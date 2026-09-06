@@ -42,6 +42,15 @@ regression evidence establish them.
 
 ## Required Manual Regression Journeys
 
+### Test Locations after Pass Eight
+
+MetronomeManagerCharacterisationTests and NoteValueTests now live under
+AppBrain tests/Features/Metronome; their names and test methods are unchanged.
+Real storage tests live in that feature's Preset Storage folder. Screen tests
+are named after their individual ViewModels, and cross-screen observation is
+in Integration tests/SharedFeatureObservationTests. Test regrouping does not
+change the behavioural requirements or constitute a new passing test run.
+
 1. Launch, start, observe several measures, and stop playback.
 2. Change BPM while stopped and while playing using every control.
 3. Select every note value and verify its visual counting and audible cadence.

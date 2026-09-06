@@ -68,7 +68,25 @@ Metronome/
 
 MetronomeTests/
 ├── AppBrain tests/
+│   ├── AppBrainTests.swift
+│   └── Features/Metronome/
+│       ├── MetronomeManagerCharacterisationTests.swift
+│       ├── Audio/MetronomeAudioFailureTests.swift
+│       ├── Data Types/NoteValueTests.swift
+│       └── Preset Storage/
+│           ├── MetronomePresetPersistenceTests.swift
+│           └── UserDefaultsPresetRepositoryTests.swift
 ├── View model tests/
+│   ├── ContentViewModelTests.swift
+│   ├── SettingsViewModelTests.swift
+│   ├── GridSettingsViewModelTests.swift
+│   ├── BeatPresetsViewModelTests.swift
+│   ├── NoteValuePickerViewModelTests.swift
+│   ├── GridViewModelTests.swift
+│   ├── BeatTileViewModelTests.swift
+│   └── StarFieldViewModelTests.swift
+├── Integration tests/SharedFeatureObservationTests.swift
+├── Presentation tests/ThemeManagerTests.swift
 └── Test Doubles/
 ```
 
@@ -86,6 +104,12 @@ palette, not a new customer setting. Theme selection is in-memory only.
 Views retain their existing opacity and layout choices.
 
 ## Remaining Migration Work
+
+Tests are grouped by the boundary they exercise. Each screen has a focused
+ViewModel suite; cross-screen tests remain explicitly integration tests rather
+than being mistaken for one screen's unit tests. Feature and repository tests
+live under Metronome. Test doubles remain shared because both feature and UI
+tests use them; they are not duplicated into each suite.
 
 Note-picker buttons are private rendering functions within their owning screen,
 not separate Views accepting action closures. The picker ViewModel owns selection

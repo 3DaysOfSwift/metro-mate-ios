@@ -8,7 +8,7 @@ continues to construct them. AppBrain.swift is the only Model-layer file outside
 the feature, justified by its application-wide composition responsibility.
 No source contents, resources, or runtime behaviour changed.
 
-## Planned Pass Eight: Test Grouping
+## Pass Eight: Test Grouping Implemented
 
 - Split mixed AppBrainTests: retain composition/launch tests there, move
   feature persistence/audio tests to Metronome tests, and observation tests
@@ -19,6 +19,32 @@ No source contents, resources, or runtime behaviour changed.
 - Preserve assertions and update behaviour-contract test references.
 - Review the resulting groups for coverage gaps and record bounded follow-ups,
   including clock cadence verification, separately from folder changes.
+
+The grouping above is now implemented. All 22 test bodies redistributed from
+AppBrainTests, SheetViewModelTests, and VisualViewModelTests are unchanged.
+The two mixed screen suites were removed; their tests now live in the six
+matching screen suites. The load-error presentation test also moved from
+AppBrainTests into BeatPresetsViewModelTests. Cross-screen observation and
+dependency wiring live in SharedFeatureObservationTests. Existing feature,
+domain, repository, and theme suites were moved intact. Shared test doubles
+remain shared. No production files changed in this pass.
+
+### Further Refinement Plan
+
+- Timing: compare real clock cadence under load against the baseline; a
+  change to missed-deadline policy requires an explicit behavioural decision.
+- Test reliability: review sleep-based animation tests under repeated Xcode
+  runs; introduce controllable time only if failures or excessive runtime
+  justify it. Do not replace existing runtime coverage with fake-only tests.
+- Domain tests: NoteValueTests also covers GridDisplayMode labels. A later
+  small naming/splitting pass can make that ownership clearer without changing
+  assertions; it is not a blocker to this regrouping.
+- Observation: retain the documented Combine decision for this migration.
+  Any move to Observation remains a separately scoped and tested change.
+
+Completion requires an Xcode run after suite splitting. Serialisation is
+retained within each split suite; Swift Testing may run independent suites
+concurrently, so the full run must verify there is no hidden shared test state.
 
 ## Remaining Review
 
