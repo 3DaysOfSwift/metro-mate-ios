@@ -22,6 +22,15 @@ shares pending loads, and sequences committed saves explicitly. Safe BeatPreset
 values cross the boundary; the UserDefaults instance stays inside the repository.
 Loading and saving state remain Main Actor observable properties.
 
+Audio now has its own serial-executor actor for engine construction, session
+activation, file loading, fallback synthesis, scheduling, and stopping. The
+Main Actor manager awaits ordered commands and guards playback/ticker revisions.
+The ticker callback is async so only one tick per ticker task is in flight.
+Start cancellation prevents a late ticker start; an already executing synchronous
+AVFoundation call cannot be preempted, so Stop waits behind it. Startup uses
+async let for independent audio and preset preparation. Deadline advancement is
+unchanged; catch-up behaviour and real-time cadence still require evaluation.
+
 There is no DispatchSource, scheduledTimer, or Timer construction.
 Syntax replacement does not prove timing equivalence. Cooperative tasks are not real-time audio scheduling:
 device testing under load remains essential before declaring this migration done.

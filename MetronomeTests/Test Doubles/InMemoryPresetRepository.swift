@@ -28,7 +28,7 @@ final class InMemoryPresetRepository: PresetRepository {
 @MainActor
 func makeTestMetronome(
     presetRepository: (any PresetRepository)? = nil,
-    audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
+    audioPlayer: (any MetronomeAudioPlayer)? = nil,
     ticker: ControllableMetronomeTicker? = nil,
     tapResetScheduler: ControllableDelayScheduler? = nil,
     blinkScheduler: ControllableDelayScheduler? = nil,
@@ -36,7 +36,7 @@ func makeTestMetronome(
 ) -> MetronomeManager {
     MetronomeManager(
         presetRepository: presetRepository ?? InMemoryPresetRepository(),
-        audioPlayer: audioPlayer,
+        audioPlayer: audioPlayer ?? RecordingMetronomeAudioPlayer(),
         ticker: ticker ?? ControllableMetronomeTicker(),
         tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
         blinkScheduler: blinkScheduler ?? ControllableDelayScheduler(),

@@ -12,7 +12,12 @@ is an actor using a serial off-main executor for synchronous UserDefaults and
 JSON operations. MetronomeManager retains Main Actor ownership of observable
 state, shares in-flight loads, and orders writes so older snapshots cannot
 overwrite newer edits. Committed writes outlive the presenting screen.
-Audio preparation remains synchronous pending the next execution-ownership step.
+AVFoundationMetronomeAudioPlayer also owns a serial off-main executor. Its engine
+and player are created on first explicit audio use on that executor, not during
+AppBrain construction. The feature awaits audio commands in submission order,
+invalidates superseded starts and queued ticks, and publishes a starting state.
+The ticker awaits each click; it does not launch detached work per beat.
+AppBrain starts audio preparation and preset loading as independent child tasks.
 
 Each ViewModel keeps its feature reference private. Views read screen-facing
 properties and call ViewModel actions; they cannot reach through a ViewModel

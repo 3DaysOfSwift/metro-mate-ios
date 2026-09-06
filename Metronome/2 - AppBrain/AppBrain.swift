@@ -13,8 +13,9 @@ final class AppBrain {
     /// An early opportunity to warm audio and load saved presets before interaction.
     /// Features own readiness; playback does not depend on this callback running first.
     func applicationDidFinishLaunching() async {
-        metronome.prepareAudio()
-        await metronome.loadSavedPresets()
+        async let audio: Void = metronome.prepareAudio()
+        async let presets: Void = metronome.loadSavedPresets()
+        _ = await (audio, presets)
     }
 
     /// Produces the live, non-test AppBrain and constructs all production dependencies in one place.

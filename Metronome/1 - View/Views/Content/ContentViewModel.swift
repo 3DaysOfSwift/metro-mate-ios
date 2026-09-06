@@ -15,13 +15,14 @@ final class ContentViewModel: ObservableObject {
     var noteValue: NoteValue { metronome.noteValue }
     var tapCount: Int { metronome.tapCount }
     var isPlaying: Bool { metronome.isPlaying }
+    var isStartingPlayback: Bool { metronome.isStartingPlayback }
     var shouldBlink: Bool { metronome.shouldBlink }
     var minimumBPM: Int { Int(metronome.tempoRange.lowerBound) }
     var maximumBPM: Int { Int(metronome.tempoRange.upperBound) }
     var audioError: String? { metronome.audioError }
 
-    func retryAudio() {
-        metronome.prepareAudio()
+    func retryAudio() async {
+        await metronome.prepareAudio()
     }
 
     private var repeatTask: Task<Void, Never>?
@@ -88,14 +89,14 @@ final class ContentViewModel: ObservableObject {
         repeatTask = nil
     }
 
-    func recordTapTempo() {
+    func recordTapTempo() async {
         mediumImpact()
-        metronome.tapTempo()
+        await metronome.tapTempo()
     }
 
-    func togglePlayback() {
+    func togglePlayback() async {
         mediumImpact()
-        metronome.togglePlayback()
+        await metronome.togglePlayback()
     }
 
     func randomizeBeat() {

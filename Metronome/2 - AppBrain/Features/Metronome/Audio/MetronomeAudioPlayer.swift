@@ -1,6 +1,6 @@
-protocol MetronomeAudioPlayer: AnyObject {
-    func prepare() throws
-    func startIfNeeded() throws
-    func stop()
-    func playClick(accented: Bool) throws
+protocol MetronomeAudioPlayer: AnyObject, Sendable {
+    func prepare() async throws
+    func startIfNeeded() async throws
+    func stop() async
+    func playClick(accented: Bool) async throws
 }

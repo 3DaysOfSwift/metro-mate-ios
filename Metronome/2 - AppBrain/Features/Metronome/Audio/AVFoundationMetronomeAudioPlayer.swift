@@ -1,9 +1,16 @@
 import AVFoundation
+import Dispatch
 
-final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
+actor AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
+    // Session activation and engine setup are synchronous system calls.
+    // This executor keeps them off the Main Actor and cooperative pool.
+    private let executor = DispatchSerialQueue(label: "Metronome.audio", qos: .userInitiated)
+    nonisolated var unownedExecutor: UnownedSerialExecutor {
+        executor.asUnownedSerialExecutor()
+    }
     private let bundle: Bundle
-    private let audioEngine = AVAudioEngine()
-    private let playerNode = AVAudioPlayerNode()
+    private lazy var audioEngine = AVAudioEngine()
+    private lazy var playerNode = AVAudioPlayerNode()
 
     private var accentClickFile: AVAudioFile?
     private var normalClickFile: AVAudioFile?
@@ -52,6 +59,7 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
     }
 
     func stop() {
+        guard isConnected else { return }
         playerNode.stop()
     }
 

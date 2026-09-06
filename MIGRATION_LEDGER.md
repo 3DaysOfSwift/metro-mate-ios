@@ -45,28 +45,51 @@ This bounded persistence conversion was taken before audio because its existing
 tests make the new await boundaries directly verifiable. No before/after device
 profile was captured; off-main ownership is not a measured performance claim.
 
+### Audio Checkpoint
+
+AVFoundationMetronomeAudioPlayer is now a serial-executor actor with async
+protocol operations. Session activation, engine setup, resource loading,
+fallback generation, click scheduling, and stopping execute off-main. Engine
+and player construction occurs on that executor on explicit use, not in init.
+Apple's synchronous [session activation API](https://developer.apple.com/documentation/avfaudio/avaudiosession/setactive(_:options:))
+and [engine start API](https://developer.apple.com/documentation/avfaudio/avaudioengine/start())
+remain encapsulated below the feature.
+
+MetronomeManager orders audio commands using awaited task dependencies and shares
+a pending playback start. Stop invalidates the start and queued old ticks before
+awaiting hardware cleanup. No synchronous device call is assumed preemptible.
+The ticker awaits its async callback rather than launching overlapping clicks;
+the existing deadline progression is retained for the later cadence review.
+Playback is still durable; an explicit Stop cancels a pending start, whereas a
+single awaiting caller disappearing does not implicitly stop shared playback.
+
+The ViewModel exposes a starting state and its UI permits cancelling preparation.
+AppBrain uses async let to begin audio and preset loading independently.
+Added five tests: shared pending start, stop/start replacement, in-flight click
+ordering, concurrent launch loads, and the live audio actor's off-main executor.
+Existing playback/failure tests now await completed operations.
+
+Validation: the full MetronomeTests simulator run passes after the final changes,
+including all five new audio concurrency tests. Focused production-source
+typechecking with complete checking and warnings-as-errors passes. Device audio
+quality, fallback playback, and combined-load latency are not claimed verified.
+
 Remaining checkpoints:
 
 1. Capture a combined cold-start, star-field animation, and playback baseline
    using Instruments on a representative device. Include missing audio files
    and preset loading/saving. No latency or frame-time measurements exist yet.
-2. Give the existing audio implementation one serial off-main execution owner
-   for its mutable engine, files, and buffers. Respect AVFoundation's execution
-   requirements; bridge unavoidable blocking setup without blocking the
-   cooperative pool. Expose awaited preparation/start results and prevent a
-   cancelled or superseded start from restarting playback. Keep scheduling
-   ordered with stop and tempo changes; do not launch detached work per beat.
-3. Once audio preparation is async, preserve independent audio and persistence
-   startup. Audio still prepares synchronously before the awaited preset load.
-4. Test the real ticker's cancellation, replacement, and missed deadlines;
+2. Verify bundled and fallback audio by listening on device, including rapid
+   start/stop, tempo changes, and simultaneous animation.
+3. Test the real ticker's cancellation, replacement, and missed deadlines;
    agree and document late-tick behaviour before changing its current catch-up
    policy. Compare timing under animation load.
-5. Repeat profiling, strict checking, and regressions. Move costly animation
+4. Repeat profiling, strict checking, and regressions. Move costly animation
    calculations off-main only if measurements warrant it, publishing completed
    frames without stale results. Do not add Task.yield merely as a showcase.
 
-Audio preparation remains synchronous. Its off-main conversion, real ticker
-tests, fallback playback verification, and performance gates remain open.
+The audio and persistence ownership changes are implemented. Real ticker tests,
+fallback playback verification, and performance gates remain open.
 
 ## Pass Seven: Feature-owned Model Files
 

@@ -4,6 +4,11 @@ import Combine
 @MainActor
 final class MetronomeManager: MetronomeFeature {
     @Published var isPlaying = false
+    @Published private(set) var isStartingPlayback = false
+    private var playbackStartTask: Task<Void, Error>?
+    private var lastAudioOperation: Task<Void, Error>?
+    private var playbackRevision = 0
+    private var tickerRevision = 0
     @Published var bpm: Double = 60
     @Published var beatsPerMeasure = 8
     @Published var currentBeat = -1
@@ -65,13 +70,31 @@ final class MetronomeManager: MetronomeFeature {
     }
 
     /// Warms the audio system without starting metronome playback.
-    func prepareAudio() {
-        do {
-            try audioPlayer.prepare()
-            audioError = nil
-        } catch {
-            audioError = error.localizedDescription
+    func prepareAudio() async {
+        let operation = enqueueAudioOperation {
+            do {
+                try await self.audioPlayer.prepare()
+                self.audioError = nil
+            } catch {
+                self.audioError = error.localizedDescription
+                throw error
+            }
         }
+        _ = await operation.result
+    }
+
+    /// Actor isolation alone does not promise submission order. Each audio
+    /// command awaits its predecessor, including Stop after an in-flight click.
+    private func enqueueAudioOperation(
+        _ operation: @escaping @MainActor () async throws -> Void
+    ) -> Task<Void, Error> {
+        let previous = lastAudioOperation
+        let task = Task {
+            _ = await previous?.result
+            try await operation()
+        }
+        lastAudioOperation = task
+        return task
     }
     
     private func setupDefaultPattern() {
@@ -133,57 +156,83 @@ final class MetronomeManager: MetronomeFeature {
         }
     }
     
-    func togglePlayback() {
-        if isPlaying {
-            stop()
+    func togglePlayback() async {
+        if isPlaying || isStartingPlayback {
+            await stop()
         } else {
-            start()
+            do {
+                try await startPlayback()
+            } catch {
+                // startPlayback publishes failures; a superseded start is silent.
+            }
         }
     }
     
     /// Starts only when stopped. Repeated requests must never toggle playback off.
-    func startPlayback() throws {
-        if !isPlaying {
-            start()
+    func startPlayback() async throws {
+        guard !isPlaying else { return }
+        if let playbackStartTask {
+            try await playbackStartTask.value
+            return
         }
-        if let audioError {
-            throw NSError(domain: "MetronomeAudio", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: audioError])
+        playbackRevision += 1
+        let revision = playbackRevision
+        isStartingPlayback = true
+        let task = Task {
+            defer {
+                if revision == playbackRevision {
+                    isStartingPlayback = false
+                    playbackStartTask = nil
+                }
+            }
+            try Task.checkCancellation()
+            let operation = enqueueAudioOperation {
+                guard revision == self.playbackRevision else { throw CancellationError() }
+                do {
+                    try await self.audioPlayer.startIfNeeded()
+                    if revision == self.playbackRevision { self.audioError = nil }
+                } catch {
+                    if revision == self.playbackRevision {
+                        self.audioError = error.localizedDescription
+                    }
+                    throw error
+                }
+            }
+            try await operation.value
+            try Task.checkCancellation()
+            guard revision == playbackRevision else { throw CancellationError() }
+            isPlaying = true
+            currentBeat = -1
+            startTicker(after: .milliseconds(10))
         }
+        playbackStartTask = task
+        try await task.value
     }
 
     /// Applies the requested tempo before starting, or retimes existing playback.
-    func startPlayback(atBPM bpm: Double) throws {
+    func startPlayback(atBPM bpm: Double) async throws {
         updateBPM(bpm)
-        try startPlayback()
+        try await startPlayback()
     }
 
-    private func start() {
-        do {
-            try audioPlayer.startIfNeeded()
-            audioError = nil
-        } catch {
-            audioError = error.localizedDescription
-            return
-        }
-        isPlaying = true
-        currentBeat = -1  // Start at -1 so first increment makes it 0 (beat 1)
-        
-        
-        startTicker(after: .milliseconds(10))
-    }
-    
-    private func stop() {
+    private func stop() async {
+        playbackRevision += 1
+        tickerRevision += 1
+        playbackStartTask?.cancel()
+        playbackStartTask = nil
+        isStartingPlayback = false
         isPlaying = false
         ticker.stop()
         blinkScheduler.cancel()
         currentBeat = -1
         shouldBlink = false
         
-        audioPlayer.stop()
+        let operation = enqueueAudioOperation { await self.audioPlayer.stop() }
+        _ = await operation.result
     }
     
-    private func tick() {
+    private func tick(revision: Int) async {
+        guard isPlaying, revision == tickerRevision, !Task.isCancelled else { return }
         // Update beat counter BEFORE playing sound and visual update
         currentBeat = (currentBeat + 1) % beatsPerMeasure
         
@@ -194,26 +243,31 @@ final class MetronomeManager: MetronomeFeature {
         let shouldPlayBeat = currentBeat < gridPattern[0].count && gridPattern[0][currentBeat]
         
         if shouldPlayBeat {
-            playClick()
+            let shouldAccent = currentBeat < accentPattern.count && accentPattern[currentBeat]
+            await playSound(accented: shouldAccent, tickRevision: revision)
         }
     }
     
-    private func playClick() {
-        let shouldAccent = currentBeat < accentPattern.count && accentPattern[currentBeat]
-        playSound(accented: shouldAccent)
-    }
-    
-    private func playTapSound() {
-        playSound(accented: false)
-    }
-
-    private func playSound(accented: Bool) {
+    private func playSound(accented: Bool, tickRevision: Int? = nil) async {
+        let revision = playbackRevision
+        let operation = enqueueAudioOperation {
+            guard revision == self.playbackRevision else { return }
+            if let tickRevision, tickRevision != self.tickerRevision { return }
+            do {
+                try await self.audioPlayer.playClick(accented: accented)
+                if revision == self.playbackRevision { self.audioError = nil }
+            } catch {
+                if revision == self.playbackRevision {
+                    self.audioError = error.localizedDescription
+                }
+                throw error
+            }
+        }
         do {
-            try audioPlayer.playClick(accented: accented)
-            audioError = nil
+            try await operation.value
         } catch {
-            stop()
-            audioError = error.localizedDescription
+            guard revision == playbackRevision else { return }
+            await stop()
         }
     }
     
@@ -332,7 +386,7 @@ final class MetronomeManager: MetronomeFeature {
         setupDefaultPattern()
     }
     
-    func tapTempo() {
+    func tapTempo() async {
         let now = currentDate()
         
         // Increment tap count (never resets, just keeps counting)
@@ -340,9 +394,6 @@ final class MetronomeManager: MetronomeFeature {
         
         // Add to tap times for BPM calculation
         tapTimes.append(now)
-        
-        // Play tap sound
-        playTapSound()
         
         triggerVisualBlink()
         
@@ -373,6 +424,7 @@ final class MetronomeManager: MetronomeFeature {
         tapResetScheduler.schedule(after: .seconds(3)) { [weak self] in
             self?.tapCount = 0
         }
+        await playSound(accented: false)
     }
     
     func updateGridBeats(_ beats: Int) {
@@ -686,11 +738,13 @@ final class MetronomeManager: MetronomeFeature {
     }
 
     private func startTicker(after initialDelay: Duration) {
+        tickerRevision += 1
+        let revision = tickerRevision
         ticker.start(
             after: initialDelay,
             repeatingEvery: tickInterval
         ) { [weak self] in
-            self?.tick()
+            await self?.tick(revision: revision)
         }
     }
 

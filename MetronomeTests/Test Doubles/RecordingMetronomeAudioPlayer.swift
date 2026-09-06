@@ -1,5 +1,6 @@
 @testable import Metronome
 
+@MainActor
 final class RecordingMetronomeAudioPlayer: MetronomeAudioPlayer {
     private(set) var prepareCallCount = 0
     private(set) var startCallCount = 0

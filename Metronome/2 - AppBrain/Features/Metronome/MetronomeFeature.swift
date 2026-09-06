@@ -1,7 +1,7 @@
 import Combine
 
 @MainActor
-protocol MetronomeFeature: AnyObject, ObservableObject
+protocol MetronomeFeature: AnyObject, ObservableObject, Sendable
 where ObjectWillChangePublisher == ObservableObjectPublisher {
     var isPlaying: Bool { get }
     var bpm: Double { get }
@@ -24,14 +24,15 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var quickPresets: [QuickPreset] { get }
     var tapCount: Int { get }
 
-    func prepareAudio()
+    var isStartingPlayback: Bool { get }
+    func prepareAudio() async
     var isLoadingPresets: Bool { get }
     var isSavingPresets: Bool { get }
     func retrySavingPresets() async
     func loadSavedPresets() async
-    func togglePlayback()
-    func startPlayback() throws
-    func startPlayback(atBPM bpm: Double) throws
+    func togglePlayback() async
+    func startPlayback() async throws
+    func startPlayback(atBPM bpm: Double) async throws
     func updateBPM(_ bpm: Double)
     func adjustedBPM(by amount: Double) -> Double
     func adjustBPM(by amount: Double)
@@ -40,7 +41,7 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     func updateGridBeats(_ beats: Int)
     func toggleGridCell(row: Int, col: Int)
     func toggleAccentCell(col: Int)
-    func tapTempo()
+    func tapTempo() async
     func saveBeatPreset(name: String) async
     func loadBeatPreset(_ preset: BeatPreset)
     func applyQuickPreset(_ preset: QuickPreset)

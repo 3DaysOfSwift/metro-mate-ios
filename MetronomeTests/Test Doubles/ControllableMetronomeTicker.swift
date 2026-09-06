@@ -7,12 +7,12 @@ final class ControllableMetronomeTicker: MetronomeTicker {
     private(set) var startCallCount = 0
     private(set) var stopCallCount = 0
 
-    private var tick: (@MainActor () -> Void)?
+    private var tick: (@MainActor () async -> Void)?
 
     func start(
         after initialDelay: Duration,
         repeatingEvery interval: Duration,
-        tick: @escaping @MainActor () -> Void
+        tick: @escaping @MainActor () async -> Void
     ) {
         self.initialDelay = initialDelay
         self.interval = interval
@@ -25,7 +25,7 @@ final class ControllableMetronomeTicker: MetronomeTicker {
         stopCallCount += 1
     }
 
-    func sendTick() {
-        tick?()
+    func sendTick() async {
+        await tick?()
     }
 }

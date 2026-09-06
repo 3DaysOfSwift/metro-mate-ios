@@ -47,9 +47,15 @@ struct ContentView: View {
                     VStack {
                         Text("Audio unavailable: \(error)")
                             .foregroundStyle(theme.errorText)
-                        Button("Retry audio", action: viewModel.retryAudio)
+                        Button("Retry audio") {
+                            Task { await viewModel.retryAudio() }
+                        }
                     }
                     .padding(.horizontal)
+                }
+                if viewModel.isStartingPlayback {
+                    ProgressView("Preparing audio…")
+                        .tint(theme.text)
                 }
                 // Header with settings
                 HStack {
@@ -197,7 +203,9 @@ struct ContentView: View {
                 // Play and Tap Tempo Buttons
                 HStack(spacing: 20) {
                     // Tap Tempo Button
-                    Button(action: viewModel.recordTapTempo) {
+                    Button {
+                        Task { await viewModel.recordTapTempo() }
+                    } label: {
                         ZStack {
                             Circle()
                                 .fill(theme.surface)
@@ -228,14 +236,14 @@ struct ContentView: View {
                             .animation(.easeInOut(duration: 0.1), value: viewModel.shouldBlink)
                             .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                         
-                        Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: viewModel.isPlaying || viewModel.isStartingPlayback ? "pause.fill" : "play.fill")
                             .font(.system(size: 32))
                             .foregroundColor(theme.text)
                             .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : 1.0)
                             .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                     }
                     .onTapGesture {
-                        viewModel.togglePlayback()
+                        Task { await viewModel.togglePlayback() }
                     }
                     .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity) {
                         // Never triggers

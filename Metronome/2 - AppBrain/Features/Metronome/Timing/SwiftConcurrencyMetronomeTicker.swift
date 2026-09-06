@@ -6,7 +6,7 @@ final class SwiftConcurrencyMetronomeTicker: MetronomeTicker {
     func start(
         after initialDelay: Duration,
         repeatingEvery interval: Duration,
-        tick: @escaping @MainActor () -> Void
+        tick: @escaping @MainActor () async -> Void
     ) {
         stop()
 
@@ -17,7 +17,7 @@ final class SwiftConcurrencyMetronomeTicker: MetronomeTicker {
                 while !Task.isCancelled {
                     try await clock.sleep(until: nextTick, tolerance: .zero)
                     try Task.checkCancellation()
-                    tick()
+                    await tick()
                     nextTick = nextTick.advanced(by: interval)
                 }
             } catch is CancellationError {

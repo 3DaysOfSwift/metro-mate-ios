@@ -5,58 +5,58 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
-    @Test func repeatedPlaybackRequestsKeepPlayingWithoutRestartingTheTicker() throws {
+    @Test func repeatedPlaybackRequestsKeepPlayingWithoutRestartingTheTicker() async throws {
         let ticker = ControllableMetronomeTicker()
         let audio = RecordingMetronomeAudioPlayer()
         let manager = makeManager(audioPlayer: audio, ticker: ticker)
 
-        try manager.startPlayback()
-        try manager.startPlayback()
+        try await manager.startPlayback()
+        try await manager.startPlayback()
 
         #expect(manager.isPlaying)
         #expect(audio.startCallCount == 1)
         #expect(ticker.startCallCount == 1)
-        manager.togglePlayback()
+        await manager.togglePlayback()
     }
 
-    @Test func playbackAtRequestedTempoWorksBeforeLaunchAndRetimesWhenAlreadyPlaying() throws {
+    @Test func playbackAtRequestedTempoWorksBeforeLaunchAndRetimesWhenAlreadyPlaying() async throws {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
 
-        try manager.startPlayback(atBPM: 120)
+        try await manager.startPlayback(atBPM: 120)
         #expect(manager.isPlaying)
         #expect(manager.bpm == 120)
         #expect(ticker.interval == .milliseconds(250))
         #expect(ticker.startCallCount == 1)
 
-        try manager.startPlayback(atBPM: 60)
+        try await manager.startPlayback(atBPM: 60)
         #expect(manager.isPlaying)
         #expect(manager.bpm == 60)
         #expect(ticker.interval == .milliseconds(500))
         #expect(ticker.startCallCount == 2)
-        manager.togglePlayback()
+        await manager.togglePlayback()
     }
 
-    @Test func playbackRequestReportsAudioFailureAndCanBeRetried() throws {
+    @Test func playbackRequestReportsAudioFailureAndCanBeRetried() async throws {
         enum Failure: Error { case unavailable }
         let audio = RecordingMetronomeAudioPlayer()
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(audioPlayer: audio, ticker: ticker)
         audio.failure = Failure.unavailable
 
-        #expect(throws: (any Error).self) {
-            try manager.startPlayback(atBPM: 120)
+        await #expect(throws: (any Error).self) {
+            try await manager.startPlayback(atBPM: 120)
         }
         #expect(!manager.isPlaying)
         #expect(manager.audioError != nil)
         #expect(ticker.startCallCount == 0)
 
         audio.failure = nil
-        try manager.startPlayback()
+        try await manager.startPlayback()
         #expect(manager.isPlaying)
         #expect(manager.audioError == nil)
         #expect(manager.bpm == 120)
-        manager.togglePlayback()
+        await manager.togglePlayback()
     }
 
     @Test func savingAnEmptyPresetNameLeavesStateAndStorageUnchanged() async {
@@ -96,10 +96,10 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.bpm == 200)
     }
 
-    @Test func adjustingTempoWhilePlayingUpdatesPlaybackTiming() {
+    @Test func adjustingTempoWhilePlayingUpdatesPlaybackTiming() async {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
-        manager.togglePlayback()
+        await manager.togglePlayback()
         manager.adjustBPM(by: 60)
         #expect(manager.bpm == 120)
         #expect(ticker.interval == .milliseconds(250))
@@ -311,81 +311,81 @@ struct MetronomeManagerCharacterisationTests {
         #expect(restoredManager.savedBeats.first?.bpm == 96)
     }
 
-    @Test func playbackCommandsAreForwardedToTheSuppliedAudioPlayer() {
+    @Test func playbackCommandsAreForwardedToTheSuppliedAudioPlayer() async {
         let audioPlayer = RecordingMetronomeAudioPlayer()
         let manager = makeManager(audioPlayer: audioPlayer)
 
         #expect(audioPlayer.prepareCallCount == 0)
 
-        manager.togglePlayback()
+        await manager.togglePlayback()
         #expect(audioPlayer.startCallCount == 1)
 
-        manager.togglePlayback()
+        await manager.togglePlayback()
         #expect(audioPlayer.stopCallCount == 1)
 
-        manager.tapTempo()
+        await manager.tapTempo()
         #expect(audioPlayer.playedAccents == [false])
     }
 
-    @Test func playbackUsesAControllableTickerWithoutWaitingForRealTime() {
+    @Test func playbackUsesAControllableTickerWithoutWaitingForRealTime() async {
         let audioPlayer = RecordingMetronomeAudioPlayer()
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(audioPlayer: audioPlayer, ticker: ticker)
 
-        manager.togglePlayback()
+        await manager.togglePlayback()
 
         #expect(ticker.initialDelay == .milliseconds(10))
         #expect(ticker.interval == .milliseconds(500))
         #expect(manager.currentBeat == -1)
 
-        ticker.sendTick()
+        await ticker.sendTick()
 
         #expect(manager.currentBeat == 0)
         #expect(audioPlayer.playedAccents == [true])
     }
 
-    @Test func tapTempoUsesTheAverageOfRecentTapIntervals() {
+    @Test func tapTempoUsesTheAverageOfRecentTapIntervals() async {
         var now = Date(timeIntervalSince1970: 1_000)
         let manager = makeManager(currentDate: { now })
 
-        manager.tapTempo()
+        await manager.tapTempo()
         now = now.addingTimeInterval(0.5)
-        manager.tapTempo()
+        await manager.tapTempo()
         now = now.addingTimeInterval(1.0)
-        manager.tapTempo()
+        await manager.tapTempo()
 
         #expect(manager.bpm == 80)
     }
 
-    @Test func tapTempoClampsAnUnreasonablyFastTempo() {
+    @Test func tapTempoClampsAnUnreasonablyFastTempo() async {
         var now = Date(timeIntervalSince1970: 1_000)
         let manager = makeManager(currentDate: { now })
 
-        manager.tapTempo()
+        await manager.tapTempo()
         now = now.addingTimeInterval(0.1)
-        manager.tapTempo()
+        await manager.tapTempo()
 
         #expect(manager.bpm == 200)
     }
 
-    @Test func tapTempoIgnoresTapsOlderThanThreeSeconds() {
+    @Test func tapTempoIgnoresTapsOlderThanThreeSeconds() async {
         var now = Date(timeIntervalSince1970: 1_000)
         let manager = makeManager(currentDate: { now })
 
-        manager.tapTempo()
+        await manager.tapTempo()
         now = now.addingTimeInterval(4)
-        manager.tapTempo()
+        await manager.tapTempo()
 
         #expect(manager.tapTimes == [now])
         #expect(manager.bpm == 60)
     }
 
-    @Test func tapCountResetsThreeSecondsAfterTheMostRecentTap() {
+    @Test func tapCountResetsThreeSecondsAfterTheMostRecentTap() async {
         let tapResetScheduler = ControllableDelayScheduler()
         let manager = makeManager(tapResetScheduler: tapResetScheduler)
 
-        manager.tapTempo()
-        manager.tapTempo()
+        await manager.tapTempo()
+        await manager.tapTempo()
 
         #expect(manager.tapCount == 2)
         #expect(tapResetScheduler.delays == [.seconds(3)])
@@ -396,11 +396,11 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.tapCount == 0)
     }
 
-    @Test func tappingTriggersTheExistingBriefVisualPulse() {
+    @Test func tappingTriggersTheExistingBriefVisualPulse() async {
         let blinkScheduler = ControllableDelayScheduler()
         let manager = makeManager(blinkScheduler: blinkScheduler)
 
-        manager.tapTempo()
+        await manager.tapTempo()
 
         #expect(manager.shouldBlink)
         #expect(blinkScheduler.delays == [.milliseconds(100)])
@@ -410,10 +410,10 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.shouldBlink == false)
     }
 
-    @Test func changingTempoReplacesTheRunningTicker() {
+    @Test func changingTempoReplacesTheRunningTicker() async {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
-        manager.togglePlayback()
+        await manager.togglePlayback()
 
         manager.updateBPM(120)
 
@@ -422,12 +422,12 @@ struct MetronomeManagerCharacterisationTests {
         #expect(ticker.interval == .milliseconds(250))
     }
 
-    @Test func loadingAPresetWhilePlayingAdvancesExactlyOncePerTick() {
+    @Test func loadingAPresetWhilePlayingAdvancesExactlyOncePerTick() async {
         let audio = RecordingMetronomeAudioPlayer()
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(audioPlayer: audio, ticker: ticker)
-        manager.togglePlayback()
-        ticker.sendTick()
+        await manager.togglePlayback()
+        await ticker.sendTick()
         #expect(manager.currentBeat == 0)
 
         let preset = BeatPreset(
@@ -443,15 +443,15 @@ struct MetronomeManagerCharacterisationTests {
         #expect(audio.startCallCount == 1)
         #expect(audio.playedAccents.count == 1)
 
-        ticker.sendTick()
+        await ticker.sendTick()
         #expect(manager.currentBeat == 1)
         #expect(audio.playedAccents == [true, false])
-        ticker.sendTick()
+        await ticker.sendTick()
         #expect(manager.currentBeat == 2)
         #expect(audio.playedAccents == [true, false, false])
 
-        manager.togglePlayback()
-        ticker.sendTick()
+        await manager.togglePlayback()
+        await ticker.sendTick()
         #expect(!manager.isPlaying)
         #expect(manager.currentBeat == -1)
         #expect(audio.playedAccents.count == 3)
@@ -463,7 +463,7 @@ struct MetronomeManagerCharacterisationTests {
 
     private func makeManager(
         repository: InMemoryPresetRepository? = nil,
-        audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
+        audioPlayer: RecordingMetronomeAudioPlayer? = nil,
         ticker: ControllableMetronomeTicker? = nil,
         tapResetScheduler: ControllableDelayScheduler? = nil,
         blinkScheduler: ControllableDelayScheduler? = nil,
@@ -471,7 +471,7 @@ struct MetronomeManagerCharacterisationTests {
     ) -> MetronomeManager {
         MetronomeManager(
             presetRepository: repository ?? InMemoryPresetRepository(),
-            audioPlayer: audioPlayer,
+            audioPlayer: audioPlayer ?? RecordingMetronomeAudioPlayer(),
             ticker: ticker ?? ControllableMetronomeTicker(),
             tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
             blinkScheduler: blinkScheduler ?? ControllableDelayScheduler(),
