@@ -152,7 +152,8 @@ struct BeatPreset: Identifiable, Codable {
     let gridDisplayMode: GridDisplayMode
 }
 
-class MetronomeManager: MetronomeFeature {
+@MainActor
+final class MetronomeManager: MetronomeFeature {
     @Published var isPlaying = false
     @Published var bpm: Double = 60
     @Published var beatsPerMeasure = 8
@@ -172,17 +173,18 @@ class MetronomeManager: MetronomeFeature {
     private var tapClearTimer: Timer?
     private var tapPointTimer: Timer?
     
-    private var timer: DispatchSourceTimer?
-
     private let presetRepository: any PresetRepository
     private let audioPlayer: any MetronomeAudioPlayer
+    private let ticker: any MetronomeTicker
 
     init(
         presetRepository: any PresetRepository,
-        audioPlayer: any MetronomeAudioPlayer
+        audioPlayer: any MetronomeAudioPlayer,
+        ticker: any MetronomeTicker
     ) {
         self.presetRepository = presetRepository
         self.audioPlayer = audioPlayer
+        self.ticker = ticker
         audioPlayer.prepare()
         setupDefaultPattern()
         restorePresets()
@@ -265,31 +267,12 @@ class MetronomeManager: MetronomeFeature {
         
         audioPlayer.startIfNeeded()
         
-        // Small delay to ensure audio system is ready, then play first beat
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
-            self?.tick()
-            
-            // Use DispatchSourceTimer for subsequent beats
-            guard let self = self else { return }
-            let interval = (60.0 / self.bpm) / self.noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            self.timer = DispatchSource.makeTimerSource(queue: queue)
-            // Start after one interval, then repeat
-            self.timer?.schedule(deadline: .now() + interval, repeating: interval)
-            self.timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            self.timer?.resume()
-        }
+        startTicker(after: .milliseconds(10))
     }
     
     private func stop() {
         isPlaying = false
-        timer?.cancel()
-        timer = nil
+        ticker.stop()
         currentBeat = -1
         shouldBlink = false
         
@@ -330,26 +313,10 @@ class MetronomeManager: MetronomeFeature {
     }
     
     func updateBPM(_ newBPM: Double) {
-        let oldBPM = bpm
         bpm = newBPM
         
         if isPlaying {
-            // Cancel old timer
-            timer?.cancel()
-            
-            // Calculate new interval
-            let newInterval = (60.0 / bpm) / noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            // Restart immediately with new interval to maintain beat continuity
-            timer = DispatchSource.makeTimerSource(queue: queue)
-            timer?.schedule(deadline: .now() + newInterval, repeating: newInterval)
-            timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            timer?.resume()
+            restartTicker()
         }
     }
     
@@ -403,18 +370,7 @@ class MetronomeManager: MetronomeFeature {
         setupDefaultPattern()
         
         if isPlaying {
-            timer?.cancel()
-            let interval = (60.0 / bpm) / noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            timer = DispatchSource.makeTimerSource(queue: queue)
-            timer?.schedule(deadline: .now() + interval, repeating: interval)
-            timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            timer?.resume()
+            restartTicker()
         }
     }
     
@@ -629,18 +585,7 @@ class MetronomeManager: MetronomeFeature {
         }
         
         if isPlaying {
-            timer?.cancel()
-            let interval = (60.0 / bpm) / noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            timer = DispatchSource.makeTimerSource(queue: queue)
-            timer?.schedule(deadline: .now() + interval, repeating: interval)
-            timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            timer?.resume()
+            restartTicker()
         }
     }
     
@@ -703,18 +648,7 @@ class MetronomeManager: MetronomeFeature {
         
         // Update timer if playing
         if isPlaying {
-            timer?.cancel()
-            let interval = (60.0 / bpm) / noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            timer = DispatchSource.makeTimerSource(queue: queue)
-            timer?.schedule(deadline: .now() + interval, repeating: interval)
-            timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            timer?.resume()
+            restartTicker()
         }
         
         currentBeatName = "Random Beat"
@@ -749,20 +683,26 @@ class MetronomeManager: MetronomeFeature {
         
         // Update timer if playing
         if isPlaying {
-            timer?.cancel()
-            let interval = (60.0 / bpm) / noteValue.multiplier
-            let queue = DispatchQueue(label: "metronome.timer", qos: .userInteractive)
-            
-            timer = DispatchSource.makeTimerSource(queue: queue)
-            timer?.schedule(deadline: .now() + interval, repeating: interval)
-            timer?.setEventHandler { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tick()
-                }
-            }
-            timer?.resume()
+            restartTicker()
         }
         
         currentBeatName = "Eighth"
+    }
+
+    private func restartTicker() {
+        startTicker(after: tickInterval)
+    }
+
+    private func startTicker(after initialDelay: Duration) {
+        ticker.start(
+            after: initialDelay,
+            repeatingEvery: tickInterval
+        ) { [weak self] in
+            self?.tick()
+        }
+    }
+
+    private var tickInterval: Duration {
+        .seconds((60.0 / bpm) / noteValue.multiplier)
     }
 }

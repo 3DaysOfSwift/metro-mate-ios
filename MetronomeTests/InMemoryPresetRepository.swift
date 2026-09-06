@@ -16,12 +16,15 @@ final class InMemoryPresetRepository: PresetRepository {
     }
 }
 
+@MainActor
 func makeTestMetronome(
     presetRepository: InMemoryPresetRepository = InMemoryPresetRepository(),
-    audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer()
+    audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
+    ticker: ControllableMetronomeTicker? = nil
 ) -> MetronomeManager {
     MetronomeManager(
         presetRepository: presetRepository,
-        audioPlayer: audioPlayer
+        audioPlayer: audioPlayer,
+        ticker: ticker ?? ControllableMetronomeTicker()
     )
 }

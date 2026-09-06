@@ -1,0 +1,10 @@
+@MainActor
+protocol MetronomeTicker: AnyObject {
+    func start(
+        after initialDelay: Duration,
+        repeatingEvery interval: Duration,
+        tick: @escaping @MainActor () -> Void
+    )
+    func stop()
+}
+

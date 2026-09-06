@@ -15,9 +15,11 @@ final class AppBrain {
             storageKey: "savedBeatPresets"
         )
         let audioPlayer = AVFoundationMetronomeAudioPlayer(bundle: .main)
+        let ticker = SwiftConcurrencyMetronomeTicker()
         let metronome = MetronomeManager(
             presetRepository: presetRepository,
-            audioPlayer: audioPlayer
+            audioPlayer: audioPlayer,
+            ticker: ticker
         )
 
         return AppBrain(metronome: metronome)

@@ -1,5 +1,6 @@
 import Combine
 
+@MainActor
 protocol MetronomeFeature: AnyObject, ObservableObject
 where ObjectWillChangePublisher == ObservableObjectPublisher {
     var isPlaying: Bool { get }

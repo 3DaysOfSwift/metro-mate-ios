@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import Metronome
 
+@MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
     @Test func newManagerUsesTheExistingDefaultBeat() {
@@ -185,17 +186,48 @@ struct MetronomeManagerCharacterisationTests {
         #expect(audioPlayer.playedAccents == [false])
     }
 
+    @Test func playbackUsesAControllableTickerWithoutWaitingForRealTime() {
+        let audioPlayer = RecordingMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(audioPlayer: audioPlayer, ticker: ticker)
+
+        manager.togglePlayback()
+
+        #expect(ticker.initialDelay == .milliseconds(10))
+        #expect(ticker.interval == .milliseconds(500))
+        #expect(manager.currentBeat == -1)
+
+        ticker.sendTick()
+
+        #expect(manager.currentBeat == 0)
+        #expect(audioPlayer.playedAccents == [true])
+    }
+
+    @Test func changingTempoReplacesTheRunningTicker() {
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(ticker: ticker)
+        manager.togglePlayback()
+
+        manager.updateBPM(120)
+
+        #expect(ticker.startCallCount == 2)
+        #expect(ticker.initialDelay == .milliseconds(250))
+        #expect(ticker.interval == .milliseconds(250))
+    }
+
     private func activeIndices(in values: [Bool]) -> [Int] {
         values.indices.filter { values[$0] }
     }
 
     private func makeManager(
         repository: InMemoryPresetRepository = InMemoryPresetRepository(),
-        audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer()
+        audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
+        ticker: ControllableMetronomeTicker? = nil
     ) -> MetronomeManager {
         MetronomeManager(
             presetRepository: repository,
-            audioPlayer: audioPlayer
+            audioPlayer: audioPlayer,
+            ticker: ticker ?? ControllableMetronomeTicker()
         )
     }
 }
