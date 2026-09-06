@@ -13,7 +13,7 @@ struct AppColourTheme: Identifiable {
 
     static let classic = AppColourTheme(
         id: "Classic",
-        background: Color(hex: "#1C1C1B"),
+        background: Color("ClassicBackground"),
         surface: Color(hex: "#242424"),
         elevatedSurface: Color(hex: "#303030"),
         text: Color(hex: "#DDDDDD"),
