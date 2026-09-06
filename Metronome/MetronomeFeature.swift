@@ -6,6 +6,8 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var isPlaying: Bool { get }
     var bpm: Double { get }
     var beatsPerMeasure: Int { get }
+    var beatCountRange: ClosedRange<Int> { get }
+    var gridBeatCountRange: ClosedRange<Int> { get }
     var currentBeat: Int { get }
     var shouldBlink: Bool { get }
     var gridPattern: [[Bool]] { get }

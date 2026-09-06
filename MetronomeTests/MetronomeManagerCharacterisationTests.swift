@@ -5,6 +5,17 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func availableBeatRangesPreserveTheSettingsAndGridDistinction() {
+        let manager = makeManager()
+        for note in NoteValue.allCases {
+            manager.updateNoteValue(note)
+            #expect(manager.beatCountRange == 1...16)
+            #expect(manager.gridBeatCountRange == 1...(note.isTriplet ? 12 : 16))
+            manager.updateGridBeats(99)
+            #expect(manager.beatsPerMeasure == manager.gridBeatCountRange.upperBound)
+        }
+    }
+
     @Test func tempoAdjustmentsRespectLimitsAndPreserveFractionalValues() {
         let manager = makeManager()
         #expect(manager.adjustedBPM(by: 0.5) == 60.5)

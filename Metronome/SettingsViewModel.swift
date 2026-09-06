@@ -20,6 +20,8 @@ final class SettingsViewModel: ObservableObject {
         set { metronome.updateBeatsPerMeasure(newValue) }
     }
 
+    var beatCountRange: ClosedRange<Int> { metronome.beatCountRange }
+
     func finish() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }

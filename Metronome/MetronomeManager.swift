@@ -162,6 +162,10 @@ final class MetronomeManager: MetronomeFeature {
     @Published var tapTimes: [Date] = []
     @Published var tapCount: Int = 0
     private let maxTapCount = 8
+    let beatCountRange = 1...16
+    var gridBeatCountRange: ClosedRange<Int> {
+        1...(noteValue.isTriplet ? 12 : 16)
+    }
     let quickPresets = [
         QuickPreset(title: "Basic", bpm: 120, noteValue: .quarter),
         QuickPreset(title: "Rock", bpm: 110, noteValue: .eighth),
@@ -467,12 +471,7 @@ final class MetronomeManager: MetronomeFeature {
     func updateGridBeats(_ beats: Int) {
         let maxBeats = max(16, beats)
         
-        // Update beatsPerMeasure based on note value
-        if noteValue.isTriplet {
-            beatsPerMeasure = min(beats, 12) // Max 12 for triplets
-        } else {
-            beatsPerMeasure = min(beats, 16) // Max 16 for regular notes
-        }
+        beatsPerMeasure = min(beats, gridBeatCountRange.upperBound)
         
         currentBeat = -1
         

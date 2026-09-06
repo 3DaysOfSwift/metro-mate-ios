@@ -16,7 +16,11 @@ final class GridSettingsViewModel: ObservableObject {
     }
 
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }
-    var maximumBeatCount: Int { metronome.noteValue.isTriplet ? 12 : 16 }
+    var minimumBeatCount: Int { metronome.gridBeatCountRange.lowerBound }
+    var maximumBeatCount: Int { metronome.gridBeatCountRange.upperBound }
+    var sliderRange: ClosedRange<Double> {
+        Double(minimumBeatCount)...Double(maximumBeatCount)
+    }
 
     func updateBeatCount(_ count: Double) {
         metronome.updateGridBeats(Int(count))

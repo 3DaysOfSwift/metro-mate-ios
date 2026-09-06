@@ -317,7 +317,7 @@ struct SettingsView: View {
                             get: { viewModel.beatsPerMeasure },
                             set: { viewModel.beatsPerMeasure = $0 }
                         ),
-                        in: 1...16
+                        in: viewModel.beatCountRange
                     )
                     .foregroundColor(Color(hex: "#DDDDDD"))
                     .accentColor(Color(hex: "#F54206"))
@@ -360,11 +360,11 @@ struct GridSettingsView: View {
                         Slider(value: Binding(
                             get: { Double(viewModel.beatsPerMeasure) },
                             set: viewModel.updateBeatCount
-                        ), in: 1...Double(maxBeats), step: 1)
+                        ), in: viewModel.sliderRange, step: 1)
                         .accentColor(Color(hex: "#F54206"))
                         
                         HStack {
-                            Text("1")
+                            Text("\(viewModel.minimumBeatCount)")
                                 .font(.caption)
                                 .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
                             Spacer()
