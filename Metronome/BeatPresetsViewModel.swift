@@ -10,7 +10,8 @@ final class BeatPresetsViewModel: ObservableObject {
 
     private var metronomeUpdates: AnyCancellable?
 
-    init(brain: AppBrain = .shared) {
+    init(brain: AppBrain? = nil) {
+        let brain = brain ?? .shared
         metronome = brain.metronome
         metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()

@@ -1,3 +1,5 @@
+import Foundation
+
 @MainActor
 final class AppBrain {
     static let shared = AppBrain.live()
