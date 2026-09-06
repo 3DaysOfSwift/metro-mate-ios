@@ -6,7 +6,7 @@ import Testing
 struct SheetViewModelTests {
     @Test func settingsUpdatesTheBeatCountThroughTheExistingFeature() {
         let metronome = MetronomeManager()
-        let viewModel = SettingsViewModel(metronome: metronome)
+        let viewModel = SettingsViewModel(brain: AppBrain(metronome: metronome))
 
         viewModel.beatsPerMeasure = 5
 
@@ -16,7 +16,7 @@ struct SheetViewModelTests {
 
     @Test func gridSettingsDescribesAndUpdatesItsCurrentRange() {
         let metronome = MetronomeManager()
-        let viewModel = GridSettingsViewModel(metronome: metronome)
+        let viewModel = GridSettingsViewModel(brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.maximumBeatCount == 16)
         viewModel.updateBeatCount(7)
@@ -27,7 +27,7 @@ struct SheetViewModelTests {
     }
 
     @Test func beatPresetsProvidesTheSixExistingDefaults() {
-        let viewModel = BeatPresetsViewModel(metronome: MetronomeManager())
+        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: MetronomeManager()))
 
         #expect(viewModel.defaultPresets.map(\.name) == [
             "Quarter",
@@ -42,7 +42,7 @@ struct SheetViewModelTests {
 
     @Test func beginningToSaveCopiesTheCurrentBeatName() {
         let metronome = MetronomeManager()
-        let viewModel = BeatPresetsViewModel(metronome: metronome)
+        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: metronome))
 
         metronome.currentBeatName = "My Beat"
         viewModel.beginSavingCurrentBeat()
@@ -53,7 +53,7 @@ struct SheetViewModelTests {
 
     @Test func noteValueSelectionUpdatesTheMetronomeBeforeDismissal() {
         let metronome = MetronomeManager()
-        let viewModel = NoteValuePickerViewModel(metronome: metronome)
+        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: metronome))
 
         viewModel.select(.sixteenth)
 
@@ -63,7 +63,7 @@ struct SheetViewModelTests {
 
     @Test func quickPresetSelectionUpdatesTempoAndNoteValue() {
         let metronome = MetronomeManager()
-        let viewModel = NoteValuePickerViewModel(metronome: metronome)
+        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: metronome))
         let jazz = viewModel.quickPresets.first { $0.title == "Jazz" }
 
         if let jazz {

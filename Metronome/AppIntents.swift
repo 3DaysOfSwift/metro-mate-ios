@@ -50,7 +50,7 @@ struct PlayMetronomeIntent: AppIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let metronome = MetronomeManager.shared
+        let metronome = AppBrain.shared.metronome
         
         // Setze BPM
         let targetBPM = Double(bpm.rawValue)
@@ -73,7 +73,7 @@ struct StartMetronomeIntent: AppIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult {
-        let metronome = MetronomeManager.shared
+        let metronome = AppBrain.shared.metronome
         if !metronome.isPlaying {
             metronome.togglePlayback()
         }

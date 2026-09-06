@@ -7,7 +7,7 @@ import Testing
 struct VisualViewModelTests {
     @Test func gridLayoutUsesFourColumnsForOrdinaryNotes() {
         let metronome = MetronomeManager()
-        let viewModel = GridViewModel(metronome: metronome)
+        let viewModel = GridViewModel(brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.tilesPerRow == 4)
         #expect(viewModel.numberOfRows == 2)
@@ -18,7 +18,7 @@ struct VisualViewModelTests {
     @Test func gridLayoutUsesThreeColumnsForTriplets() {
         let metronome = MetronomeManager()
         metronome.updateNoteValue(.eighthTriplet)
-        let viewModel = GridViewModel(metronome: metronome)
+        let viewModel = GridViewModel(brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.tilesPerRow == 3)
         #expect(viewModel.numberOfRows == 2)
@@ -28,7 +28,7 @@ struct VisualViewModelTests {
 
     @Test func beatTileReadsAndUpdatesItsOwnBeat() {
         let metronome = MetronomeManager()
-        let viewModel = BeatTileViewModel(beat: 1, metronome: metronome)
+        let viewModel = BeatTileViewModel(beat: 1, brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.isActive)
         #expect(viewModel.label == "&")
@@ -40,7 +40,7 @@ struct VisualViewModelTests {
     }
 
     @Test func starFieldBuildsDotsForItsCanvasAndCanStopAnimating() {
-        let viewModel = StarFieldViewModel(metronome: MetronomeManager())
+        let viewModel = StarFieldViewModel(brain: AppBrain(metronome: MetronomeManager()))
 
         viewModel.appear(in: CGSize(width: 100, height: 80))
 

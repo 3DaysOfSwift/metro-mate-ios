@@ -23,8 +23,8 @@ final class StarFieldViewModel: ObservableObject {
     private var animationTimer: Timer?
     private var metronomeUpdates: AnyCancellable?
 
-    init(metronome: MetronomeManager = .shared) {
-        self.metronome = metronome
+    init(brain: AppBrain = .shared) {
+        metronome = brain.metronome
         metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }

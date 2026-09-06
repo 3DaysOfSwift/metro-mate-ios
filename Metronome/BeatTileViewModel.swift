@@ -10,9 +10,9 @@ final class BeatTileViewModel: ObservableObject {
 
     private var metronomeUpdates: AnyCancellable?
 
-    init(beat: Int, metronome: MetronomeManager = .shared) {
+    init(beat: Int, brain: AppBrain = .shared) {
         self.beat = beat
-        self.metronome = metronome
+        metronome = brain.metronome
         metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }

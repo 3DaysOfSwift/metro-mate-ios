@@ -24,8 +24,8 @@ final class NoteValuePickerViewModel: ObservableObject {
     private var dismissalTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?
 
-    init(metronome: MetronomeManager = .shared) {
-        self.metronome = metronome
+    init(brain: AppBrain = .shared) {
+        metronome = brain.metronome
         metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
