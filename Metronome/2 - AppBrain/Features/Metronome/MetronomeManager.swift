@@ -135,6 +135,23 @@ final class MetronomeManager: MetronomeFeature {
         }
     }
     
+    /// Starts only when stopped. Repeated requests must never toggle playback off.
+    func startPlayback() throws {
+        if !isPlaying {
+            start()
+        }
+        if let audioError {
+            throw NSError(domain: "MetronomeAudio", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: audioError])
+        }
+    }
+
+    /// Applies the requested tempo before starting, or retimes existing playback.
+    func startPlayback(atBPM bpm: Double) throws {
+        updateBPM(bpm)
+        try startPlayback()
+    }
+
     private func start() {
         do {
             try audioPlayer.startIfNeeded()

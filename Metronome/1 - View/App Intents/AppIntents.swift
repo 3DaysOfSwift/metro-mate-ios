@@ -52,19 +52,7 @@ struct PlayMetronomeIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let metronome = AppBrain.shared.metronome
         
-        // Setze BPM
-        let targetBPM = Double(bpm.rawValue)
-        metronome.updateBPM(targetBPM)
-        
-        // Starte Wiedergabe
-        if !metronome.isPlaying {
-            metronome.togglePlayback()
-        }
-        
-        if let error = metronome.audioError {
-            throw NSError(domain: "MetronomeAudio", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: error])
-        }
+        try metronome.startPlayback(atBPM: Double(bpm.rawValue))
         return .result(dialog: "Playing at \(bpm.rawValue) BPM")
     }
 }
@@ -77,13 +65,7 @@ struct StartMetronomeIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         let metronome = AppBrain.shared.metronome
-        if !metronome.isPlaying {
-            metronome.togglePlayback()
-        }
-        if let error = metronome.audioError {
-            throw NSError(domain: "MetronomeAudio", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: error])
-        }
+        try metronome.startPlayback()
         return .result()
     }
 }

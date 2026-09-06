@@ -1,5 +1,15 @@
 # AppBrain Migration Ledger
 
+## Siri Feature Boundary Pass
+
+Siri now requests startPlayback() or startPlayback(atBPM:) from the metronome
+feature instead of inspecting playback state and coordinating commands itself.
+The feature owns start-only behaviour, tempo application, and failure propagation.
+Siri retains parameter conversion and response wording. Repeated start requests
+must leave playback running; specifying a tempo while playing retains the existing
+retiming behaviour. Added direct feature tests for these paths and audio retry.
+Grid layout and visual highlighting remain presentation responsibilities.
+
 ## Explicit Loading Pass
 
 Feature construction now assigns dependencies and builds in-memory defaults only.

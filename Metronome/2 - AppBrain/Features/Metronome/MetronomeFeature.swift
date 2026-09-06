@@ -27,6 +27,8 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     func retrySavingPresets()
     func loadSavedPresets()
     func togglePlayback()
+    func startPlayback() throws
+    func startPlayback(atBPM bpm: Double) throws
     func updateBPM(_ bpm: Double)
     func adjustedBPM(by amount: Double) -> Double
     func adjustBPM(by amount: Double)

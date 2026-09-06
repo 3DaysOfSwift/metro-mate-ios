@@ -5,6 +5,60 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func repeatedPlaybackRequestsKeepPlayingWithoutRestartingTheTicker() throws {
+        let ticker = ControllableMetronomeTicker()
+        let audio = RecordingMetronomeAudioPlayer()
+        let manager = makeManager(audioPlayer: audio, ticker: ticker)
+
+        try manager.startPlayback()
+        try manager.startPlayback()
+
+        #expect(manager.isPlaying)
+        #expect(audio.startCallCount == 1)
+        #expect(ticker.startCallCount == 1)
+        manager.togglePlayback()
+    }
+
+    @Test func playbackAtRequestedTempoWorksBeforeLaunchAndRetimesWhenAlreadyPlaying() throws {
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(ticker: ticker)
+
+        try manager.startPlayback(atBPM: 120)
+        #expect(manager.isPlaying)
+        #expect(manager.bpm == 120)
+        #expect(ticker.interval == .milliseconds(250))
+        #expect(ticker.startCallCount == 1)
+
+        try manager.startPlayback(atBPM: 60)
+        #expect(manager.isPlaying)
+        #expect(manager.bpm == 60)
+        #expect(ticker.interval == .milliseconds(500))
+        #expect(ticker.startCallCount == 2)
+        manager.togglePlayback()
+    }
+
+    @Test func playbackRequestReportsAudioFailureAndCanBeRetried() throws {
+        enum Failure: Error { case unavailable }
+        let audio = RecordingMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(audioPlayer: audio, ticker: ticker)
+        audio.failure = Failure.unavailable
+
+        #expect(throws: (any Error).self) {
+            try manager.startPlayback(atBPM: 120)
+        }
+        #expect(!manager.isPlaying)
+        #expect(manager.audioError != nil)
+        #expect(ticker.startCallCount == 0)
+
+        audio.failure = nil
+        try manager.startPlayback()
+        #expect(manager.isPlaying)
+        #expect(manager.audioError == nil)
+        #expect(manager.bpm == 120)
+        manager.togglePlayback()
+    }
+
     @Test func savingAnEmptyPresetNameLeavesStateAndStorageUnchanged() {
         let repository = InMemoryPresetRepository()
         let manager = makeManager(repository: repository)
