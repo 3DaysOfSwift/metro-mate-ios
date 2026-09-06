@@ -43,23 +43,23 @@ final class ContentViewModel: ObservableObject {
 
     func decreaseBPM() {
         lightImpact()
-        changeBPM(by: -1)
+        metronome.adjustBPM(by: -1)
     }
 
     func increaseBPM() {
         lightImpact()
-        changeBPM(by: 1)
+        metronome.adjustBPM(by: 1)
     }
 
     func dragBPM(verticalTranslation: CGFloat) {
         let change = -Double(verticalTranslation) * 0.02
-        let newBPM = max(40, min(200, metronome.bpm + change))
+        let newBPM = metronome.adjustedBPM(by: change)
 
         if Int(newBPM) != Int(metronome.bpm) {
             lightImpact()
         }
 
-        setBPM(newBPM)
+        metronome.updateBPM(newBPM)
     }
 
     func startRepeatingBPMIncrease() {
@@ -98,7 +98,7 @@ final class ContentViewModel: ObservableObject {
                     try await Task.sleep(for: .milliseconds(100))
                     try Task.checkCancellation()
                     guard let self else { return }
-                    self.changeBPM(by: amount)
+                    self.metronome.adjustBPM(by: amount)
                     self.lightImpact()
                 }
             } catch is CancellationError {
@@ -107,14 +107,6 @@ final class ContentViewModel: ObservableObject {
                 return
             }
         }
-    }
-
-    private func changeBPM(by amount: Double) {
-        setBPM(max(40, min(200, metronome.bpm + amount)))
-    }
-
-    private func setBPM(_ bpm: Double) {
-        metronome.updateBPM(bpm)
     }
 
     private func lightImpact() {

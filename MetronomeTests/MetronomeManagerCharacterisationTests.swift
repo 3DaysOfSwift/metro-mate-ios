@@ -5,6 +5,29 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func tempoAdjustmentsRespectLimitsAndPreserveFractionalValues() {
+        let manager = makeManager()
+        #expect(manager.adjustedBPM(by: 0.5) == 60.5)
+        #expect(manager.bpm == 60)
+
+        manager.adjustBPM(by: 0.5)
+        #expect(manager.bpm == 60.5)
+        manager.adjustBPM(by: -1_000)
+        #expect(manager.bpm == 40)
+        manager.adjustBPM(by: 1_000)
+        #expect(manager.bpm == 200)
+    }
+
+    @Test func adjustingTempoWhilePlayingUpdatesPlaybackTiming() {
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(ticker: ticker)
+        manager.togglePlayback()
+        manager.adjustBPM(by: 60)
+        #expect(manager.bpm == 120)
+        #expect(ticker.interval == .milliseconds(250))
+        #expect(ticker.startCallCount == 2)
+    }
+
     @Test func quickPresetsRetainTheirExistingMusicalSettings() {
         let manager = makeManager()
         #expect(manager.quickPresets.map(\.title) == ["Basic", "Rock", "Jazz", "Fast"])

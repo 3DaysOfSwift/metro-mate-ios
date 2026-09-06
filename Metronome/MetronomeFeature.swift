@@ -20,6 +20,8 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
 
     func togglePlayback()
     func updateBPM(_ bpm: Double)
+    func adjustedBPM(by amount: Double) -> Double
+    func adjustBPM(by amount: Double)
     func updateNoteValue(_ noteValue: NoteValue)
     func updateBeatsPerMeasure(_ beats: Int)
     func updateGridBeats(_ beats: Int)

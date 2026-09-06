@@ -321,6 +321,14 @@ final class MetronomeManager: MetronomeFeature {
             restartTicker()
         }
     }
+
+    func adjustedBPM(by amount: Double) -> Double {
+        max(40, min(200, bpm + amount))
+    }
+
+    func adjustBPM(by amount: Double) {
+        updateBPM(adjustedBPM(by: amount))
+    }
     
     func updateNoteValue(_ newNoteValue: NoteValue) {
         noteValue = newNoteValue
