@@ -190,11 +190,6 @@ final class MetronomeManager: MetronomeFeature {
         restorePresets()
     }
     
-    deinit {
-        tapResetScheduler.cancel()
-        blinkScheduler.cancel()
-    }
-    
     private func setupDefaultPattern() {
         // Clear all patterns first
         for i in 0..<gridPattern.count {
