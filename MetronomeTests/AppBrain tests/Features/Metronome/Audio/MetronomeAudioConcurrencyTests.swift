@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Testing
 @testable import Metronome
 
@@ -39,12 +40,15 @@ struct MetronomeAudioConcurrencyTests {
         #expect(manager.isStartingPlayback)
         #expect(!manager.isPlaying)
         let stopped = AsyncStream<Void>.makeStream()
-        let observation = manager.$isStartingPlayback.sink {
-            if !$0 { stopped.continuation.yield() }
+        withObservationTracking {
+            _ = manager.isStartingPlayback
+        } onChange: {
+            stopped.continuation.yield()
         }
         let stop = Task { await manager.togglePlayback() }
         var events = stopped.stream.makeAsyncIterator()
         await events.next()
+        #expect(!manager.isStartingPlayback)
         #expect(audio.commands == ["start"])
         let restart = Task { try await manager.startPlayback() }
         audio.finishOperation()
@@ -56,7 +60,6 @@ struct MetronomeAudioConcurrencyTests {
         #expect(manager.isPlaying)
         #expect(!manager.isStartingPlayback)
         await manager.togglePlayback()
-        withExtendedLifetime(observation) {}
     }
 
     @Test(.timeLimit(.minutes(1)))
@@ -69,12 +72,15 @@ struct MetronomeAudioConcurrencyTests {
         let tick = Task { await ticker.sendTick() }
         await audio.waitForSuspension()
         let stopped = AsyncStream<Void>.makeStream()
-        let observation = manager.$isPlaying.sink {
-            if !$0 { stopped.continuation.yield() }
+        withObservationTracking {
+            _ = manager.isPlaying
+        } onChange: {
+            stopped.continuation.yield()
         }
         let stop = Task { await manager.togglePlayback() }
         var events = stopped.stream.makeAsyncIterator()
         await events.next()
+        #expect(!manager.isPlaying)
         await ticker.sendTick()
         audio.finishOperation()
         await tick.value
@@ -82,7 +88,6 @@ struct MetronomeAudioConcurrencyTests {
         #expect(audio.commands == ["start", "click", "stop"])
         #expect(!manager.isPlaying)
         #expect(manager.currentBeat == -1)
-        withExtendedLifetime(observation) {}
     }
 
     @Test(.timeLimit(.minutes(1)))

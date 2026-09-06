@@ -15,10 +15,17 @@ timing checks remain documented follow-ups. Entries below retain the historical
 state at each checkpoint; the Starting Architecture table is not a current
 backlog. Consult the final report for current ownership and evidence limits.
 
-## Pass Twelve: Swift Observation — Planned Post-migration Work
+## Pass Twelve: Swift Observation — Implemented, Manual UI Check Pending
 
 Requested after migration closure; this does not invalidate the completed
-migration milestone. No Observation conversion has been implemented yet.
+migration milestone. MetronomeManager, all eight dedicated ViewModels, and
+ThemeManager now use @Observable with their existing Main Actor isolation.
+MetronomeFeature requires Observable instead of a Combine publisher. Manual
+notification subscriptions and @Published have been removed from production
+and tests. Screens and the app-owned theme now use @State; task handles and
+internal scheduling bookkeeping are excluded from observation.
+
+The agreed scope was:
 
 1. Convert MetronomeManager, the eight dedicated ViewModels, and ThemeManager
    to @Observable while retaining their Main Actor isolation. Remove Combine
@@ -37,6 +44,24 @@ The feature remains the single state owner. Audio/storage executors, playback
 ordering, persistence guarantees, and timing policy are not part of this change.
 Observation replaces UI notification wiring, not Swift Concurrency itself.
 The reusable pass is recorded in Trend's legacy-application-migration.md.
+
+Five additional tests verify unrelated-change filtering and re-registration,
+collection-derived tile state, selected theme tracking, observed load failure
+and retry, and local draft observation. The shared-screen test now tracks both
+ViewModels through their actual feature protocol. Existing task-lifetime tests
+remain in place; suspended audio/save tests use one-shot Observation signals
+and assert resulting state after the mutation.
+
+The full MetronomeTests simulator suite passed with complete concurrency checking
+after conversion and the additional tests. The standalone swiftc subset check
+could not execute Observation's macro plugin due to its sandbox; full Xcode
+compilation is the applicable build evidence. No deployment target or language
+mode changed. Existing weak-variable test warnings are not new diagnostics.
+
+Manual follow-up: open and dismiss Settings, Grid Settings, the note picker,
+and Presets repeatedly; edit/cancel a preset name; verify shared beat/tempo
+updates and continued animation. Unit tests do not certify SwiftUI identity or
+visual dismissal. This remains explicit before the pass is marked closed.
 
 ## Pass Ten: Off-Main Feature Execution — Closed
 

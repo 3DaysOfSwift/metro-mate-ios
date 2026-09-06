@@ -1,13 +1,14 @@
-import Combine
+import Observation
 import UIKit
 
 @MainActor
-final class ContentViewModel: ObservableObject {
-    @Published var isShowingSettings = false
-    @Published var isShowingNoteValuePicker = false
-    @Published var isShowingGridSettings = false
-    @Published var isShowingBeatPresets = false
-    @Published var isPlayButtonPressed = false
+@Observable
+final class ContentViewModel {
+    var isShowingSettings = false
+    var isShowingNoteValuePicker = false
+    var isShowingGridSettings = false
+    var isShowingBeatPresets = false
+    var isPlayButtonPressed = false
 
     private let metronome: any MetronomeFeature
     var currentBeatName: String { metronome.currentBeatName }
@@ -25,15 +26,11 @@ final class ContentViewModel: ObservableObject {
         await metronome.prepareAudio()
     }
 
-    private var repeatTask: Task<Void, Never>?
-    private var metronomeUpdates: AnyCancellable?
+    @ObservationIgnored private var repeatTask: Task<Void, Never>?
 
     init(brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     deinit {

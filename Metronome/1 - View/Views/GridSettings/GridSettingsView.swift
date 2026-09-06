@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GridSettingsView: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = GridSettingsViewModel()
+    @State private var viewModel = GridSettingsViewModel()
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = ContentViewModel()
+    @State private var viewModel = ContentViewModel()
 
     
     var body: some View {

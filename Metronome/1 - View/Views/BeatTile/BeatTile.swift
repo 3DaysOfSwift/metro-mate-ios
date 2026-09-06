@@ -2,10 +2,10 @@ import SwiftUI
 
 struct BeatTile: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel: BeatTileViewModel
+    @State private var viewModel: BeatTileViewModel
 
     init(beat: Int) {
-        _viewModel = StateObject(wrappedValue: BeatTileViewModel(beat: beat))
+        _viewModel = State(initialValue: BeatTileViewModel(beat: beat))
     }
     
     var body: some View {

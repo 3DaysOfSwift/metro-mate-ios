@@ -10,7 +10,7 @@ import AppIntents
 
 @main
 struct MetronomeApp: App {
-    @StateObject private var themeManager = ThemeManager()
+    @State private var themeManager = ThemeManager()
     init() {
         // Register shortcuts
         MetronomeShortcuts.updateAppShortcutParameters()

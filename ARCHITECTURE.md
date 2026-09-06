@@ -24,11 +24,19 @@ properties and call ViewModel actions; they cannot reach through a ViewModel
 into the feature API. Musical limits, including the tempo range, belong to the
 feature. ViewModels expose those limits without redefining them.
 
-The current observation mechanism remains Combine: a ViewModel forwards the
-feature's objectWillChange notification using a weak capture, and its computed
-properties read the shared feature state. It does not copy feature state.
-Notifications precede mutation; subscribers must not treat them as updated values.
-An Observation conversion is a separate change, not part of this boundary pass.
+MetronomeManager, each dedicated ViewModel, and ThemeManager use @Observable.
+SwiftUI tracks property reads through computed ViewModel properties into the
+shared feature, including through MetronomeFeature. No publisher forwarding or
+copied feature state is needed. Observable state remains Main Actor isolated;
+Observation does not change execution ownership or provide thread safety.
+
+Each screen owns its viewModel using @State. Existing bindings project through
+that state or explicitly forward a feature command. Initializers retain inputs
+without starting work: @State preserves the installed object for a View identity,
+but initial-value expressions may run again when View values are constructed.
+Task handles and internal scheduling bookkeeping use @ObservationIgnored;
+their cancellation and lifetime responsibilities are unchanged. Observation
+tests register one-shot tracking and read final values after mutation.
 
 ## Folder Structure
 

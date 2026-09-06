@@ -2,7 +2,7 @@ import SwiftUI
 
 struct NoteValuePicker: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = NoteValuePickerViewModel()
+    @State private var viewModel = NoteValuePickerViewModel()
     @Environment(\.dismiss) private var dismiss
 
     

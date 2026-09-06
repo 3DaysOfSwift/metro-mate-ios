@@ -1,31 +1,73 @@
 import Foundation
-import Combine
+import Observation
+import Synchronization
 import Testing
 @testable import Metronome
 
 @MainActor
 @Suite(.serialized)
 struct SharedFeatureObservationTests {
+    @Test func trackingIgnoresUnrelatedChangesAndCanBeRegisteredAgain() {
+        let manager = makeTestMetronome()
+        let content = ContentViewModel(brain: AppBrain(metronome: manager))
+        let notifications = Mutex(0)
+        for tempo in [96.0, 110.0] {
+            withObservationTracking {
+                _ = content.bpm
+            } onChange: {
+                notifications.withLock { $0 += 1 }
+            }
+            let before = notifications.withLock { $0 }
+            manager.toggleGridCell(row: 0, col: 0)
+            #expect(notifications.withLock { $0 } == before)
+            manager.updateBPM(tempo)
+            #expect(notifications.withLock { $0 } == before + 1)
+            #expect(content.bpm == tempo)
+        }
+    }
+
+    @Test func collectionMutationInvalidatesDerivedTileState() {
+        let manager = makeTestMetronome()
+        let tile = BeatTileViewModel(beat: 0, brain: AppBrain(metronome: manager))
+        let original = tile.isActive
+        let notifications = Mutex(0)
+        withObservationTracking {
+            _ = tile.isActive
+        } onChange: {
+            notifications.withLock { $0 += 1 }
+        }
+        manager.toggleGridCell(row: 0, col: 0)
+        #expect(notifications.withLock { $0 } == 1)
+        #expect(tile.isActive != original)
+    }
+
     @Test func featureChangesNotifyBothScreenViewModelsWithoutCopyingState() {
         let manager = makeTestMetronome()
         let brain = AppBrain(metronome: manager)
         let content = ContentViewModel(brain: brain)
         let presets = BeatPresetsViewModel(brain: brain)
-        var contentNotifications = 0
-        var presetNotifications = 0
-        let contentSubscription = content.objectWillChange.sink { contentNotifications += 1 }
-        let presetSubscription = presets.objectWillChange.sink { presetNotifications += 1 }
+        let contentNotifications = Mutex(0)
+        let presetNotifications = Mutex(0)
+        withObservationTracking {
+            _ = content.bpm
+        } onChange: {
+            contentNotifications.withLock { $0 += 1 }
+        }
+        withObservationTracking {
+            _ = presets.bpm
+        } onChange: {
+            presetNotifications.withLock { $0 += 1 }
+        }
 
         manager.updateBPM(96)
 
-        #expect(contentNotifications > 0)
-        #expect(presetNotifications > 0)
-        // objectWillChange precedes mutation; read the computed values after the command.
+        #expect(contentNotifications.withLock { $0 } == 1)
+        #expect(presetNotifications.withLock { $0 } == 1)
+        // Observation notifies before mutation; read values after the command.
         #expect(content.bpm == 96)
         #expect(presets.bpm == 96)
         #expect(content.minimumBPM == Int(manager.tempoRange.lowerBound))
         #expect(content.maximumBPM == Int(manager.tempoRange.upperBound))
-        withExtendedLifetime((contentSubscription, presetSubscription)) {}
     }
 
     @Test func viewModelsUseTheFeatureFromTheirProvidedBrain() {

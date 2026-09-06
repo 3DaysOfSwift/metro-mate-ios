@@ -1,10 +1,61 @@
 import Foundation
 import Testing
+import Observation
+import Synchronization
 @testable import Metronome
 
 @MainActor
 @Suite(.serialized)
 struct BeatPresetsViewModelTests {
+    @Test func screenObservesLoadFailureAndSuccessfulRetry() async {
+        enum Failure: Error { case unavailable }
+        let repository = InMemoryPresetRepository()
+        repository.loadError = Failure.unavailable
+        let manager = makeTestMetronome(presetRepository: repository)
+        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
+        let loadingChanges = Mutex(0)
+        let errorChanges = Mutex(0)
+        withObservationTracking {
+            _ = viewModel.isLoading
+        } onChange: {
+            loadingChanges.withLock { $0 += 1 }
+        }
+        withObservationTracking {
+            _ = viewModel.loadError
+        } onChange: {
+            errorChanges.withLock { $0 += 1 }
+        }
+        await viewModel.loadSavedPresets()
+        #expect(loadingChanges.withLock { $0 } == 1)
+        #expect(errorChanges.withLock { $0 } == 1)
+        #expect(viewModel.loadError != nil)
+        #expect(!viewModel.isLoading)
+        withObservationTracking {
+            _ = viewModel.loadError
+        } onChange: {
+            errorChanges.withLock { $0 += 1 }
+        }
+        repository.loadError = nil
+        await viewModel.loadSavedPresets()
+        #expect(errorChanges.withLock { $0 } == 2)
+        #expect(viewModel.loadError == nil)
+    }
+
+    @Test func saveDialogBindingsUpdateOnlyLocalPresentationState() {
+        let manager = makeTestMetronome()
+        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
+        let notifications = Mutex(0)
+        withObservationTracking {
+            _ = viewModel.newBeatName
+        } onChange: {
+            notifications.withLock { $0 += 1 }
+        }
+        viewModel.newBeatName = "Draft"
+        #expect(notifications.withLock { $0 } == 1)
+        #expect(viewModel.newBeatName == "Draft")
+        #expect(manager.savedBeats.isEmpty)
+    }
+
     @Test func failedLoadIsVisibleAndRetryCanSucceedWithoutReplacingStoredBeats() async {
         enum LoadFailure: Error { case unavailable }
         let repository = InMemoryPresetRepository()

@@ -1,4 +1,4 @@
-import Combine
+import Observation
 import UIKit
 
 struct Dot {
@@ -11,25 +11,22 @@ struct Dot {
 }
 
 @MainActor
-final class StarFieldViewModel: ObservableObject {
-    @Published private(set) var dots: [[Dot]] = []
+@Observable
+final class StarFieldViewModel {
+    private(set) var dots: [[Dot]] = []
 
     private let metronome: any MetronomeFeature
     var shouldBlink: Bool { metronome.shouldBlink }
     let dotSpacing: CGFloat = 10
 
-    private var canvasSize: CGSize = .zero
-    private var wavePhase: CGFloat = 0
-    private var pulseTime: CGFloat = 1
-    private var animationTask: Task<Void, Never>?
-    private var metronomeUpdates: AnyCancellable?
+    @ObservationIgnored private var canvasSize: CGSize = .zero
+    @ObservationIgnored private var wavePhase: CGFloat = 0
+    @ObservationIgnored private var pulseTime: CGFloat = 1
+    @ObservationIgnored private var animationTask: Task<Void, Never>?
 
     init(brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     deinit {

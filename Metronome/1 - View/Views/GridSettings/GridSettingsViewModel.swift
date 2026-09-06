@@ -1,18 +1,14 @@
-import Combine
+import Observation
 import UIKit
 
 @MainActor
-final class GridSettingsViewModel: ObservableObject {
+@Observable
+final class GridSettingsViewModel {
     private let metronome: any MetronomeFeature
-
-    private var metronomeUpdates: AnyCancellable?
 
     init(brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }

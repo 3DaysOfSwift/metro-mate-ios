@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Testing
 @testable import Metronome
 
@@ -54,12 +55,15 @@ struct MetronomePresetPersistenceTests {
         repository.finishLoad()
         await repository.waitForSave()
         let changed = AsyncStream<Void>.makeStream()
-        let observation = manager.$savedBeats.sink { presets in
-            if presets.count == 2 { changed.continuation.yield() }
+        withObservationTracking {
+            _ = manager.savedBeats
+        } onChange: {
+            changed.continuation.yield()
         }
         let second = Task { await manager.saveBeatPreset(name: "Second") }
         var events = changed.stream.makeAsyncIterator()
         await events.next()
+        #expect(manager.savedBeats.count == 2)
         #expect(repository.writes.count == 1)
         // Cancelling the initiating screen must not discard a committed write.
         first.cancel()
@@ -73,7 +77,6 @@ struct MetronomePresetPersistenceTests {
         await second.value
         #expect(!manager.isSavingPresets)
         #expect(manager.presetSaveError == nil)
-        withExtendedLifetime(observation) {}
     }
 
     @Test func failedSaveRetainsChangesForRetryWithoutDuplicatingPresets() async {

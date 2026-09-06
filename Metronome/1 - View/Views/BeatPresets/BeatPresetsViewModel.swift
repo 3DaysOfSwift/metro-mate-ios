@@ -1,10 +1,11 @@
-import Combine
+import Observation
 import UIKit
 
 @MainActor
-final class BeatPresetsViewModel: ObservableObject {
-    @Published var isShowingSaveDialog = false
-    @Published var newBeatName = ""
+@Observable
+final class BeatPresetsViewModel {
+    var isShowingSaveDialog = false
+    var newBeatName = ""
 
     private let metronome: any MetronomeFeature
     var currentBeatName: String { metronome.currentBeatName }
@@ -13,14 +14,9 @@ final class BeatPresetsViewModel: ObservableObject {
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }
     var savedBeats: [BeatPreset] { metronome.savedBeats }
 
-    private var metronomeUpdates: AnyCancellable?
-
     init(brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     var defaultPresets: [BeatPreset] { metronome.defaultPresets }

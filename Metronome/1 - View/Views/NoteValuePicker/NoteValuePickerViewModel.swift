@@ -1,9 +1,10 @@
-import Combine
+import Observation
 import UIKit
 
 @MainActor
-final class NoteValuePickerViewModel: ObservableObject {
-    @Published private(set) var shouldDismiss = false
+@Observable
+final class NoteValuePickerViewModel {
+    private(set) var shouldDismiss = false
 
     private let metronome: any MetronomeFeature
     var noteValue: NoteValue { metronome.noteValue }
@@ -19,15 +20,11 @@ final class NoteValuePickerViewModel: ObservableObject {
         }
     }
 
-    private var dismissalTask: Task<Void, Never>?
-    private var metronomeUpdates: AnyCancellable?
+    @ObservationIgnored private var dismissalTask: Task<Void, Never>?
 
     init(brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     deinit {

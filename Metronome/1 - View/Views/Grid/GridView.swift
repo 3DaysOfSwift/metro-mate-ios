@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GridView: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = GridViewModel()
+    @State private var viewModel = GridViewModel()
     
     var body: some View {
         VStack(spacing: 6) {

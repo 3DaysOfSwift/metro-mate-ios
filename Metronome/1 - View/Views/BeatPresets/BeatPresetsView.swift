@@ -2,7 +2,7 @@ import SwiftUI
 
 struct BeatPresetsView: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = BeatPresetsViewModel()
+    @State private var viewModel = BeatPresetsViewModel()
     @Environment(\.dismiss) private var dismiss
 
     

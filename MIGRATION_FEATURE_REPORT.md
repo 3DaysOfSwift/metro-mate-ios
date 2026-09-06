@@ -6,6 +6,21 @@ Report date: 6 September 2026. Reviewed application commit:
 `78ce4fff052b3256861e861b3d6fa16ee1bbbc05`.
 This handover adds documentation only to that implementation.
 
+## Post-migration Addendum: Pass Twelve
+
+The original completion record below remains a historical milestone. The
+subsequent Swift Observation conversion replaces Combine notification forwarding
+with @Observable in MetronomeManager, all eight ViewModels, and ThemeManager.
+Views retain their dedicated ViewModels using @State. Computed reads through
+the feature protocol track the shared state directly, without local copies.
+Main Actor isolation, off-main audio/storage, and task lifetimes are unchanged.
+
+SharedFeatureObservationTests now verifies property-specific and cross-screen
+tracking, repeated registration, and collection-derived tile state. Added screen
+and theme tests cover load failure/retry, local draft state, and palette changes.
+Suspended-operation tests use Observation signals instead of Combine publishers.
+The ledger records the latest verification and outstanding manual checks.
+
 The AppBrain and Swift Concurrency migration is complete within the agreed
 scope. Matthew reported that the migrated app works well and requested final
 closure after agreeing to defer additional catch-up diagnostics and profiling.
@@ -28,8 +43,9 @@ See [the migration ledger](MIGRATION_LEDGER.md),
   private to ViewModels; business rules remain in MetronomeManager. Retained
   tasks belong to ViewModels or Model types, not SwiftUI View structs.
 - Tests are grouped by feature, screen, presentation, and integration ownership.
-- Complete concurrency checking is enabled; Swift 5 language mode and Combine
-  observation are intentional retained choices, not incomplete conversions.
+- Complete concurrency checking is enabled; Swift 5 language mode remains an
+  intentional choice. Combine observation retained at the original milestone
+  has since been replaced in Pass Twelve, as described above.
 - Observable feature state and lightweight decisions remain Main Actor owned.
   Synchronous audio and storage work use separate serial-executor actors.
   Dispatch-backed executors are intentional adapters for synchronous APIs, not

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StarFieldView: View {
     @Environment(\.appColourTheme) private var theme
-    @StateObject private var viewModel = StarFieldViewModel()
+    @State private var viewModel = StarFieldViewModel()
     
     var body: some View {
         GeometryReader { geometry in

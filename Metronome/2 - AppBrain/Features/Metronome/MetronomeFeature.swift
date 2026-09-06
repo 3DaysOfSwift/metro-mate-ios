@@ -1,8 +1,7 @@
-import Combine
+import Observation
 
 @MainActor
-protocol MetronomeFeature: AnyObject, ObservableObject, Sendable
-where ObjectWillChangePublisher == ObservableObjectPublisher {
+protocol MetronomeFeature: AnyObject, Observable, Sendable {
     var isPlaying: Bool { get }
     var bpm: Double { get }
     var tempoRange: ClosedRange<Double> { get }

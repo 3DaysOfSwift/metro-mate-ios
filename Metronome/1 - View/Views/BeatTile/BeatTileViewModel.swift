@@ -1,22 +1,18 @@
-import Combine
+import Observation
 import UIKit
 
 @MainActor
-final class BeatTileViewModel: ObservableObject {
-    @Published var isPressed = false
+@Observable
+final class BeatTileViewModel {
+    var isPressed = false
 
     let beat: Int
     private let metronome: any MetronomeFeature
-
-    private var metronomeUpdates: AnyCancellable?
 
     init(beat: Int, brain: AppBrain? = nil) {
         let brain = brain ?? .shared
         self.beat = beat
         metronome = brain.metronome
-        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
     }
 
     var isActive: Bool {

@@ -1,27 +1,28 @@
 import Foundation
-import Combine
+import Observation
 
 @MainActor
+@Observable
 final class MetronomeManager: MetronomeFeature {
-    @Published var isPlaying = false
-    @Published private(set) var isStartingPlayback = false
-    private var playbackStartTask: Task<Void, Error>?
-    private var lastAudioOperation: Task<Void, Error>?
-    private var playbackRevision = 0
-    private var tickerRevision = 0
-    @Published var bpm: Double = 60
-    @Published var beatsPerMeasure = 8
-    @Published var currentBeat = -1
-    @Published var shouldBlink = false
-    @Published var gridPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 16), count: 4)
-    @Published var accentPattern: [Bool] = Array(repeating: false, count: 16)
-    @Published var gridSize = 4
-    @Published var noteValue: NoteValue = .eighth
-    @Published var gridDisplayMode: GridDisplayMode = .andCounting
-    @Published var currentBeatName: String = "Eighth"
-    @Published var savedBeats: [BeatPreset] = []
-    @Published var tapTimes: [Date] = []
-    @Published var tapCount: Int = 0
+    var isPlaying = false
+    private(set) var isStartingPlayback = false
+    @ObservationIgnored private var playbackStartTask: Task<Void, Error>?
+    @ObservationIgnored private var lastAudioOperation: Task<Void, Error>?
+    @ObservationIgnored private var playbackRevision = 0
+    @ObservationIgnored private var tickerRevision = 0
+    var bpm: Double = 60
+    var beatsPerMeasure = 8
+    var currentBeat = -1
+    var shouldBlink = false
+    var gridPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 16), count: 4)
+    var accentPattern: [Bool] = Array(repeating: false, count: 16)
+    var gridSize = 4
+    var noteValue: NoteValue = .eighth
+    var gridDisplayMode: GridDisplayMode = .andCounting
+    var currentBeatName: String = "Eighth"
+    var savedBeats: [BeatPreset] = []
+    var tapTimes: [Date] = []
+    var tapCount: Int = 0
     private let maxTapCount = 8
     let beatCountRange = 1...16
     let tempoRange: ClosedRange<Double> = 40...200
@@ -42,15 +43,15 @@ final class MetronomeManager: MetronomeFeature {
     private let blinkScheduler: any CancellableDelayScheduler
     /// Supplies the current date so time-based rules can be tested without waiting for real time.
     private let currentDate: () -> Date
-    private var hasLoadedPresets = false
-    private var presetLoadTask: Task<Void, Never>?
-    private var presetSaveTask: Task<Void, Never>?
-    private var presetSaveRevision = 0
-    @Published private(set) var isLoadingPresets = false
-    @Published private(set) var isSavingPresets = false
-    @Published private(set) var presetLoadError: String?
-    @Published private(set) var presetSaveError: String?
-    @Published private(set) var audioError: String?
+    @ObservationIgnored private var hasLoadedPresets = false
+    @ObservationIgnored private var presetLoadTask: Task<Void, Never>?
+    @ObservationIgnored private var presetSaveTask: Task<Void, Never>?
+    @ObservationIgnored private var presetSaveRevision = 0
+    private(set) var isLoadingPresets = false
+    private(set) var isSavingPresets = false
+    private(set) var presetLoadError: String?
+    private(set) var presetSaveError: String?
+    private(set) var audioError: String?
 
     init(
         presetRepository: any PresetRepository,
