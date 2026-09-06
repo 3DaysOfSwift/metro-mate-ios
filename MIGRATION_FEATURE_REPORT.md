@@ -1,5 +1,14 @@
 # Migration Feature Behaviour Report
 
+## Current Refinement: Pass Sixteen
+
+The feature now protects its advertised tempo and beat-count ranges at command
+boundaries, and grid-count changes update running audio. Invalid cell indices
+are harmless no-ops. Manager state cannot be changed directly by external code;
+ViewModels receive only the feature capability and use feature-owned beat queries.
+These architecture refinements await manual approval; prior pass approvals
+remain historical checkpoints.
+
 ## Current Refinement: Pass Fifteen
 
 Closed by explicit developer approval on 7 September 2026 after the developer

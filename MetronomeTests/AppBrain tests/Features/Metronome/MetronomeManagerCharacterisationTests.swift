@@ -5,6 +5,48 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func featureCommandsProtectTheirOwnInputBoundaries() {
+        let manager = makeManager()
+        manager.updateBPM(-100)
+        #expect(manager.bpm == 40)
+        manager.updateBPM(1000)
+        #expect(manager.bpm == 200)
+        manager.updateBPM(.nan)
+        manager.updateBPM(.infinity)
+        #expect(manager.bpm == 200)
+        manager.updateBeatsPerMeasure(Int.min)
+        #expect(manager.beatsPerMeasure == 1)
+        manager.updateBeatsPerMeasure(Int.max)
+        #expect(manager.beatsPerMeasure == 16)
+        manager.updateGridBeats(Int.min)
+        #expect(manager.beatsPerMeasure == 1)
+        let grid = manager.gridPattern
+        let accents = manager.accentPattern
+        manager.toggleGridCell(row: -1, col: 0)
+        manager.toggleGridCell(row: 0, col: Int.max)
+        manager.toggleAccentCell(col: -1)
+        manager.updateGridSize(0)
+        #expect(manager.gridPattern == grid)
+        #expect(manager.accentPattern == accents)
+        #expect(!manager.isBeatActive(-1))
+        #expect(!manager.isBeatAccented(Int.max))
+        #expect(manager.isBeatActive(0))
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func gridBeatCountEditsUpdateAudioWithoutUITicks() async throws {
+        let audio = RecordingMetronomeAudioPlayer()
+        let manager = makeManager(audioPlayer: audio)
+        try await manager.startPlayback()
+        await audio.waitForSchedule()
+        manager.updateGridBeats(3)
+        await audio.waitForSchedule()
+        #expect(audio.scheduledPatterns.last?.beats.count == 3)
+        #expect(audio.scheduledPatterns.last?.restartFromFirstBeat == true)
+        #expect(manager.beatsPerMeasure == 3)
+        await manager.togglePlayback()
+    }
+
     @Test func repeatedPlaybackRequestsKeepPlayingWithoutRestartingTheTicker() async throws {
         let ticker = ControllableMetronomeTicker()
         let audio = RecordingMetronomeAudioPlayer()
@@ -213,7 +255,7 @@ struct MetronomeManagerCharacterisationTests {
     @Test func resetRestoresTheExistingBasicBeat() {
         let manager = makeManager()
         manager.updateNoteValue(.sixteenthTriplet)
-        manager.bpm = 147
+        manager.updateBPM(147)
         manager.toggleGridCell(row: 0, col: 1)
 
         manager.resetToBasicBeat()
@@ -229,7 +271,7 @@ struct MetronomeManagerCharacterisationTests {
 
     @Test func randomBeatPreservesTempoAndAlwaysStartsWithAnAccentedBeat() {
         let manager = makeManager()
-        manager.bpm = 123
+        manager.updateBPM(123)
 
         manager.randomizeBeat()
 
@@ -268,9 +310,9 @@ struct MetronomeManagerCharacterisationTests {
         let manager = makeManager()
         let name = "Characterisation-\(UUID().uuidString)"
 
-        manager.bpm = 80
+        manager.updateBPM(80)
         await manager.saveBeatPreset(name: name)
-        manager.bpm = 125
+        manager.updateBPM(125)
         await manager.saveBeatPreset(name: name)
 
         let matchingPresets = manager.savedBeats.filter { $0.name == name }
@@ -378,8 +420,10 @@ struct MetronomeManagerCharacterisationTests {
         now = now.addingTimeInterval(4)
         await manager.tapTempo()
 
-        #expect(manager.tapTimes == [now])
         #expect(manager.bpm == 60)
+        now = now.addingTimeInterval(0.5)
+        await manager.tapTempo()
+        #expect(manager.bpm == 120)
     }
 
     @Test func tapCountResetsThreeSecondsAfterTheMostRecentTap() async {

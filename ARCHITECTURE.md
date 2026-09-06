@@ -43,8 +43,15 @@ the Main Actor. StarFieldViewModel retains its single animation task, submits
 value inputs, and publishes completed frames. Resize revisions and cancellation
 prevent stale publication. SwiftUI drawing still belongs to presentation.
 
-Each ViewModel keeps its feature reference private. Views read screen-facing
-properties and call ViewModel actions; they cannot reach through a ViewModel
+Each ViewModel receives a narrow MetronomeFeature dependency directly through
+its initializer and keeps that reference private. Omitting that dependency selects AppBrain.shared.metronome
+inside the Main Actor initializer; callers no longer inject the entire AppBrain.
+Feature state has private setters, and tap timestamps are private bookkeeping.
+Beat activity and accent queries belong to the feature; presentation retains
+highlighting and pulse styling. Commands enforce tempo/count boundaries and
+grid count changes refresh active audio as well as observable state.
+
+Views read screen-facing properties and call ViewModel actions; they cannot reach through a ViewModel
 into the feature API. Musical limits, including the tempo range, belong to the
 feature. ViewModels expose those limits without redefining them.
 

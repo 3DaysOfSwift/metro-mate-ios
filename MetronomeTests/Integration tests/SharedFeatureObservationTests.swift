@@ -9,7 +9,7 @@ import Testing
 struct SharedFeatureObservationTests {
     @Test func trackingIgnoresUnrelatedChangesAndCanBeRegisteredAgain() {
         let manager = makeTestMetronome()
-        let content = ContentViewModel(brain: AppBrain(metronome: manager))
+        let content = ContentViewModel(metronome: manager)
         let notifications = Mutex(0)
         for tempo in [96.0, 110.0] {
             withObservationTracking {
@@ -28,7 +28,7 @@ struct SharedFeatureObservationTests {
 
     @Test func collectionMutationInvalidatesDerivedTileState() {
         let manager = makeTestMetronome()
-        let tile = BeatTileViewModel(beat: 0, brain: AppBrain(metronome: manager))
+        let tile = BeatTileViewModel(beat: 0, metronome: manager)
         let original = tile.isActive
         let notifications = Mutex(0)
         withObservationTracking {
@@ -44,8 +44,8 @@ struct SharedFeatureObservationTests {
     @Test func featureChangesNotifyBothScreenViewModelsWithoutCopyingState() {
         let manager = makeTestMetronome()
         let brain = AppBrain(metronome: manager)
-        let content = ContentViewModel(brain: brain)
-        let presets = BeatPresetsViewModel(brain: brain)
+        let content = ContentViewModel(metronome: brain.metronome)
+        let presets = BeatPresetsViewModel(metronome: brain.metronome)
         let contentNotifications = Mutex(0)
         let presetNotifications = Mutex(0)
         withObservationTracking {
@@ -74,8 +74,8 @@ struct SharedFeatureObservationTests {
         let metronome = makeTestMetronome()
         let brain = AppBrain(metronome: metronome)
 
-        let content = ContentViewModel(brain: brain)
-        let settings = SettingsViewModel(brain: brain)
+        let content = ContentViewModel(metronome: brain.metronome)
+        let settings = SettingsViewModel(metronome: brain.metronome)
 
         metronome.updateBPM(96)
         #expect(content.bpm == 96)

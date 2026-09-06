@@ -12,7 +12,7 @@ struct BeatPresetsViewModelTests {
         let repository = InMemoryPresetRepository()
         repository.loadError = Failure.unavailable
         let manager = makeTestMetronome(presetRepository: repository)
-        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
+        let viewModel = BeatPresetsViewModel(metronome: manager)
         let loadingChanges = Mutex(0)
         let errorChanges = Mutex(0)
         withObservationTracking {
@@ -43,7 +43,7 @@ struct BeatPresetsViewModelTests {
 
     @Test func saveDialogBindingsUpdateOnlyLocalPresentationState() {
         let manager = makeTestMetronome()
-        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
+        let viewModel = BeatPresetsViewModel(metronome: manager)
         let notifications = Mutex(0)
         withObservationTracking {
             _ = viewModel.newBeatName
@@ -63,7 +63,7 @@ struct BeatPresetsViewModelTests {
         await original.saveBeatPreset(name: "Existing")
         repository.loadError = LoadFailure.unavailable
         let manager = makeTestMetronome(presetRepository: repository)
-        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
+        let viewModel = BeatPresetsViewModel(metronome: manager)
 
         await viewModel.loadSavedPresets()
         #expect(viewModel.loadError != nil)
@@ -82,7 +82,7 @@ struct BeatPresetsViewModelTests {
         for name in ["First", "Second", "Third", "Fourth"] {
             await metronome.saveBeatPreset(name: name)
         }
-        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = BeatPresetsViewModel(metronome: metronome)
 
         await viewModel.deleteSavedBeats(at: IndexSet([0, 2]))
 
@@ -93,9 +93,7 @@ struct BeatPresetsViewModelTests {
 
     @Test func beatPresetsProvidesTheSixExistingDefaults() {
         let viewModel = BeatPresetsViewModel(
-            brain: AppBrain(
-                metronome: makeTestMetronome()
-            )
+            metronome: makeTestMetronome()
         )
 
         #expect(viewModel.defaultPresets.map(\.name) == [
@@ -109,11 +107,11 @@ struct BeatPresetsViewModelTests {
         #expect(viewModel.defaultPresets.map(\.beatsPerMeasure) == [4, 8, 16, 3, 6, 12])
     }
 
-    @Test func beginningToSaveCopiesTheCurrentBeatName() {
+    @Test func beginningToSaveCopiesTheCurrentBeatName() async {
         let metronome = makeTestMetronome()
-        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = BeatPresetsViewModel(metronome: metronome)
 
-        metronome.currentBeatName = "My Beat"
+        await metronome.saveBeatPreset(name: "My Beat")
         viewModel.beginSavingCurrentBeat()
 
         #expect(viewModel.newBeatName == "My Beat")

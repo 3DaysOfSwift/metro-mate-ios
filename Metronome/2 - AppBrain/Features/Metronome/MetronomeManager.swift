@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class MetronomeManager: MetronomeFeature {
-    var isPlaying = false
+    private(set) var isPlaying = false
     private(set) var isStartingPlayback = false
     @ObservationIgnored private var playbackStartTask: Task<Void, Error>?
     @ObservationIgnored private var lastAudioOperation: Task<Void, Error>?
@@ -14,19 +14,19 @@ final class MetronomeManager: MetronomeFeature {
     @ObservationIgnored private var lastPlaybackStep: Int?
     @ObservationIgnored private var playbackRevision = 0
     @ObservationIgnored private var tickerRevision = 0
-    var bpm: Double = 60
-    var beatsPerMeasure = 8
-    var currentBeat = -1
-    var shouldBlink = false
-    var gridPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 16), count: 4)
-    var accentPattern: [Bool] = Array(repeating: false, count: 16)
-    var gridSize = 4
-    var noteValue: NoteValue = .eighth
-    var gridDisplayMode: GridDisplayMode = .andCounting
-    var currentBeatName: String = "Eighth"
-    var savedBeats: [BeatPreset] = []
-    var tapTimes: [Date] = []
-    var tapCount: Int = 0
+    private(set) var bpm: Double = 60
+    private(set) var beatsPerMeasure = 8
+    private(set) var currentBeat = -1
+    private(set) var shouldBlink = false
+    private(set) var gridPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 16), count: 4)
+    private(set) var accentPattern: [Bool] = Array(repeating: false, count: 16)
+    private(set) var gridSize = 4
+    private(set) var noteValue: NoteValue = .eighth
+    private(set) var gridDisplayMode: GridDisplayMode = .andCounting
+    private(set) var currentBeatName: String = "Eighth"
+    private(set) var savedBeats: [BeatPreset] = []
+    @ObservationIgnored private var tapTimes: [Date] = []
+    private(set) var tapCount: Int = 0
     private let maxTapCount = 8
     let beatCountRange = 1...16
     let tempoRange: ClosedRange<Double> = 40...200
@@ -299,7 +299,8 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func updateBPM(_ newBPM: Double) {
-        bpm = newBPM
+        guard newBPM.isFinite else { return }
+        bpm = max(tempoRange.lowerBound, min(tempoRange.upperBound, newBPM))
         
         if isPlaying {
             restartTicker()
@@ -369,6 +370,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func updateBeatsPerMeasure(_ beats: Int) {
+        let beats = max(beatCountRange.lowerBound, min(beatCountRange.upperBound, beats))
         beatsPerMeasure = beats
         currentBeat = -1
         
@@ -385,6 +387,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func toggleGridCell(row: Int, col: Int) {
+        guard gridPattern.indices.contains(row), gridPattern[row].indices.contains(col) else { return }
         gridPattern[row][col].toggle()
         // Set to custom beat when user modifies pattern
         if currentBeatName != "Random Beat" {
@@ -394,6 +397,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func toggleAccentCell(col: Int) {
+        guard accentPattern.indices.contains(col) else { return }
         accentPattern[col].toggle()
         // Set to custom beat when user modifies accent pattern
         if currentBeatName != "Random Beat" {
@@ -403,6 +407,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func updateGridSize(_ size: Int) {
+        guard size > 0 else { return }
         gridSize = size
         gridPattern = Array(repeating: Array(repeating: false, count: max(16, beatsPerMeasure)), count: size)
         setupDefaultPattern()
@@ -451,25 +456,19 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func updateGridBeats(_ beats: Int) {
-        let maxBeats = max(16, beats)
-        
-        beatsPerMeasure = min(beats, gridBeatCountRange.upperBound)
-        
-        currentBeat = -1
-        
-        // Ensure grid pattern accommodates new beat count
-        for i in 0..<gridPattern.count {
-            while gridPattern[i].count < maxBeats {
-                gridPattern[i].append(false)
-            }
-        }
-        
-        // Reset accent pattern for new beat count
-        while accentPattern.count < maxBeats {
-            accentPattern.append(false)
-        }
-        
-        setupDefaultPattern()
+        let count = max(gridBeatCountRange.lowerBound, min(gridBeatCountRange.upperBound, beats))
+        updateBeatsPerMeasure(count)
+    }
+
+    func isBeatActive(_ beat: Int) -> Bool {
+        guard (0..<beatsPerMeasure).contains(beat), let pattern = gridPattern.first,
+              pattern.indices.contains(beat) else { return false }
+        return pattern[beat]
+    }
+
+    func isBeatAccented(_ beat: Int) -> Bool {
+        guard (0..<beatsPerMeasure).contains(beat), accentPattern.indices.contains(beat) else { return false }
+        return accentPattern[beat]
     }
     
     var defaultPresets: [BeatPreset] {
@@ -643,11 +642,12 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func loadBeatPreset(_ preset: BeatPreset) {
+        guard preset.bpm.isFinite else { return }
         var gridPattern = self.gridPattern
         var accentPattern = self.accentPattern
         noteValue = preset.noteValue
-        bpm = preset.bpm
-        beatsPerMeasure = preset.beatsPerMeasure
+        bpm = max(tempoRange.lowerBound, min(tempoRange.upperBound, preset.bpm))
+        beatsPerMeasure = max(beatCountRange.lowerBound, min(beatCountRange.upperBound, preset.beatsPerMeasure))
         gridDisplayMode = preset.gridDisplayMode
         currentBeatName = preset.name
         

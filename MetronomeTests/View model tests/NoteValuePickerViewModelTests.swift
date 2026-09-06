@@ -6,7 +6,7 @@ import Testing
 @Suite(.serialized)
 struct NoteValuePickerViewModelTests {
     @Test func notePickerRetainsItsDecorativeDotCounts() {
-        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        let viewModel = NoteValuePickerViewModel(metronome: makeTestMetronome())
         #expect(viewModel.visualBeatCount(for: .quarter) == 4)
         #expect(viewModel.visualBeatCount(for: .eighth) == 8)
         #expect(viewModel.visualBeatCount(for: .sixteenth) == 8)
@@ -17,7 +17,7 @@ struct NoteValuePickerViewModelTests {
 
     @Test func noteValueSelectionUpdatesTheMetronomeBeforeDismissal() {
         let metronome = makeTestMetronome()
-        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = NoteValuePickerViewModel(metronome: metronome)
 
         viewModel.select(.sixteenth)
 
@@ -27,7 +27,7 @@ struct NoteValuePickerViewModelTests {
 
     @Test func quickPresetSelectionUpdatesTempoAndNoteValue() {
         let metronome = makeTestMetronome()
-        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = NoteValuePickerViewModel(metronome: metronome)
         let jazz = viewModel.quickPresets.first { $0.title == "Jazz" }
 
         if let jazz {

@@ -1,5 +1,29 @@
 # AppBrain Migration Ledger
 
+## Pass Sixteen: Architecture Refinements — 7 September 2026
+
+Implemented the developer-approved review findings: all eight ViewModels accept
+MetronomeFeature directly rather than AppBrain; concrete manager state has
+private setters; tap timestamps are private; and repeated active/accent lookup
+logic is exposed through feature queries instead of array indexing in ViewModels.
+Presentation styling remains in the UI layer and execution owners are unchanged.
+
+Feature commands clamp finite tempo/count inputs to the existing advertised
+ranges, ignore non-finite tempo input, and ignore invalid cell indices or
+nonpositive grid sizes. Preset application also protects tempo/count boundaries.
+updateGridBeats now delegates to the common beat-count command so active audio
+is refreshed alongside the grid. This repairs the previously identified mismatch
+without changing valid range choices in Settings versus Grid Settings.
+
+Tests now construct ViewModels from feature capabilities and configure the
+manager through commands, not writable state. Added boundary and active-grid
+audio regression coverage. No new managers or layers were introduced. Manual
+approval of this checkpoint is pending.
+
+Validation: the complete MetronomeTests target passed on the iPhone Air
+simulator, including the new boundary and active-grid audio regression tests.
+UI tests and physical-device checks were not rerun for this checkpoint.
+
 ## Pass Fifteen Closed — 7 September 2026
 
 The developer reported that the refined app works well and explicitly approved

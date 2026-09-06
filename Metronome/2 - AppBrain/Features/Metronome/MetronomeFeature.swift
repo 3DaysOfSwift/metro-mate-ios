@@ -40,6 +40,8 @@ protocol MetronomeFeature: AnyObject, Observable, Sendable {
     func updateGridBeats(_ beats: Int)
     func toggleGridCell(row: Int, col: Int)
     func toggleAccentCell(col: Int)
+    func isBeatActive(_ beat: Int) -> Bool
+    func isBeatAccented(_ beat: Int) -> Bool
     func tapTempo() async
     func saveBeatPreset(name: String) async
     func loadBeatPreset(_ preset: BeatPreset)

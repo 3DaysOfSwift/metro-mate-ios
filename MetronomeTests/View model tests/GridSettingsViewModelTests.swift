@@ -7,7 +7,7 @@ import Testing
 struct GridSettingsViewModelTests {
     @Test func gridSettingsDescribesAndUpdatesItsCurrentRange() {
         let metronome = makeTestMetronome()
-        let viewModel = GridSettingsViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = GridSettingsViewModel(metronome: metronome)
 
         #expect(viewModel.maximumBeatCount == 16)
         viewModel.updateBeatCount(7)

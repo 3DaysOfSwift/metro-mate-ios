@@ -14,9 +14,8 @@ final class BeatPresetsViewModel {
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }
     var savedBeats: [BeatPreset] { metronome.savedBeats }
 
-    init(brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
-        metronome = brain.metronome
+    init(metronome: (any MetronomeFeature)? = nil) {
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     var defaultPresets: [BeatPreset] { metronome.defaultPresets }

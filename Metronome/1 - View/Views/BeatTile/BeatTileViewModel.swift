@@ -9,14 +9,13 @@ final class BeatTileViewModel {
     let beat: Int
     private let metronome: any MetronomeFeature
 
-    init(beat: Int, brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
+    init(beat: Int, metronome: (any MetronomeFeature)? = nil) {
         self.beat = beat
-        metronome = brain.metronome
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     var isActive: Bool {
-        beat < metronome.gridPattern[0].count && metronome.gridPattern[0][beat]
+        metronome.isBeatActive(beat)
     }
 
     var isCurrent: Bool {

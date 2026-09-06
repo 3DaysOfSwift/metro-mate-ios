@@ -16,7 +16,7 @@ struct StarFieldViewModelTests {
     }
 
     @Test func resizePublishesOnlyTheNewCanvasShape() async throws {
-        let viewModel = StarFieldViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        let viewModel = StarFieldViewModel(metronome: makeTestMetronome())
         viewModel.appear(in: CGSize(width: 430, height: 932))
         viewModel.resize(to: CGSize(width: 100, height: 80))
         defer { viewModel.disappear() }
@@ -27,7 +27,7 @@ struct StarFieldViewModelTests {
 
     @Test(.timeLimit(.minutes(1)))
     func fullScreenAnimationPublishesANewFrameWithoutChangingTheOldSnapshot() async throws {
-        let viewModel = StarFieldViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        let viewModel = StarFieldViewModel(metronome: makeTestMetronome())
         viewModel.appear(in: CGSize(width: 430, height: 932))
         defer { viewModel.disappear() }
         try await waitForFrame(viewModel)
@@ -45,9 +45,7 @@ struct StarFieldViewModelTests {
 
     @Test func starFieldBuildsDotsForItsCanvasAndCanStopAnimating() async throws {
         let viewModel = StarFieldViewModel(
-            brain: AppBrain(
-                metronome: makeTestMetronome()
-            )
+            metronome: makeTestMetronome()
         )
 
         viewModel.appear(in: CGSize(width: 100, height: 80))
@@ -60,7 +58,7 @@ struct StarFieldViewModelTests {
     }
 
     @Test func starFieldStopsUpdatingWhenHiddenAndResumesOnAppearance() async throws {
-        let viewModel = StarFieldViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        let viewModel = StarFieldViewModel(metronome: makeTestMetronome())
         let size = CGSize(width: 100, height: 80)
         defer { viewModel.disappear() }
 
@@ -84,7 +82,7 @@ struct StarFieldViewModelTests {
 
     @Test func animationDoesNotKeepItsViewModelAlive() async throws {
         var viewModel: StarFieldViewModel? = StarFieldViewModel(
-            brain: AppBrain(metronome: makeTestMetronome())
+            metronome: makeTestMetronome()
         )
         weak var releasedViewModel = viewModel
         viewModel?.appear(in: CGSize(width: 100, height: 80))

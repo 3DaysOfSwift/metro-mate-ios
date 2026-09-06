@@ -25,9 +25,8 @@ final class StarFieldViewModel {
     @ObservationIgnored private var pulseTime: CGFloat = 1
     @ObservationIgnored private var animationTask: Task<Void, Never>?
 
-    init(brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
-        metronome = brain.metronome
+    init(metronome: (any MetronomeFeature)? = nil) {
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     deinit {
@@ -56,9 +55,7 @@ final class StarFieldViewModel {
     private var pulseIntensity: CGFloat {
         guard metronome.isPlaying else { return 1 }
 
-        let isAccented = metronome.currentBeat >= 0
-            && metronome.currentBeat < metronome.accentPattern.count
-            && metronome.accentPattern[metronome.currentBeat]
+        let isAccented = metronome.isBeatAccented(metronome.currentBeat)
         let baseIntensity: CGFloat = isAccented ? 1 : 0.5
 
         let bpmFactor: CGFloat

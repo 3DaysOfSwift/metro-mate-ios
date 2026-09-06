@@ -7,7 +7,7 @@ import Testing
 struct BeatTileViewModelTests {
     @Test func beatTileReadsAndUpdatesItsOwnBeat() {
         let metronome = makeTestMetronome()
-        let viewModel = BeatTileViewModel(beat: 1, brain: AppBrain(metronome: metronome))
+        let viewModel = BeatTileViewModel(beat: 1, metronome: metronome)
 
         #expect(viewModel.isActive)
         #expect(viewModel.label == "&")

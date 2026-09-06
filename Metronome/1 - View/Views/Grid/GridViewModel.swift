@@ -6,9 +6,8 @@ import UIKit
 final class GridViewModel {
     private let metronome: any MetronomeFeature
 
-    init(brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
-        metronome = brain.metronome
+    init(metronome: (any MetronomeFeature)? = nil) {
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     var numberOfRows: Int {
@@ -25,7 +24,7 @@ final class GridViewModel {
     }
 
     func isAccentActive(at beat: Int) -> Bool {
-        beat < metronome.accentPattern.count && metronome.accentPattern[beat]
+        metronome.isBeatAccented(beat)
     }
 
     func isCurrentAccent(at beat: Int) -> Bool {

@@ -7,7 +7,7 @@ struct ContentViewModelTests {
     @Test(arguments: [true, false])
     func holdingTempoButtonRepeatsUntilReleased(increasing: Bool) async throws {
         let metronome = makeTestMetronome()
-        let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = ContentViewModel(metronome: metronome)
         defer { viewModel.stopRepeatingBPMChange() }
 
         if increasing {
@@ -33,7 +33,7 @@ struct ContentViewModelTests {
 
     @Test func releasingViewModelCancelsTheHeldButtonTask() async throws {
         let metronome = makeTestMetronome()
-        var viewModel: ContentViewModel? = ContentViewModel(brain: AppBrain(metronome: metronome))
+        var viewModel: ContentViewModel? = ContentViewModel(metronome: metronome)
         weak var releasedViewModel = viewModel
         viewModel?.startRepeatingBPMIncrease()
         await Task.yield()
@@ -47,9 +47,7 @@ struct ContentViewModelTests {
 
     @Test func presentationIntentsExposeTheRequestedSheet() {
         let viewModel = ContentViewModel(
-            brain: AppBrain(
-                metronome: makeTestMetronome()
-            )
+            metronome: makeTestMetronome()
         )
 
         viewModel.showBeatPresets()
@@ -63,22 +61,22 @@ struct ContentViewModelTests {
 
     @Test func bpmButtonsRespectTheExistingLimits() {
         let metronome = makeTestMetronome()
-        let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = ContentViewModel(metronome: metronome)
 
-        metronome.bpm = 40
+        metronome.updateBPM(40)
         viewModel.decreaseBPM()
         #expect(metronome.bpm == 40)
 
-        metronome.bpm = 200
+        metronome.updateBPM(200)
         viewModel.increaseBPM()
         #expect(metronome.bpm == 200)
     }
 
     @Test func bpmDragUsesTheExistingSensitivityAndLimits() {
         let metronome = makeTestMetronome()
-        let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = ContentViewModel(metronome: metronome)
 
-        metronome.bpm = 100
+        metronome.updateBPM(100)
         viewModel.dragBPM(verticalTranslation: -50)
         #expect(metronome.bpm == 101)
 

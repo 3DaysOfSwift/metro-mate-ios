@@ -6,9 +6,8 @@ import UIKit
 final class GridSettingsViewModel {
     private let metronome: any MetronomeFeature
 
-    init(brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
-        metronome = brain.metronome
+    init(metronome: (any MetronomeFeature)? = nil) {
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }

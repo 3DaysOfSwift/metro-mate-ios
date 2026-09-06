@@ -7,7 +7,7 @@ import Testing
 struct SettingsViewModelTests {
     @Test func settingsUpdatesTheBeatCountThroughTheExistingFeature() {
         let metronome = makeTestMetronome()
-        let viewModel = SettingsViewModel(brain: AppBrain(metronome: metronome))
+        let viewModel = SettingsViewModel(metronome: metronome)
 
         viewModel.beatsPerMeasure = 5
 

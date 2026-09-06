@@ -28,9 +28,8 @@ final class ContentViewModel {
 
     @ObservationIgnored private var repeatTask: Task<Void, Never>?
 
-    init(brain: AppBrain? = nil) {
-        let brain = brain ?? .shared
-        metronome = brain.metronome
+    init(metronome: (any MetronomeFeature)? = nil) {
+        self.metronome = metronome ?? AppBrain.shared.metronome
     }
 
     deinit {
