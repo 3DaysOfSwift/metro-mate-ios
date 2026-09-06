@@ -87,6 +87,13 @@ Views retain their existing opacity and layout choices.
 
 ## Remaining Migration Work
 
+Note-picker buttons are private rendering functions within their owning screen,
+not separate Views accepting action closures. The picker ViewModel owns selection
+and dismissal, and supplies the decorative dot counts. BeatTile remains a separate
+View with its own ViewModel because each tile has distinct pressed state and beat
+identity. Its beat-index input identifies the item; it does not inject a manager
+or a parent action.
+
 This layout makes ownership visible, but does not mean the migration is complete.
 See MIGRATION_LEDGER.md for pending responsibility reviews and
 MIGRATION_BEHAVIOUR_CONTRACT.md for the regression journeys.

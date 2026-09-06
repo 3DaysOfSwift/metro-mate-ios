@@ -2,6 +2,13 @@
 
 ## Remaining Review
 
+The presentation-subview pass removed the two closure-fed picker button View
+types in favour of private rendering functions on their owning screen.
+Decorative dot counts moved to NoteValuePickerViewModel with a regression test.
+All remaining custom View structs have dedicated ViewModels; BeatTile retains
+its beat identity input. Manual regression and final evidence reconciliation
+remain outstanding.
+
 The latest boundary pass made every screen ViewModel's feature reference private,
 removed direct feature access from Views, and centralised the remaining hard-coded
 tempo limits. A two-screen notification test was added for the retained Combine

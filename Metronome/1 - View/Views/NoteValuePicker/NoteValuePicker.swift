@@ -26,15 +26,7 @@ struct NoteValuePicker: View {
                     GridItem(.flexible())
                 ], spacing: 16) {
                     ForEach(NoteValue.allCases, id: \.self) { noteValue in
-                        NoteValueButton(
-                            noteValue: noteValue,
-                            isSelected: viewModel.noteValue == noteValue,
-                            action: {
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    viewModel.select(noteValue)
-                                }
-                            }
-                        )
+                        noteValueButton(for: noteValue)
                     }
                 }
                 .padding()
@@ -49,12 +41,7 @@ struct NoteValuePicker: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(viewModel.quickPresets) { preset in
-                                PresetButton(
-                                    title: preset.title,
-                                    bpm: preset.bpm,
-                                    noteValue: preset.noteValue,
-                                    action: { viewModel.select(preset) }
-                                )
+                                presetButton(for: preset)
                             }
                         }
                         .padding(.horizontal)
@@ -75,16 +62,14 @@ struct NoteValuePicker: View {
             }
         }
     }
-}
 
-struct NoteValueButton: View {
-    @Environment(\.appColourTheme) private var theme
-    let noteValue: NoteValue
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
+    private func noteValueButton(for noteValue: NoteValue) -> some View {
+        let isSelected = viewModel.noteValue == noteValue
+        return Button {
+            withAnimation(.easeOut(duration: 0.2)) {
+                viewModel.select(noteValue)
+            }
+        } label: {
             VStack(spacing: 8) {
                 Text(noteValue.displayName)
                     .font(.system(size: 36))
@@ -96,7 +81,7 @@ struct NoteValueButton: View {
                 
                 // Visual representation
                 HStack(spacing: 2) {
-                    ForEach(0..<getVisualBeats(), id: \.self) { _ in
+                    ForEach(0..<viewModel.visualBeatCount(for: noteValue), id: \.self) { _ in
                         Circle()
                             .fill(isSelected ? theme.accent : theme.elevatedSurface)
                             .frame(width: 4, height: 4)
@@ -115,37 +100,18 @@ struct NoteValueButton: View {
         }
     }
     
-    private func getVisualBeats() -> Int {
-        switch noteValue {
-        case .quarter: return 4
-        case .eighth: return 8
-        case .sixteenth: return 8
-        case .quarterTriplet: return 3
-        case .eighthTriplet: return 6
-        case .sixteenthTriplet: return 6
-        }
-    }
-}
-
-struct PresetButton: View {
-    @Environment(\.appColourTheme) private var theme
-    let title: String
-    let bpm: Int
-    let noteValue: NoteValue
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
+    private func presetButton(for preset: QuickPreset) -> some View {
+        Button { viewModel.select(preset) } label: {
             VStack(spacing: 6) {
-                Text(title.uppercased())
+                Text(preset.title.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(theme.text)
                 
-                Text("\(bpm)")
+                Text("\(preset.bpm)")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(theme.accent)
                 
-                Text(noteValue.displayName)
+                Text(preset.noteValue.displayName)
                     .font(.system(size: 12))
                     .foregroundColor(theme.text.opacity(0.6))
             }
@@ -154,4 +120,5 @@ struct PresetButton: View {
             .cornerRadius(12)
         }
     }
+
 }

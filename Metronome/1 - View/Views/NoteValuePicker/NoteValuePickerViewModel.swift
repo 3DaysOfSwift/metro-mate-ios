@@ -9,6 +9,16 @@ final class NoteValuePickerViewModel: ObservableObject {
     var noteValue: NoteValue { metronome.noteValue }
     var quickPresets: [QuickPreset] { metronome.quickPresets }
 
+    /// Decorative dots summarise the pattern; they are not the actual beat count.
+    func visualBeatCount(for noteValue: NoteValue) -> Int {
+        switch noteValue {
+        case .quarter: return 4
+        case .eighth, .sixteenth: return 8
+        case .quarterTriplet: return 3
+        case .eighthTriplet, .sixteenthTriplet: return 6
+        }
+    }
+
     private var dismissalTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?
 

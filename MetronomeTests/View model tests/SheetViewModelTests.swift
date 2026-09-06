@@ -5,6 +5,16 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct SheetViewModelTests {
+    @Test func notePickerRetainsItsDecorativeDotCounts() {
+        let viewModel = NoteValuePickerViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        #expect(viewModel.visualBeatCount(for: .quarter) == 4)
+        #expect(viewModel.visualBeatCount(for: .eighth) == 8)
+        #expect(viewModel.visualBeatCount(for: .sixteenth) == 8)
+        #expect(viewModel.visualBeatCount(for: .quarterTriplet) == 3)
+        #expect(viewModel.visualBeatCount(for: .eighthTriplet) == 6)
+        #expect(viewModel.visualBeatCount(for: .sixteenthTriplet) == 6)
+    }
+
     @Test func deletingSeveralRowsRemovesTheOriginallySelectedPresets() {
         let repository = InMemoryPresetRepository()
         let metronome = makeTestMetronome(presetRepository: repository)
