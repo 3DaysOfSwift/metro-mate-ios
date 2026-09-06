@@ -27,12 +27,15 @@ final class BeatPresetsViewModel: ObservableObject {
     var loadError: String? { metronome.presetLoadError }
     var saveError: String? { metronome.presetSaveError }
 
-    func retrySavingPresets() {
-        metronome.retrySavingPresets()
+    var isLoading: Bool { metronome.isLoadingPresets }
+    var isSaving: Bool { metronome.isSavingPresets }
+
+    func retrySavingPresets() async {
+        await metronome.retrySavingPresets()
     }
 
-    func loadSavedPresets() {
-        metronome.loadSavedPresets()
+    func loadSavedPresets() async {
+        await metronome.loadSavedPresets()
     }
 
     func beginSavingCurrentBeat() {
@@ -41,9 +44,9 @@ final class BeatPresetsViewModel: ObservableObject {
         isShowingSaveDialog = true
     }
 
-    func saveCurrentBeat() {
+    func saveCurrentBeat() async {
         lightImpact()
-        metronome.saveBeatPreset(name: newBeatName)
+        await metronome.saveBeatPreset(name: newBeatName)
     }
 
     func load(_ preset: BeatPreset) {
@@ -51,10 +54,10 @@ final class BeatPresetsViewModel: ObservableObject {
         metronome.loadBeatPreset(preset)
     }
 
-    func deleteSavedBeats(at offsets: IndexSet) {
+    func deleteSavedBeats(at offsets: IndexSet) async {
         let selectedPresets = offsets.map { metronome.savedBeats[$0] }
         for preset in selectedPresets {
-            metronome.deleteBeatPreset(preset)
+            await metronome.deleteBeatPreset(preset)
         }
     }
 

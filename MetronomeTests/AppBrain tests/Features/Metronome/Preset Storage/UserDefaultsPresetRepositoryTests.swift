@@ -3,11 +3,23 @@ import Testing
 @testable import Metronome
 
 struct UserDefaultsPresetRepositoryTests {
-    @Test func savedFieldsSurviveRepositoryRecreationAndDeletion() throws {
+    @MainActor
+    @Test func repositoryWorkLeavesTheMainActor() async throws {
         let suite = "MetronomeRepositoryTests." + UUID().uuidString
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let repository = UserDefaultsPresetRepository(userDefaults: defaults, storageKey: "presets")
+        let repository = UserDefaultsPresetRepository(suiteName: suite, storageKey: "presets")
+        try await repository.savePresets([])
+        #expect(await repository.executesOffMainThread())
+        #expect(try await repository.loadPresets().isEmpty)
+        MainActor.assertIsolated()
+    }
+
+    @Test func savedFieldsSurviveRepositoryRecreationAndDeletion() async throws {
+        let suite = "MetronomeRepositoryTests." + UUID().uuidString
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let repository = UserDefaultsPresetRepository(suiteName: suite, storageKey: "presets")
         let preset = BeatPreset(
             name: "Integration", noteValue: .eighth, bpm: 96,
             beatsPerMeasure: 8,
@@ -15,11 +27,11 @@ struct UserDefaultsPresetRepositoryTests {
             accentPattern: [true, false, false, false, true, false, false, false],
             gridDisplayMode: .andCounting
         )
-        try repository.savePresets([preset])
+        try await repository.savePresets([preset])
         let reopened = UserDefaultsPresetRepository(
-            userDefaults: try #require(UserDefaults(suiteName: suite)), storageKey: "presets"
+            suiteName: suite, storageKey: "presets"
         )
-        let loaded = try #require(try reopened.loadPresets().first)
+        let loaded = try #require(try await reopened.loadPresets().first)
         #expect(loaded.id == preset.id)
         #expect(loaded.name == preset.name)
         #expect(loaded.noteValue == preset.noteValue)
@@ -28,20 +40,28 @@ struct UserDefaultsPresetRepositoryTests {
         #expect(loaded.gridPattern == preset.gridPattern)
         #expect(loaded.accentPattern == preset.accentPattern)
         #expect(loaded.gridDisplayMode == preset.gridDisplayMode)
-        try reopened.savePresets([])
-        #expect(try repository.loadPresets().isEmpty)
+        try await reopened.savePresets([])
+        #expect(try await repository.loadPresets().isEmpty)
     }
 
-    @Test func corruptDataThrowsAndRemovesOnlyThePresetKey() throws {
+    @Test func corruptDataThrowsAndRemovesOnlyThePresetKey() async throws {
         let suite = "MetronomeRepositoryTests." + UUID().uuidString
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         defaults.set(Data("invalid JSON".utf8), forKey: "presets")
         defaults.set("Retained", forKey: "unrelated")
-        let repository = UserDefaultsPresetRepository(userDefaults: defaults, storageKey: "presets")
-        #expect(throws: DecodingError.self) { try repository.loadPresets() }
+        let repository = UserDefaultsPresetRepository(suiteName: suite, storageKey: "presets")
+        await #expect(throws: DecodingError.self) { try await repository.loadPresets() }
         #expect(defaults.object(forKey: "presets") == nil)
         #expect(defaults.string(forKey: "unrelated") == "Retained")
-        #expect(try repository.loadPresets().isEmpty)
+        #expect(try await repository.loadPresets().isEmpty)
+    }
+}
+
+private extension UserDefaultsPresetRepository {
+    // Runs on the same actor executor as the synchronous storage methods.
+    func executesOffMainThread() -> Bool {
+        assertIsolated()
+        return !Thread.isMainThread
     }
 }

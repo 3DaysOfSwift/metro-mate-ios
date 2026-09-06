@@ -38,6 +38,11 @@ final class MetronomeManager: MetronomeFeature {
     /// Supplies the current date so time-based rules can be tested without waiting for real time.
     private let currentDate: () -> Date
     private var hasLoadedPresets = false
+    private var presetLoadTask: Task<Void, Never>?
+    private var presetSaveTask: Task<Void, Never>?
+    private var presetSaveRevision = 0
+    @Published private(set) var isLoadingPresets = false
+    @Published private(set) var isSavingPresets = false
     @Published private(set) var presetLoadError: String?
     @Published private(set) var presetSaveError: String?
     @Published private(set) var audioError: String?
@@ -455,10 +460,9 @@ final class MetronomeManager: MetronomeFeature {
         )
     }
 
-    func saveBeatPreset(name: String) {
+    func saveBeatPreset(name: String) async {
         guard !name.isEmpty else { return }
-        loadSavedPresets()
-        guard hasLoadedPresets else { return }
+        // Capture the requested beat before loading can suspend and the user edits it.
         let preset = BeatPreset(
             name: name,
             noteValue: noteValue,
@@ -468,43 +472,79 @@ final class MetronomeManager: MetronomeFeature {
             accentPattern: accentPattern,
             gridDisplayMode: gridDisplayMode
         )
+        await loadSavedPresets()
+        guard hasLoadedPresets else { return }
         
         // Remove existing preset with same name
         savedBeats.removeAll { $0.name == name }
         savedBeats.append(preset)
         currentBeatName = name
-        persistPresets()
+        await persistPresets()
     }
 
     // MARK: - Preset persistence
 
     /// Persists the current presets through the storage supplied by AppBrain.
     /// Nothing leaves the device in the live implementation - see PRIVACY.md.
-    private func persistPresets() {
-        do {
-            try presetRepository.savePresets(savedBeats)
-            presetSaveError = nil
-        } catch {
-            presetSaveError = error.localizedDescription
+    private func persistPresets() async {
+        let previousSave = presetSaveTask
+        let presets = savedBeats
+        presetSaveRevision += 1
+        let revision = presetSaveRevision
+        isSavingPresets = true
+
+        // A committed edit outlives its screen. Await the previous write rather
+        // than relying on actor scheduling to preserve submission order.
+        let task = Task {
+            await previousSave?.value
+            do {
+                try await presetRepository.savePresets(presets)
+                if revision == presetSaveRevision { presetSaveError = nil }
+            } catch {
+                if revision == presetSaveRevision {
+                    presetSaveError = error.localizedDescription
+                }
+            }
+        }
+        presetSaveTask = task
+        await task.value
+        if revision == presetSaveRevision {
+            presetSaveTask = nil
+            isSavingPresets = false
         }
     }
 
     /// Retries the current unsaved collection without adding or deleting anything again.
-    func retrySavingPresets() {
+    func retrySavingPresets() async {
         guard hasLoadedPresets, presetSaveError != nil else { return }
-        persistPresets()
+        await persistPresets()
     }
 
     /// Loads once after success. Failed requests can be retried without rebuilding the feature.
-    func loadSavedPresets() {
+    func loadSavedPresets() async {
         guard !hasLoadedPresets else { return }
-        do {
-            savedBeats = try presetRepository.loadPresets()
-            hasLoadedPresets = true
-            presetLoadError = nil
-        } catch {
-            presetLoadError = error.localizedDescription
+        if let presetLoadTask {
+            await presetLoadTask.value
+            return
         }
+        isLoadingPresets = true
+        // Startup and a newly opened screen share one load. Cancelling one
+        // caller must not cancel the work another caller still needs.
+        let task = Task {
+            defer {
+                isLoadingPresets = false
+                presetLoadTask = nil
+            }
+            do {
+                savedBeats = try await presetRepository.loadPresets()
+                hasLoadedPresets = true
+                presetLoadError = nil
+            } catch {
+                presetLoadError = error.localizedDescription
+            }
+        }
+        presetLoadTask = task
+        await task.value
     }
     
     func loadBeatPreset(_ preset: BeatPreset) {
@@ -539,14 +579,14 @@ final class MetronomeManager: MetronomeFeature {
         }
     }
     
-    func deleteBeatPreset(_ preset: BeatPreset) {
-        loadSavedPresets()
+    func deleteBeatPreset(_ preset: BeatPreset) async {
+        await loadSavedPresets()
         guard hasLoadedPresets else { return }
         savedBeats.removeAll { $0.id == preset.id }
         if currentBeatName == preset.name {
             currentBeatName = "Eighth"
         }
-        persistPresets()
+        await persistPresets()
     }
     
     func randomizeBeat() {

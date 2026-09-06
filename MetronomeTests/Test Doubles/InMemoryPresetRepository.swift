@@ -2,6 +2,7 @@ import Foundation
 
 @testable import Metronome
 
+@MainActor
 final class InMemoryPresetRepository: PresetRepository {
     private(set) var presets: [BeatPreset]
     private(set) var loadCallCount = 0
@@ -26,7 +27,7 @@ final class InMemoryPresetRepository: PresetRepository {
 
 @MainActor
 func makeTestMetronome(
-    presetRepository: InMemoryPresetRepository = InMemoryPresetRepository(),
+    presetRepository: (any PresetRepository)? = nil,
     audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
     ticker: ControllableMetronomeTicker? = nil,
     tapResetScheduler: ControllableDelayScheduler? = nil,
@@ -34,7 +35,7 @@ func makeTestMetronome(
     currentDate: @escaping () -> Date = Date.init
 ) -> MetronomeManager {
     MetronomeManager(
-        presetRepository: presetRepository,
+        presetRepository: presetRepository ?? InMemoryPresetRepository(),
         audioPlayer: audioPlayer,
         ticker: ticker ?? ControllableMetronomeTicker(),
         tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),

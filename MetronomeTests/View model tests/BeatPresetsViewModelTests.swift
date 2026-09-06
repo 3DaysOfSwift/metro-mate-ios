@@ -5,35 +5,35 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct BeatPresetsViewModelTests {
-    @Test func failedLoadIsVisibleAndRetryCanSucceedWithoutReplacingStoredBeats() {
+    @Test func failedLoadIsVisibleAndRetryCanSucceedWithoutReplacingStoredBeats() async {
         enum LoadFailure: Error { case unavailable }
         let repository = InMemoryPresetRepository()
         let original = makeTestMetronome(presetRepository: repository)
-        original.saveBeatPreset(name: "Existing")
+        await original.saveBeatPreset(name: "Existing")
         repository.loadError = LoadFailure.unavailable
         let manager = makeTestMetronome(presetRepository: repository)
         let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: manager))
 
-        viewModel.loadSavedPresets()
+        await viewModel.loadSavedPresets()
         #expect(viewModel.loadError != nil)
-        manager.saveBeatPreset(name: "Must not overwrite storage")
+        await manager.saveBeatPreset(name: "Must not overwrite storage")
         #expect(repository.presets.map(\.name) == ["Existing"])
 
         repository.loadError = nil
-        viewModel.loadSavedPresets()
+        await viewModel.loadSavedPresets()
         #expect(viewModel.loadError == nil)
         #expect(manager.savedBeats.map(\.name) == ["Existing"])
     }
 
-    @Test func deletingSeveralRowsRemovesTheOriginallySelectedPresets() {
+    @Test func deletingSeveralRowsRemovesTheOriginallySelectedPresets() async {
         let repository = InMemoryPresetRepository()
         let metronome = makeTestMetronome(presetRepository: repository)
         for name in ["First", "Second", "Third", "Fourth"] {
-            metronome.saveBeatPreset(name: name)
+            await metronome.saveBeatPreset(name: name)
         }
         let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: metronome))
 
-        viewModel.deleteSavedBeats(at: IndexSet([0, 2]))
+        await viewModel.deleteSavedBeats(at: IndexSet([0, 2]))
 
         #expect(metronome.savedBeats.map(\.name) == ["Second", "Fourth"])
         #expect(repository.presets.map(\.name) == ["Second", "Fourth"])

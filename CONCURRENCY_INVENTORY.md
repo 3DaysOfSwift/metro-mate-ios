@@ -15,9 +15,15 @@ unimplemented work. Its pending labels describe the baseline assessment.
 | CON-009 | ContentViewModel owns the repeating adjustment task. | Long press, release, bounds, and screen lifetime |
 | CON-010 | StarFieldViewModel owns its animation task and cancels on disappearance. | Visual comparison and lifetime checks |
 
-The production-source scan finds no explicit DispatchQueue, DispatchSource,
-scheduledTimer, or Timer construction. This proves syntax replacement, not
-timing equivalence. Cooperative tasks are not real-time audio scheduling:
+Preset storage now uses an actor with a retained DispatchSerialQueue executor.
+This is an intentional bridge for synchronous UserDefaults and JSON work, not
+a return to callback-based feature APIs. The feature awaits the repository,
+shares pending loads, and sequences committed saves explicitly. Safe BeatPreset
+values cross the boundary; the UserDefaults instance stays inside the repository.
+Loading and saving state remain Main Actor observable properties.
+
+There is no DispatchSource, scheduledTimer, or Timer construction.
+Syntax replacement does not prove timing equivalence. Cooperative tasks are not real-time audio scheduling:
 device testing under load remains essential before declaring this migration done.
 
 ## Original Planning Inventory

@@ -16,7 +16,36 @@ iOS 26.2 simulator. Actual fallback playback and profiling still require
 verification; this is not a completed responsiveness pass. Existing app-icon
 and weak-variable compiler warnings remain unrelated to concurrency checking.
 
-Next checkpoints, in order:
+### Persistence Checkpoint
+
+Moved UserDefaultsPresetRepository to an actor with a retained DispatchSerialQueue
+executor. The repository creates and retains its UserDefaults instance on that
+executor; only suite/key configuration enters its initializer. JSON and storage
+operations no longer execute on the Main Actor. The repository contract is async
+and Sendable; BeatPreset and its stored enums have checked Sendable conformances.
+
+MetronomeManager shares a pending load, serializes committed write snapshots with
+awaited task dependencies, and prevents stale save completions from publishing
+errors for newer edits. A save captures the requested configuration before
+loading suspends. Loading/saving state is exposed through the dedicated ViewModel.
+Existing load failures, optimistic edits, save failures, and retry remain visible.
+The launch callback and relevant screen actions now await persistence.
+
+Added controlled-suspension tests for shared loads, snapshot capture, ordered
+writes, stale failure suppression, and writes surviving caller cancellation.
+Updated existing persistence and ViewModel tests to await completion. The live
+repository also has an executor check when invoked from the Main Actor.
+
+Validation: the full MetronomeTests run passes on the iPhone Air iOS 26.2
+simulator, including the executor test and all four newly added tests.
+Focused production-source typechecking passes with complete concurrency
+checking and warnings-as-errors. No unchecked conformance was added.
+
+This bounded persistence conversion was taken before audio because its existing
+tests make the new await boundaries directly verifiable. No before/after device
+profile was captured; off-main ownership is not a measured performance claim.
+
+Remaining checkpoints:
 
 1. Capture a combined cold-start, star-field animation, and playback baseline
    using Instruments on a representative device. Include missing audio files
@@ -27,10 +56,8 @@ Next checkpoints, in order:
    cooperative pool. Expose awaited preparation/start results and prevent a
    cancelled or superseded start from restarting playback. Keep scheduling
    ordered with stop and tempo changes; do not launch detached work per beat.
-3. Give persistence its own off-main execution owner, with async load/save and
-   Sendable value snapshots. Preserve save ordering, unsaved-change errors,
-   retry behaviour, and independent startup work. Keep feature rules in
-   MetronomeManager and small observable state updates on the Main Actor.
+3. Once audio preparation is async, preserve independent audio and persistence
+   startup. Audio still prepares synchronously before the awaited preset load.
 4. Test the real ticker's cancellation, replacement, and missed deadlines;
    agree and document late-tick behaviour before changing its current catch-up
    policy. Compare timing under animation load.
@@ -38,8 +65,8 @@ Next checkpoints, in order:
    calculations off-main only if measurements warrant it, publishing completed
    frames without stale results. Do not add Task.yield merely as a showcase.
 
-Audio preparation and persistence are still synchronous in this checkpoint.
-The off-main conversions, real ticker tests, and performance gates remain open.
+Audio preparation remains synchronous. Its off-main conversion, real ticker
+tests, fallback playback verification, and performance gates remain open.
 
 ## Pass Seven: Feature-owned Model Files
 

@@ -59,13 +59,13 @@ struct MetronomeManagerCharacterisationTests {
         manager.togglePlayback()
     }
 
-    @Test func savingAnEmptyPresetNameLeavesStateAndStorageUnchanged() {
+    @Test func savingAnEmptyPresetNameLeavesStateAndStorageUnchanged() async {
         let repository = InMemoryPresetRepository()
         let manager = makeManager(repository: repository)
-        manager.saveBeatPreset(name: "Saved Beat")
+        await manager.saveBeatPreset(name: "Saved Beat")
         let savedIDs = manager.savedBeats.map(\.id)
 
-        manager.saveBeatPreset(name: "")
+        await manager.saveBeatPreset(name: "")
 
         #expect(manager.savedBeats.map(\.id) == savedIDs)
         #expect(repository.presets.map(\.id) == savedIDs)
@@ -264,47 +264,47 @@ struct MetronomeManagerCharacterisationTests {
         #expect(Array(manager.accentPattern.prefix(3)) == [true, false, false])
     }
 
-    @Test func savingTheSameNameReplacesTheExistingPreset() {
+    @Test func savingTheSameNameReplacesTheExistingPreset() async {
         let manager = makeManager()
         let name = "Characterisation-\(UUID().uuidString)"
 
         manager.bpm = 80
-        manager.saveBeatPreset(name: name)
+        await manager.saveBeatPreset(name: name)
         manager.bpm = 125
-        manager.saveBeatPreset(name: name)
+        await manager.saveBeatPreset(name: name)
 
         let matchingPresets = manager.savedBeats.filter { $0.name == name }
         #expect(matchingPresets.count == 1)
         #expect(matchingPresets.first?.bpm == 125)
 
         if let preset = matchingPresets.first {
-            manager.deleteBeatPreset(preset)
+            await manager.deleteBeatPreset(preset)
         }
     }
 
-    @Test func deletingTheSelectedPresetRestoresTheExistingTitle() {
+    @Test func deletingTheSelectedPresetRestoresTheExistingTitle() async {
         let manager = makeManager()
         let name = "Characterisation-\(UUID().uuidString)"
-        manager.saveBeatPreset(name: name)
+        await manager.saveBeatPreset(name: name)
         let preset = manager.savedBeats.first { $0.name == name }
 
         if let preset {
-            manager.deleteBeatPreset(preset)
+            await manager.deleteBeatPreset(preset)
         }
 
         #expect(manager.savedBeats.contains { $0.name == name } == false)
         #expect(manager.currentBeatName == "Eighth")
     }
 
-    @Test func savedPresetsAreRestoredByTheNextFeatureInstance() {
+    @Test func savedPresetsAreRestoredByTheNextFeatureInstance() async {
         let repository = InMemoryPresetRepository()
         let firstManager = makeManager(repository: repository)
 
         firstManager.updateBPM(96)
-        firstManager.saveBeatPreset(name: "Stored Beat")
+        await firstManager.saveBeatPreset(name: "Stored Beat")
 
         let restoredManager = makeManager(repository: repository)
-        restoredManager.loadSavedPresets()
+        await restoredManager.loadSavedPresets()
 
         #expect(restoredManager.savedBeats.count == 1)
         #expect(restoredManager.savedBeats.first?.name == "Stored Beat")
@@ -462,7 +462,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     private func makeManager(
-        repository: InMemoryPresetRepository = InMemoryPresetRepository(),
+        repository: InMemoryPresetRepository? = nil,
         audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
         ticker: ControllableMetronomeTicker? = nil,
         tapResetScheduler: ControllableDelayScheduler? = nil,
@@ -470,7 +470,7 @@ struct MetronomeManagerCharacterisationTests {
         currentDate: @escaping () -> Date = Date.init
     ) -> MetronomeManager {
         MetronomeManager(
-            presetRepository: repository,
+            presetRepository: repository ?? InMemoryPresetRepository(),
             audioPlayer: audioPlayer,
             ticker: ticker ?? ControllableMetronomeTicker(),
             tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),

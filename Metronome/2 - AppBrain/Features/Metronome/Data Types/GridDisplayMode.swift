@@ -1,6 +1,6 @@
 import Foundation
 
-enum GridDisplayMode: String, CaseIterable, Codable {
+enum GridDisplayMode: String, CaseIterable, Codable, Sendable {
     case andCounting = "1&2&"
     case subdivisionCounting = "1e&a"
     

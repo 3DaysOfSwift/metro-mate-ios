@@ -57,13 +57,19 @@ struct BeatPresetsView: View {
                 }
                 
                 Section("Saved Beats") {
+                    if viewModel.isLoading { ProgressView("Loading saved beats…") }
+                    if viewModel.isSaving { ProgressView("Saving changes…") }
                     if let error = viewModel.saveError {
                         Text("Changes are not saved: \(error)")
-                        Button("Retry saving", action: viewModel.retrySavingPresets)
+                        Button("Retry saving") {
+                            Task { await viewModel.retrySavingPresets() }
+                        }
                     }
                     if let error = viewModel.loadError {
                         Text("Could not load saved beats: \(error)")
-                        Button("Retry", action: viewModel.loadSavedPresets)
+                        Button("Retry") {
+                            Task { await viewModel.loadSavedPresets() }
+                        }
                     }
                     ForEach(viewModel.savedBeats) { preset in
                         HStack {
@@ -89,7 +95,7 @@ struct BeatPresetsView: View {
                         .listRowBackground(theme.elevatedSurface)
                     }
                     .onDelete { indexSet in
-                        viewModel.deleteSavedBeats(at: indexSet)
+                        Task { await viewModel.deleteSavedBeats(at: indexSet) }
                     }
                 }
             }
@@ -97,7 +103,7 @@ struct BeatPresetsView: View {
             .scrollContentBackground(.hidden)
             .foregroundColor(theme.text)
             .navigationTitle("Beat Presets")
-            .onAppear(perform: viewModel.loadSavedPresets)
+            .task { await viewModel.loadSavedPresets() }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark)
             .toolbar {
@@ -124,7 +130,7 @@ struct BeatPresetsView: View {
             TextField("Beat Name", text: $viewModel.newBeatName)
                 .foregroundColor(theme.alertInputText)
             Button("Save") {
-                viewModel.saveCurrentBeat()
+                Task { await viewModel.saveCurrentBeat() }
             }
             Button("Cancel", role: .cancel) { }
         } message: {

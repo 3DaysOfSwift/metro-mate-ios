@@ -1,6 +1,6 @@
 import Foundation
 
-enum NoteValue: String, CaseIterable, Codable {
+enum NoteValue: String, CaseIterable, Codable, Sendable {
     case quarter = "1/4"
     case eighth = "1/8"
     case sixteenth = "1/16"

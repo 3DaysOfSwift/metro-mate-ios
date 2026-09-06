@@ -1,6 +1,6 @@
 import Foundation
 
-struct BeatPreset: Identifiable, Codable {
+struct BeatPreset: Identifiable, Codable, Sendable {
     var id = UUID()
     let name: String
     let noteValue: NoteValue

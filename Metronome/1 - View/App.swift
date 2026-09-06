@@ -20,8 +20,8 @@ struct MetronomeApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.appColourTheme, themeManager.selectedTheme)
-                .onAppear {
-                    AppBrain.shared.applicationDidFinishLaunching()
+                .task {
+                    await AppBrain.shared.applicationDidFinishLaunching()
                 }
         }
     }

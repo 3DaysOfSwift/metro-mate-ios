@@ -7,6 +7,13 @@ which manages presentation state and user interactions. ViewModels obtain the
 metronome feature from AppBrain. MetronomeManager owns musical rules and delegates
 audio, timing, and preset storage to the dependencies constructed by AppBrain.live().
 
+PresetRepository exposes asynchronous loading and saving. Its live implementation
+is an actor using a serial off-main executor for synchronous UserDefaults and
+JSON operations. MetronomeManager retains Main Actor ownership of observable
+state, shares in-flight loads, and orders writes so older snapshots cannot
+overwrite newer edits. Committed writes outlive the presenting screen.
+Audio preparation remains synchronous pending the next execution-ownership step.
+
 Each ViewModel keeps its feature reference private. Views read screen-facing
 properties and call ViewModel actions; they cannot reach through a ViewModel
 into the feature API. Musical limits, including the tempo range, belong to the

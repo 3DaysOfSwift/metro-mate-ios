@@ -25,8 +25,10 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var tapCount: Int { get }
 
     func prepareAudio()
-    func retrySavingPresets()
-    func loadSavedPresets()
+    var isLoadingPresets: Bool { get }
+    var isSavingPresets: Bool { get }
+    func retrySavingPresets() async
+    func loadSavedPresets() async
     func togglePlayback()
     func startPlayback() throws
     func startPlayback(atBPM bpm: Double) throws
@@ -39,10 +41,10 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     func toggleGridCell(row: Int, col: Int)
     func toggleAccentCell(col: Int)
     func tapTempo()
-    func saveBeatPreset(name: String)
+    func saveBeatPreset(name: String) async
     func loadBeatPreset(_ preset: BeatPreset)
     func applyQuickPreset(_ preset: QuickPreset)
-    func deleteBeatPreset(_ preset: BeatPreset)
+    func deleteBeatPreset(_ preset: BeatPreset) async
     func randomizeBeat()
     func resetToBasicBeat()
 }

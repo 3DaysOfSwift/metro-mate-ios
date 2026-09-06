@@ -5,7 +5,7 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct AppBrainTests {
-    @Test func constructionDoesNotLoadStorageOrPrepareAudio() {
+    @Test func constructionDoesNotLoadStorageOrPrepareAudio() async {
         let repository = InMemoryPresetRepository()
         let audio = RecordingMetronomeAudioPlayer()
         let manager = makeTestMetronome(presetRepository: repository, audioPlayer: audio)
@@ -13,10 +13,10 @@ struct AppBrainTests {
 
         #expect(repository.loadCallCount == 0)
         #expect(audio.prepareCallCount == 0)
-        brain.applicationDidFinishLaunching()
+        await brain.applicationDidFinishLaunching()
         #expect(repository.loadCallCount == 1)
         #expect(audio.prepareCallCount == 1)
-        brain.applicationDidFinishLaunching()
+        await brain.applicationDidFinishLaunching()
         #expect(repository.loadCallCount == 1)
     }
 
