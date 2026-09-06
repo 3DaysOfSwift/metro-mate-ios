@@ -1,5 +1,15 @@
 # Migration Feature Behaviour Report
 
+## Current Refinement: Pass Fourteen
+
+As of 7 September 2026, the UI ticker skips missed polls and waits a fresh
+interval after an overrun. It no longer replays overdue polls in a burst; the
+historical catch-up description below does not describe current behaviour.
+Audio remains independently scheduled by the engine. Default, loaded, and random
+patterns are assembled locally and published once per array on the Main Actor.
+The developer approved the preceding audio implementation and reported all tests
+passing; manual approval of these latest refinements remains pending.
+
 ## Completion and Scope
 
 Report date: 6 September 2026. Reviewed application commit:

@@ -102,6 +102,9 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     private func setupDefaultPattern() {
+        // Build locally so Observation sees one publication per completed array.
+        var gridPattern = self.gridPattern
+        var accentPattern = self.accentPattern
         // Clear all patterns first
         for i in 0..<gridPattern.count {
             for j in 0..<gridPattern[i].count {
@@ -158,6 +161,8 @@ final class MetronomeManager: MetronomeFeature {
                 accentPattern[i] = true
             }
         }
+        self.gridPattern = gridPattern
+        self.accentPattern = accentPattern
     }
     
     func togglePlayback() async {
@@ -611,6 +616,8 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func loadBeatPreset(_ preset: BeatPreset) {
+        var gridPattern = self.gridPattern
+        var accentPattern = self.accentPattern
         noteValue = preset.noteValue
         bpm = preset.bpm
         beatsPerMeasure = preset.beatsPerMeasure
@@ -636,6 +643,8 @@ final class MetronomeManager: MetronomeFeature {
                 accentPattern[i] = false
             }
         }
+        self.gridPattern = gridPattern
+        self.accentPattern = accentPattern
         
         if isPlaying {
             restartTicker()
@@ -653,6 +662,8 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func randomizeBeat() {
+        var gridPattern = self.gridPattern
+        var accentPattern = self.accentPattern
         // Randomize note value
         let allNoteValues = NoteValue.allCases
         let randomNoteValue = allNoteValues.randomElement()!
@@ -701,6 +712,9 @@ final class MetronomeManager: MetronomeFeature {
             }
         }
         
+        self.gridPattern = gridPattern
+        self.accentPattern = accentPattern
+
         // Update timer if playing
         if isPlaying {
             restartTicker()
@@ -720,17 +734,6 @@ final class MetronomeManager: MetronomeFeature {
             currentBeat = -1 // Will become 0 on next tick
         } else {
             currentBeat = -1 // Stopped state
-        }
-        
-        // Clear all patterns
-        for i in 0..<gridPattern.count {
-            for j in 0..<gridPattern[i].count {
-                gridPattern[i][j] = false
-            }
-        }
-        
-        for i in 0..<accentPattern.count {
-            accentPattern[i] = false
         }
         
         // Set up basic 4/4 pattern

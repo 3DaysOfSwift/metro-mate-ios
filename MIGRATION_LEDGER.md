@@ -1,5 +1,24 @@
 # AppBrain Migration Ledger
 
+## Pass Fourteen: Main Actor Review Refinements — 7 September 2026
+
+The developer approved simulator audio playback and reported all tests passing
+for the preceding implementation. The subsequent Main Actor review identified
+two refinements, now implemented: visual polling skips overdue deadlines instead
+of catching up, and default, loaded, and random beat patterns are built in local
+arrays before each array is published once. Reset no longer clears observed
+arrays redundantly before default-pattern construction clears them.
+
+Audio scheduling and persistence ownership are unchanged. A new real-ticker
+test checks that a delayed callback is followed by a fresh interval, alongside
+existing cancellation, replacement, and non-overlap tests. These changes do not
+claim measured performance gains; manual regression approval of this checkpoint
+remains pending.
+
+Validation: the complete MetronomeTests target passed on the iPhone Air simulator
+on 7 September 2026, including the new missed-poll test. MetronomeUITests was not
+rerun for this checkpoint. `git diff --check` passed.
+
 ## Migration Closed — 6 September 2026
 
 The developer requested completion after general manual app approval and the

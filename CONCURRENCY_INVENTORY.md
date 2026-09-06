@@ -5,10 +5,11 @@
 The timing-regression correction supersedes the earlier ticker description:
 repeating sound now comes from a sample-spaced rhythm buffer looped by the audio
 engine. SwiftConcurrencyMetronomeTicker polls audio progress for UI state only.
+Following Pass Fourteen, it skips overdue visual polls instead of catching up.
 The actor-owned audio configuration command replaces the loop on tempo/pattern
 changes; tap feedback uses a separate player node. StarFieldRenderer calculates
 frames on a presentation actor and returns Sendable values for publication.
-See MIGRATION_LEDGER.md for verification and pending listening approval.
+See MIGRATION_LEDGER.md for verification and checkpoint-specific manual approval.
 
 The table below is the original planning inventory, not a current list of
 unimplemented work. Its pending labels describe the baseline assessment.

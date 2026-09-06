@@ -110,6 +110,32 @@ struct SwiftConcurrencyMetronomeTickerTests {
         #expect(calls == 4)
         #expect(maximumActiveCallbacks == 1)
     }
+
+    @Test func missedVisualPollsWaitForANewIntervalInsteadOfCatchingUp() async throws {
+        let ticker = SwiftConcurrencyMetronomeTicker()
+        let clock = ContinuousClock()
+        let finished = AsyncStream<Void>.makeStream()
+        let interval = Duration.milliseconds(80)
+        var firstCompletion: ContinuousClock.Instant?
+        var secondStart: ContinuousClock.Instant?
+        ticker.start(after: .zero, repeatingEvery: interval) {
+            if firstCompletion == nil {
+                // Make multiple deadlines overdue without blocking the UI executor.
+                try? await clock.sleep(for: .milliseconds(250))
+                firstCompletion = clock.now
+            } else {
+                secondStart = clock.now
+                ticker.stop()
+                finished.continuation.yield()
+            }
+        }
+        var events = finished.stream.makeAsyncIterator()
+        await events.next()
+        let completion = try #require(firstCompletion)
+        let nextStart = try #require(secondStart)
+        // Only a lower bound: a busy simulator is allowed to deliver late.
+        #expect(completion.duration(to: nextStart) >= interval)
+    }
 }
 
 @MainActor
