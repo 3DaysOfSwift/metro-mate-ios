@@ -21,12 +21,14 @@ func makeTestMetronome(
     presetRepository: InMemoryPresetRepository = InMemoryPresetRepository(),
     audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
     ticker: ControllableMetronomeTicker? = nil,
+    tapResetScheduler: ControllableDelayScheduler? = nil,
     currentDate: @escaping () -> Date = Date.init
 ) -> MetronomeManager {
     MetronomeManager(
         presetRepository: presetRepository,
         audioPlayer: audioPlayer,
         ticker: ticker ?? ControllableMetronomeTicker(),
+        tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
         currentDate: currentDate
     )
 }

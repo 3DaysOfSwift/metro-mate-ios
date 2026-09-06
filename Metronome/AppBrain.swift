@@ -18,10 +18,12 @@ final class AppBrain {
         )
         let audioPlayer = AVFoundationMetronomeAudioPlayer(bundle: .main)
         let ticker = SwiftConcurrencyMetronomeTicker()
+        let tapResetScheduler = SwiftConcurrencyDelayScheduler()
         let metronome = MetronomeManager(
             presetRepository: presetRepository,
             audioPlayer: audioPlayer,
             ticker: ticker,
+            tapResetScheduler: tapResetScheduler,
             currentDate: Date.init
         )
 

@@ -239,6 +239,22 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.bpm == 60)
     }
 
+    @Test func tapCountResetsThreeSecondsAfterTheMostRecentTap() {
+        let tapResetScheduler = ControllableDelayScheduler()
+        let manager = makeManager(tapResetScheduler: tapResetScheduler)
+
+        manager.tapTempo()
+        manager.tapTempo()
+
+        #expect(manager.tapCount == 2)
+        #expect(tapResetScheduler.delay == .seconds(3))
+        #expect(tapResetScheduler.cancelCallCount == 2)
+
+        tapResetScheduler.completeDelay()
+
+        #expect(manager.tapCount == 0)
+    }
+
     @Test func changingTempoReplacesTheRunningTicker() {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
@@ -259,12 +275,14 @@ struct MetronomeManagerCharacterisationTests {
         repository: InMemoryPresetRepository = InMemoryPresetRepository(),
         audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
         ticker: ControllableMetronomeTicker? = nil,
+        tapResetScheduler: ControllableDelayScheduler? = nil,
         currentDate: @escaping () -> Date = Date.init
     ) -> MetronomeManager {
         MetronomeManager(
             presetRepository: repository,
             audioPlayer: audioPlayer,
             ticker: ticker ?? ControllableMetronomeTicker(),
+            tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
             currentDate: currentDate
         )
     }

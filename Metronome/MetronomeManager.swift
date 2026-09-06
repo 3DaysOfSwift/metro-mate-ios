@@ -170,12 +170,12 @@ final class MetronomeManager: MetronomeFeature {
     @Published var tapTimes: [Date] = []
     @Published var tapCount: Int = 0
     private let maxTapCount = 8
-    private var tapClearTimer: Timer?
     private var tapPointTimer: Timer?
     
     private let presetRepository: any PresetRepository
     private let audioPlayer: any MetronomeAudioPlayer
     private let ticker: any MetronomeTicker
+    private let tapResetScheduler: any CancellableDelayScheduler
     /// Supplies the current date so time-based rules can be tested without waiting for real time.
     private let currentDate: () -> Date
 
@@ -183,11 +183,13 @@ final class MetronomeManager: MetronomeFeature {
         presetRepository: any PresetRepository,
         audioPlayer: any MetronomeAudioPlayer,
         ticker: any MetronomeTicker,
+        tapResetScheduler: any CancellableDelayScheduler,
         currentDate: @escaping () -> Date
     ) {
         self.presetRepository = presetRepository
         self.audioPlayer = audioPlayer
         self.ticker = ticker
+        self.tapResetScheduler = tapResetScheduler
         self.currentDate = currentDate
         audioPlayer.prepare()
         setupDefaultPattern()
@@ -195,6 +197,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     deinit {
+        tapResetScheduler.cancel()
         tapPointTimer?.invalidate()
     }
     
@@ -455,11 +458,10 @@ final class MetronomeManager: MetronomeFeature {
             }
         }
         
-        // Clear tap count after 3 seconds of no tapping
-        tapClearTimer?.invalidate()
-        tapClearTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+        // Reset the visible count three seconds after the most recent tap.
+        tapResetScheduler.cancel()
+        tapResetScheduler.schedule(after: .seconds(3)) { [weak self] in
             self?.tapCount = 0
-            // Don't clear BPM - it stays
         }
     }
     
