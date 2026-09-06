@@ -1,5 +1,20 @@
 # AppBrain Migration Ledger
 
+## Migration Closed — 6 September 2026
+
+The developer requested completion after general manual app approval and the
+explicit deferral of further timing/profiling work. The final MetronomeTests
+simulator run passed against application commit
+`78ce4fff052b3256861e861b3d6fa16ee1bbbc05`.
+The closing source/ownership audit and feature-by-feature handover are recorded
+in [MIGRATION_FEATURE_REPORT.md](MIGRATION_FEATURE_REPORT.md).
+
+This is completion of the agreed migration scope, not a claim that every
+device regression or performance check passed. Hardware-specific and measured
+timing checks remain documented follow-ups. Entries below retain the historical
+state at each checkpoint; the Starting Architecture table is not a current
+backlog. Consult the final report for current ownership and evidence limits.
+
 ## Pass Ten: Off-Main Feature Execution — Closed
 
 Closed on 6 September 2026 with the developer's agreement to defer additional

@@ -1,5 +1,14 @@
 # Migration Behaviour Contract
 
+## Closing Record
+
+The migration was closed by agreement on 6 September 2026. The table below
+preserves the original baseline assessment; its Pending labels are not a
+current test-run summary. Current implementation, automated evidence, general
+user approval, and explicitly unverified manual checks are summarised in
+[MIGRATION_FEATURE_REPORT.md](MIGRATION_FEATURE_REPORT.md). No unperformed
+manual journey has been retrospectively marked as passed.
+
 ## Baseline
 
 - Original repository: `alexfriedl/metro-mate-ios`
