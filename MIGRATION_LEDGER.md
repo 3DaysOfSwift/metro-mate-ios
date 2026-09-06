@@ -1,5 +1,15 @@
 # AppBrain Migration Ledger
 
+## Audio Scheduling: Live Integration — 7 September 2026
+
+Connected bounded sample-time scheduling and reusable voices to the production
+audio player, replacing time-stretching and whole-pattern replacement. The audio
+actor owns refill lifetime and rejects obsolete generations. Progress reports
+committed beat indices; underrun counts and refill failures reach feature state.
+The complete MetronomeTests target passed, including production tempo/pattern
+changes and stop/restart. Manual listening and device measurements are pending;
+see AUDIO_TIMING_CONTRACT.md for tuning values and remaining acceptance checks.
+
 ## Pass Sixteen — Further Architecture Refinement, 7 September 2026
 
 Removed unused grid rows, gridSize, and updateGridSize. The feature now owns one

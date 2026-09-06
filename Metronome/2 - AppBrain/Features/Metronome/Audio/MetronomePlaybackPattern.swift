@@ -6,17 +6,6 @@ struct MetronomePlaybackPattern: Sendable, Equatable {
     let beats: [Bool?] // nil is silent; true is accented.
     let restartFromFirstBeat: Bool
 
-    /// Reuse a playing loop only when the musical pattern is unchanged and no
-    /// explicit restart was requested. AVAudioUnitTimePitch preserves click pitch.
-    func playbackRate(relativeTo source: Self) -> Float? {
-        guard !restartFromFirstBeat, beats == source.beats,
-              interval.isFinite, interval > 0,
-              source.interval.isFinite, source.interval > 0 else { return nil }
-        let rate = source.interval / interval
-        guard (1.0 / 32.0...32.0).contains(rate) else { return nil }
-        return Float(rate)
-    }
-
     func framesPerBeat(sampleRate: Double) throws -> Int {
         guard sampleRate.isFinite, sampleRate > 0, sampleRate <= 192_000,
               interval.isFinite, interval >= 0.01, interval <= 10,
@@ -26,26 +15,4 @@ struct MetronomePlaybackPattern: Sendable, Equatable {
         return max(1, Int((interval * sampleRate).rounded()))
     }
 
-    /// Called on the audio executor. Mix rather than queue overlapping click tails.
-    func render(normal: [[Float]], accented: [[Float]], sampleRate: Double, firstBeat: Int) throws -> [[Float]] {
-        let frames = try framesPerBeat(sampleRate: sampleRate)
-        guard normal.count == 2, accented.count == 2, beats.indices.contains(firstBeat) else {
-            throw CocoaError(.fileReadCorruptFile)
-        }
-        let length = frames * beats.count
-        var output = Array(repeating: Array(repeating: Float.zero, count: length), count: 2)
-        for offset in beats.indices {
-            guard let accent = beats[(firstBeat + offset) % beats.count] else { continue }
-            let click = accent ? accented : normal
-            for channel in 0..<2 {
-                for frame in click[channel].indices {
-                    output[channel][(offset * frames + frame) % length] += click[channel][frame]
-                }
-            }
-        }
-        for channel in 0..<2 {
-            for frame in 0..<length { output[channel][frame] = min(1, max(-1, output[channel][frame])) }
-        }
-        return output
-    }
 }

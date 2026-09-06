@@ -25,7 +25,7 @@ struct MetronomeAudioConcurrencyTests {
                     interval: 0.1 - Double(step % 20) * 0.001,
                     beats: source.beats, restartFromFirstBeat: false
                 )
-                // A replacement would postpone sound by a whole beat. Rate edits
+                // A replacement would postpone sound by a whole beat. Tempo edits
                 // must ignore this startup delay and preserve the existing timeline.
                 try await audio.schedulePlayback(pattern, initialDelay: pattern.interval)
                 try await Task.sleep(for: .milliseconds(20))
@@ -34,8 +34,24 @@ struct MetronomeAudioConcurrencyTests {
                 previous = beat
             }
             #expect(previous >= first + 4)
+            let changed = MetronomePlaybackPattern(interval: 0.05, beats: [nil, true, false], restartFromFirstBeat: true)
+            try await audio.schedulePlayback(changed, initialDelay: 0.5)
+            try await Task.sleep(for: .milliseconds(250))
+            let progress = try #require(try await audio.playbackProgress())
+            #expect(progress.step > previous)
+            #expect((0..<3).contains(try #require(progress.beatIndex)))
             await audio.stop()
+            try await Task.sleep(for: .milliseconds(100))
             #expect(await audio.playbackBeat() == nil)
+            try await audio.schedulePlayback(source, initialDelay: 0)
+            let restartDeadline = clock.now.advanced(by: .seconds(5))
+            while await audio.playbackBeat() == nil, clock.now < restartDeadline {
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            let restarted = try #require(try await audio.playbackProgress())
+            #expect(restarted.step < progress.step)
+            #expect(restarted.skippedBeats == 0)
+            await audio.stop()
         } catch {
             await audio.stop()
             throw error

@@ -31,17 +31,21 @@ AVFoundationMetronomeAudioPlayer also owns a serial off-main executor. Its engin
 and player are created on first explicit audio use on that executor, not during
 AppBrain construction. The feature awaits audio commands in submission order,
 invalidates superseded starts and queued ticks, and publishes a starting state.
-Repeating audio is rendered as a sample-spaced buffer and looped by AVAudioPlayerNode.
-Tempo-only edits reuse that source buffer and adjust AVAudioUnitTimePitch.rate
-without stopping the node or resetting its timeline. Rates are calculated against
-the original source interval, never compounded from successive requests. The
-presentation ticker keeps polling; an unchanged tempo is a no-op. Pattern edits
-and explicit restarts still replace the buffer. Time-stretching quality requires
-listening checks, particularly across large tempo changes.
+Cached click buffers are scheduled at absolute sample positions across a fixed
+voice pool. A silent clock node gives every voice the same continuous timeline.
+The audio actor owns one cancellable refill task (20 ms polling, an initial
+100 ms look-ahead window, and 10 ms scheduling lead). Tempo and pattern requests
+replace the pending configuration; committed beats are not stopped or delayed.
+There is no time-stretching. Generation checks protect restarted playback from
+obsolete refills. Late refills skip expired beats and report the underrun;
+other refill failures stop playback and reach the feature's error state.
+These scheduling margins still require device measurements and listening checks.
 The main-actor ticker only polls the audio playhead for display; it never triggers
 an audible beat. Tap feedback uses a separate node. Tempo and pattern edits pass
-through ordered audio commands. Cached click samples are mixed so
-sound tails can overlap subdivisions instead of queuing whole files end to end.
+through ordered audio commands. Voices preserve overlapping click tails, and
+progress reports the committed beat index rather than deriving it from the
+latest requested measure size. Controls still display requested configuration
+while already committed audio finishes.
 AppBrain starts audio preparation and preset loading as independent child tasks.
 
 StarFieldRenderer is a presentation actor that calculates dot frames outside

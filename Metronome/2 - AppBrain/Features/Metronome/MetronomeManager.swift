@@ -252,12 +252,24 @@ final class MetronomeManager: MetronomeFeature {
         guard isPlaying, revision == tickerRevision, !Task.isCancelled else { return }
         let requestedPatternRevision = patternRevision
         // UI follows the audio timeline; a late UI tick cannot delay a click.
-        let beat = await audioPlayer.playbackBeat()
+        let progress: MetronomePlaybackProgress?
+        do {
+            progress = try await audioPlayer.playbackProgress()
+        } catch {
+            guard isPlaying, revision == tickerRevision else { return }
+            audioError = error.localizedDescription
+            await stop()
+            return
+        }
         guard isPlaying, revision == tickerRevision, !Task.isCancelled,
               requestedPatternRevision == patternRevision,
-              let beat, beat != lastPlaybackStep else { return }
-        lastPlaybackStep = beat
-        currentBeat = beat % beatsPerMeasure
+              let progress else { return }
+        if progress.skippedBeats > 0 {
+            audioError = "Audio scheduling fell behind; \(progress.skippedBeats) beats were skipped. Stop and restart playback to retry."
+        }
+        guard progress.step != lastPlaybackStep else { return }
+        lastPlaybackStep = progress.step
+        currentBeat = progress.beatIndex ?? (progress.step % beatsPerMeasure)
         triggerVisualBlink()
     }
     
