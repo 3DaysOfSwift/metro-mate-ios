@@ -2,9 +2,9 @@
 final class AppBrain {
     static let shared = AppBrain.live()
 
-    let metronome: MetronomeManager
+    let metronome: any MetronomeFeature
 
-    init(metronome: MetronomeManager) {
+    init(metronome: any MetronomeFeature) {
         self.metronome = metronome
     }
 

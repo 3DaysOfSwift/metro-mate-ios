@@ -9,7 +9,7 @@ final class ContentViewModel: ObservableObject {
     @Published var isShowingBeatPresets = false
     @Published var isPlayButtonPressed = false
 
-    let metronome: MetronomeManager
+    let metronome: any MetronomeFeature
 
     private var repeatTimer: Timer?
     private var metronomeUpdates: AnyCancellable?
@@ -104,7 +104,6 @@ final class ContentViewModel: ObservableObject {
     }
 
     private func setBPM(_ bpm: Double) {
-        metronome.bpm = bpm
         metronome.updateBPM(bpm)
     }
 

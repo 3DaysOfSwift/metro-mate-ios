@@ -14,7 +14,7 @@ that no responsibility becomes stranded during the staged migration.
 | Grid-settings presentation state and intent | `GridSettingsView` in `ContentView.swift` | `GridSettingsViewModel` | `GridSettingsViewModel` | Separate screen currently talks directly to the shared manager | Pass One | Complete |
 | Preset-list presentation state and intent | `BeatPresetsView` in `ContentView.swift` | `BeatPresetsViewModel` | `BeatPresetsViewModel` | Separate screen mixes editor state with preset rules | Pass One and Three | Presentation extraction complete; feature-rule extraction pending |
 | Note-value-picker presentation state and intent | `NoteValuePicker` | `NoteValuePickerViewModel` | `NoteValuePickerViewModel` | Screen currently mutates the manager directly | Pass One | Complete |
-| Metronome playback state, timing rules, and pattern rules | `MetronomeManager` | AppBrain staging | `MetronomeManager` behind `MetronomeFeature` | Existing type mixes several layers and requires incremental separation | Pass Two and Three | Pending |
+| Metronome playback state, timing rules, and pattern rules | `MetronomeManager` | `MetronomeManager` behind `MetronomeFeature` | `MetronomeManager` behind `MetronomeFeature` | Existing type mixes several layers and requires incremental separation | Pass Two and Three | Feature boundary complete; internal separation pending |
 | Tap-tempo calculation | `MetronomeManager` | AppBrain staging | `MetronomeManager` | Business rule needs a controllable clock and direct tests | Pass Three | Pending |
 | Preset business rules | `MetronomeManager` and `BeatPresetsView` | AppBrain staging | `PresetManager` only if separation provides a clear maintenance benefit; otherwise `MetronomeManager` | Final feature boundary requires evaluation against KISS | Pass Three | Pending |
 | Preset persistence | `MetronomeManager` using `UserDefaults.standard` | AppBrain staging | `PresetRepository` and `UserDefaultsPresetRepository` | External storage is embedded in the feature object | Pass Three | Pending |
@@ -23,7 +23,7 @@ that no responsibility becomes stranded during the staged migration.
 | Repeating BPM-button timer | `ContentView` | `ContentViewModel` | `ContentViewModel` | This is tracked interaction state and must not remain stored in a View | Pass One | Complete |
 | Star-field animation timer and dot mutation | `StarFieldView` | `StarFieldViewModel` | `StarFieldViewModel` | The View stores and updates tracked animation work | Pass One | Complete |
 | Production object construction | `MetronomeManager.shared` | `AppBrain.shared` | `AppBrain.live()` | One explicit composition root is required | Pass Two | Complete |
-| Siri access to playback | App Intents through `MetronomeManager.shared` | AppBrain facade | `MetronomeFeature` supplied by `AppBrain.shared` | App Intent is another UI entry point into the same feature | Pass Two and Three | AppBrain routing complete; feature API pending |
+| Siri access to playback | App Intents through `MetronomeManager.shared` | AppBrain facade | `MetronomeFeature` supplied by `AppBrain.shared` | App Intent is another UI entry point into the same feature | Pass Two and Three | Complete |
 
 No architectural production change begins until the behaviour contract has
 adequate protection for the responsibility being moved.

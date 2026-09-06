@@ -54,7 +54,6 @@ struct PlayMetronomeIntent: AppIntent {
         
         // Setze BPM
         let targetBPM = Double(bpm.rawValue)
-        metronome.bpm = targetBPM
         metronome.updateBPM(targetBPM)
         
         // Starte Wiedergabe

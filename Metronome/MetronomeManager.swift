@@ -153,7 +153,7 @@ struct BeatPreset: Identifiable, Codable {
     let gridDisplayMode: GridDisplayMode
 }
 
-class MetronomeManager: ObservableObject {
+class MetronomeManager: MetronomeFeature {
     @Published var isPlaying = false
     @Published var bpm: Double = 60
     @Published var beatsPerMeasure = 8

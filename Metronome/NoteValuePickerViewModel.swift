@@ -13,7 +13,7 @@ final class NoteValuePickerViewModel: ObservableObject {
 
     @Published private(set) var shouldDismiss = false
 
-    let metronome: MetronomeManager
+    let metronome: any MetronomeFeature
     let quickPresets = [
         QuickPreset(title: "Basic", bpm: 120, noteValue: .quarter),
         QuickPreset(title: "Rock", bpm: 110, noteValue: .eighth),
@@ -43,7 +43,6 @@ final class NoteValuePickerViewModel: ObservableObject {
 
     func select(_ preset: QuickPreset) {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        metronome.bpm = Double(preset.bpm)
         metronome.updateBPM(Double(preset.bpm))
         metronome.updateNoteValue(preset.noteValue)
         requestDismissalAfterSelection()

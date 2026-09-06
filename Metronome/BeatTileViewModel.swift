@@ -6,7 +6,7 @@ final class BeatTileViewModel: ObservableObject {
     @Published var isPressed = false
 
     let beat: Int
-    let metronome: MetronomeManager
+    let metronome: any MetronomeFeature
 
     private var metronomeUpdates: AnyCancellable?
 

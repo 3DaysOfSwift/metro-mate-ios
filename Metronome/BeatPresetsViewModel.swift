@@ -6,7 +6,7 @@ final class BeatPresetsViewModel: ObservableObject {
     @Published var isShowingSaveDialog = false
     @Published var newBeatName = ""
 
-    let metronome: MetronomeManager
+    let metronome: any MetronomeFeature
 
     private var metronomeUpdates: AnyCancellable?
 

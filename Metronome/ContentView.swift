@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
 
-    private var metronome: MetronomeManager { viewModel.metronome }
+    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         ZStack {
@@ -405,7 +405,7 @@ struct BeatPresetsView: View {
     @StateObject private var viewModel = BeatPresetsViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    private var metronome: MetronomeManager { viewModel.metronome }
+    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         NavigationView {

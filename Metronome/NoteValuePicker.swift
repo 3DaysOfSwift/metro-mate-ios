@@ -4,7 +4,7 @@ struct NoteValuePicker: View {
     @StateObject private var viewModel = NoteValuePickerViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    private var metronome: MetronomeManager { viewModel.metronome }
+    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         VStack(spacing: 0) {
