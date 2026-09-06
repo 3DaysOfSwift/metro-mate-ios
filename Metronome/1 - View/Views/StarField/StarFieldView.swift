@@ -30,12 +30,12 @@ struct StarFieldView: View {
             .onAppear {
                 viewModel.appear(in: geometry.size)
             }
-            .onChange(of: geometry.size) { newSize in
+            .onChange(of: geometry.size) { _, newSize in
                 viewModel.resize(to: newSize)
             }
         }
         .ignoresSafeArea() // Cover entire screen including safe areas
-        .onChange(of: viewModel.metronome.shouldBlink) { newValue in
+        .onChange(of: viewModel.metronome.shouldBlink) { _, newValue in
             viewModel.metronomeDidBlink(newValue)
         }
         .onDisappear {

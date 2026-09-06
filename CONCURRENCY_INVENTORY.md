@@ -1,5 +1,27 @@
 # Concurrency Inventory
 
+## Current Implementation
+
+The table below is the original planning inventory, not a current list of
+unimplemented work. Its pending labels describe the baseline assessment.
+
+| Original entries | Current owner and implementation | Remaining verification |
+| --- | --- | --- |
+| CON-001–004 | Main-actor MetronomeManager uses SwiftConcurrencyMetronomeTicker; a stored task waits on ContinuousClock deadlines and is cancelled when replaced or stopped. First playback tick retains a 10 ms delay. | Real-device cadence, first-beat latency, and behaviour under load |
+| CON-005 | SwiftConcurrencyDelayScheduler owns pulse-completion tasks. Overlapping completions are retained to preserve the existing behaviour; stop cancels them. | Visual comparison and explicit review of stop-time cancellation |
+| CON-006 | NoteValuePickerViewModel owns and cancels its 200 ms dismissal task. | Repeated selection and dismissal on screen |
+| CON-007 | Feature-owned tap-reset scheduler replaces its task on each tap. | Run deterministic reset tests in Xcode |
+| CON-008 | Unused tap-point implementation removed. | Confirm no missing visual behaviour in regression testing |
+| CON-009 | ContentViewModel owns the repeating adjustment task. | Long press, release, bounds, and screen lifetime |
+| CON-010 | StarFieldViewModel owns its animation task and cancels on disappearance. | Visual comparison and lifetime checks |
+
+The production-source scan finds no explicit DispatchQueue, DispatchSource,
+scheduledTimer, or Timer construction. This proves syntax replacement, not
+timing equivalence. Cooperative tasks are not real-time audio scheduling:
+device testing under load remains essential before declaring this migration done.
+
+## Original Planning Inventory
+
 Do not replace an entry merely to remove GCD syntax. Preserve the guarantee
 listed here and record the evidence that proves the replacement behaves the
 same way. A deliberate decision to retain a suitable system primitive is a
@@ -18,7 +40,7 @@ valid resolution.
 | CON-009 | Foundation timers in `ContentView` for press-and-hold BPM changes | Repeats increment or decrement every 100 ms until the press ends | Tracked screen interaction | Must move out of the View; evaluate a ViewModel-owned cancellable Task | Holding, release, disappearance, bounds, and cancellation tests | Pending |
 | CON-010 | Foundation timer in `StarFieldView` at 60 Hz | Continuously updates decorative dot positions | Long-lived while presentation exists | Replace with SwiftUI animation/timeline where behaviour remains equivalent, otherwise ViewModel-owned managed work | Confirm animation stops with screen lifetime and appearance remains acceptable | Pending |
 
-## Known Concurrency Risks
+## Risks Recorded Before Migration
 
 - `MetronomeManager` publishes mutable state without actor isolation while its
   timer originates on a private queue.

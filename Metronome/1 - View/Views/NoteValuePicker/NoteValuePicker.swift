@@ -69,7 +69,7 @@ struct NoteValuePicker: View {
         .presentationDetents([.fraction(0.6)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(20)
-        .onChange(of: viewModel.shouldDismiss) { shouldDismiss in
+        .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
             if shouldDismiss {
                 dismiss()
             }
