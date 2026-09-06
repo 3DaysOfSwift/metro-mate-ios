@@ -20,7 +20,7 @@ final class StarFieldViewModel: ObservableObject {
     private var canvasSize: CGSize = .zero
     private var wavePhase: CGFloat = 0
     private var pulseTime: CGFloat = 1
-    private var animationTimer: Timer?
+    private var animationTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?
 
     init(brain: AppBrain? = nil) {
@@ -32,7 +32,7 @@ final class StarFieldViewModel: ObservableObject {
     }
 
     deinit {
-        animationTimer?.invalidate()
+        animationTask?.cancel()
     }
 
     func appear(in size: CGSize) {
@@ -45,8 +45,8 @@ final class StarFieldViewModel: ObservableObject {
     }
 
     func disappear() {
-        animationTimer?.invalidate()
-        animationTimer = nil
+        animationTask?.cancel()
+        animationTask = nil
     }
 
     func metronomeDidBlink(_ didBlink: Bool) {
@@ -101,10 +101,29 @@ final class StarFieldViewModel: ObservableObject {
     }
 
     private func startAnimation() {
-        guard animationTimer == nil else { return }
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.updateDots()
+        guard animationTask == nil else { return }
+        animationTask = Task { [weak self] in
+            let clock = ContinuousClock()
+            let frameInterval = Duration.seconds(1.0 / 60.0)
+            var nextFrame = clock.now.advanced(by: frameInterval)
+
+            do {
+                while !Task.isCancelled {
+                    try await clock.sleep(until: nextFrame, tolerance: .zero)
+                    try Task.checkCancellation()
+                    guard let self else { return }
+                    self.updateDots()
+
+                    nextFrame = nextFrame.advanced(by: frameInterval)
+                    // Skip missed frames instead of replaying them in a burst.
+                    if nextFrame <= clock.now {
+                        nextFrame = clock.now.advanced(by: frameInterval)
+                    }
+                }
+            } catch is CancellationError {
+                // Disappearance or ViewModel destruction ends animation.
+            } catch {
+                return
             }
         }
     }
