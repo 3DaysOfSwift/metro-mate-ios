@@ -21,7 +21,7 @@ that no responsibility becomes stranded during the staged migration.
 | Audio-session, engine, files, and click scheduling | `MetronomeManager` | AppBrain staging | Audio implementation behind a narrow playback contract | Device API details prevent isolated feature tests | Pass Three | Pending |
 | Haptic creation | SwiftUI Views | Screen ViewModels temporarily | Presentation haptic dependency or feature capability chosen during boundary review | Existing Views instantiate UIKit generators repeatedly | Pass One and Three | Pending |
 | Repeating BPM-button timer | `ContentView` | `ContentViewModel` | `ContentViewModel` | This is tracked interaction state and must not remain stored in a View | Pass One | Complete |
-| Star-field animation timer and dot mutation | `StarFieldView` | `StarFieldViewModel` | `StarFieldViewModel` | The View stores and updates tracked animation work | Pass One | Pending |
+| Star-field animation timer and dot mutation | `StarFieldView` | `StarFieldViewModel` | `StarFieldViewModel` | The View stores and updates tracked animation work | Pass One | Complete |
 | Production object construction | `MetronomeManager.shared` | `AppBrain.shared` | `AppBrain.live()` | One explicit composition root is required | Pass Two | Pending |
 | Siri access to playback | App Intents through `MetronomeManager.shared` | AppBrain facade | `MetronomeFeature` supplied by `AppBrain.shared` | App Intent is another UI entry point into the same feature | Pass Two and Three | Pending |
 

@@ -18,7 +18,7 @@ struct ContentView: View {
             Color(hex: "#1C1C1B")
                 .ignoresSafeArea()
             
-            StarFieldView(metronome: metronome)
+            StarFieldView()
                 .ignoresSafeArea()
                 .allowsHitTesting(false) // Don't block UI interactions
             
@@ -181,7 +181,7 @@ struct ContentView: View {
                 }
                 
                 // Beat Pattern Grid
-                GridView(metronome: metronome)
+                GridView()
                 
                 Spacer()
                     .frame(maxHeight: 20)
@@ -257,33 +257,26 @@ struct ContentView: View {
 }
 
 struct GridView: View {
-    @ObservedObject var metronome: MetronomeManager
+    @StateObject private var viewModel = GridViewModel()
     
     var body: some View {
         VStack(spacing: 6) {
             // Main grid tiles
-            ForEach(0..<numberOfRows(), id: \.self) { row in
+            ForEach(0..<viewModel.numberOfRows, id: \.self) { row in
                 VStack(spacing: 3) {
                     HStack(spacing: 6) {
-                        ForEach(0..<tilesInRow(row), id: \.self) { col in
-                            let beat = row * tilesPerRow() + col
-                            BeatTile(
-                                beat: beat,
-                                metronome: metronome,
-                                isActive: beat < metronome.gridPattern[0].count && metronome.gridPattern[0][beat],
-                                isCurrent: beat == metronome.currentBeat && metronome.isPlaying
-                            )
+                        ForEach(0..<viewModel.tilesInRow(row), id: \.self) { col in
+                            let beat = row * viewModel.tilesPerRow + col
+                            BeatTile(beat: beat)
                         }
                     }
                     
                     // Accent dots row
                     HStack(spacing: 6) {
-                        ForEach(0..<tilesInRow(row), id: \.self) { col in
-                            let beat = row * tilesPerRow() + col
+                        ForEach(0..<viewModel.tilesInRow(row), id: \.self) { col in
+                            let beat = row * viewModel.tilesPerRow + col
                             Button(action: {
-                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                impactFeedback.impactOccurred()
-                                metronome.toggleAccentCell(col: beat)
+                                viewModel.toggleAccent(at: beat)
                             }) {
                                 Circle()
                                     .fill(getAccentColor(for: beat))
@@ -297,25 +290,9 @@ struct GridView: View {
         }
     }
     
-    private func numberOfRows() -> Int {
-        let tilesPerRow = self.tilesPerRow()
-        return (metronome.beatsPerMeasure + tilesPerRow - 1) / tilesPerRow
-    }
-    
-    private func tilesInRow(_ row: Int) -> Int {
-        let remainingBeats = metronome.beatsPerMeasure - (row * tilesPerRow())
-        return min(tilesPerRow(), remainingBeats)
-    }
-    
-    private func tilesPerRow() -> Int {
-        return metronome.noteValue.isTriplet ? 3 : 4
-    }
-    
-    
-    
     private func getAccentColor(for beat: Int) -> Color {
-        if beat < metronome.accentPattern.count && metronome.accentPattern[beat] {
-            if beat == metronome.currentBeat && metronome.isPlaying {
+        if viewModel.isAccentActive(at: beat) {
+            if viewModel.isCurrentAccent(at: beat) {
                 return Color(hex: "#F54206") // Orange when playing accent
             } else {
                 return Color(hex: "#303030") // Gray accent dots
