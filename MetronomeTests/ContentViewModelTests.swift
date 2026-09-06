@@ -4,6 +4,47 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ContentViewModelTests {
+    @Test(arguments: [true, false])
+    func holdingTempoButtonRepeatsUntilReleased(increasing: Bool) async throws {
+        let metronome = makeTestMetronome()
+        let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
+        defer { viewModel.stopRepeatingBPMChange() }
+
+        if increasing {
+            viewModel.startRepeatingBPMIncrease()
+        } else {
+            viewModel.startRepeatingBPMDecrease()
+        }
+        #expect(metronome.bpm == 60)
+
+        // Exercise the real Task runtime, allowing for a busy test host.
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(3))
+        while metronome.bpm == 60 && clock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(increasing ? metronome.bpm > 60 : metronome.bpm < 60)
+
+        viewModel.stopRepeatingBPMChange()
+        let releasedBPM = metronome.bpm
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(metronome.bpm == releasedBPM)
+    }
+
+    @Test func releasingViewModelCancelsTheHeldButtonTask() async throws {
+        let metronome = makeTestMetronome()
+        var viewModel: ContentViewModel? = ContentViewModel(brain: AppBrain(metronome: metronome))
+        weak var releasedViewModel = viewModel
+        viewModel?.startRepeatingBPMIncrease()
+        await Task.yield()
+        viewModel = nil
+
+        #expect(releasedViewModel == nil)
+        let releasedBPM = metronome.bpm
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(metronome.bpm == releasedBPM)
+    }
+
     @Test func presentationIntentsExposeTheRequestedSheet() {
         let viewModel = ContentViewModel(
             brain: AppBrain(

@@ -11,7 +11,7 @@ final class ContentViewModel: ObservableObject {
 
     let metronome: any MetronomeFeature
 
-    private var repeatTimer: Timer?
+    private var repeatTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?
 
     init(brain: AppBrain? = nil) {
@@ -23,7 +23,7 @@ final class ContentViewModel: ObservableObject {
     }
 
     deinit {
-        repeatTimer?.invalidate()
+        repeatTask?.cancel()
     }
 
     func showBeatPresets() {
@@ -71,8 +71,8 @@ final class ContentViewModel: ObservableObject {
     }
 
     func stopRepeatingBPMChange() {
-        repeatTimer?.invalidate()
-        repeatTimer = nil
+        repeatTask?.cancel()
+        repeatTask = nil
     }
 
     func recordTapTempo() {
@@ -92,10 +92,19 @@ final class ContentViewModel: ObservableObject {
 
     private func startRepeatingBPMChange(by amount: Double) {
         stopRepeatingBPMChange()
-        repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.changeBPM(by: amount)
-                self?.lightImpact()
+        repeatTask = Task { [weak self] in
+            do {
+                while !Task.isCancelled {
+                    try await Task.sleep(for: .milliseconds(100))
+                    try Task.checkCancellation()
+                    guard let self else { return }
+                    self.changeBPM(by: amount)
+                    self.lightImpact()
+                }
+            } catch is CancellationError {
+                // Releasing the button or replacing the gesture ends repetition.
+            } catch {
+                return
             }
         }
     }
