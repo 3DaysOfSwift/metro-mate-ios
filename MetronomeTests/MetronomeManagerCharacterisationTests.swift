@@ -203,6 +203,42 @@ struct MetronomeManagerCharacterisationTests {
         #expect(audioPlayer.playedAccents == [true])
     }
 
+    @Test func tapTempoUsesTheAverageOfRecentTapIntervals() {
+        var now = Date(timeIntervalSince1970: 1_000)
+        let manager = makeManager(currentDate: { now })
+
+        manager.tapTempo()
+        now = now.addingTimeInterval(0.5)
+        manager.tapTempo()
+        now = now.addingTimeInterval(1.0)
+        manager.tapTempo()
+
+        #expect(manager.bpm == 80)
+    }
+
+    @Test func tapTempoClampsAnUnreasonablyFastTempo() {
+        var now = Date(timeIntervalSince1970: 1_000)
+        let manager = makeManager(currentDate: { now })
+
+        manager.tapTempo()
+        now = now.addingTimeInterval(0.1)
+        manager.tapTempo()
+
+        #expect(manager.bpm == 200)
+    }
+
+    @Test func tapTempoIgnoresTapsOlderThanThreeSeconds() {
+        var now = Date(timeIntervalSince1970: 1_000)
+        let manager = makeManager(currentDate: { now })
+
+        manager.tapTempo()
+        now = now.addingTimeInterval(4)
+        manager.tapTempo()
+
+        #expect(manager.tapTimes == [now])
+        #expect(manager.bpm == 60)
+    }
+
     @Test func changingTempoReplacesTheRunningTicker() {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
@@ -222,12 +258,14 @@ struct MetronomeManagerCharacterisationTests {
     private func makeManager(
         repository: InMemoryPresetRepository = InMemoryPresetRepository(),
         audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
-        ticker: ControllableMetronomeTicker? = nil
+        ticker: ControllableMetronomeTicker? = nil,
+        currentDate: @escaping () -> Date = Date.init
     ) -> MetronomeManager {
         MetronomeManager(
             presetRepository: repository,
             audioPlayer: audioPlayer,
-            ticker: ticker ?? ControllableMetronomeTicker()
+            ticker: ticker ?? ControllableMetronomeTicker(),
+            currentDate: currentDate
         )
     }
 }

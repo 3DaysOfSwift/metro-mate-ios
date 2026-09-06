@@ -19,7 +19,8 @@ final class AppBrain {
         let metronome = MetronomeManager(
             presetRepository: presetRepository,
             audioPlayer: audioPlayer,
-            ticker: ticker
+            ticker: ticker,
+            currentDate: Date.init
         )
 
         return AppBrain(metronome: metronome)

@@ -20,11 +20,13 @@ final class InMemoryPresetRepository: PresetRepository {
 func makeTestMetronome(
     presetRepository: InMemoryPresetRepository = InMemoryPresetRepository(),
     audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
-    ticker: ControllableMetronomeTicker? = nil
+    ticker: ControllableMetronomeTicker? = nil,
+    currentDate: @escaping () -> Date = Date.init
 ) -> MetronomeManager {
     MetronomeManager(
         presetRepository: presetRepository,
         audioPlayer: audioPlayer,
-        ticker: ticker ?? ControllableMetronomeTicker()
+        ticker: ticker ?? ControllableMetronomeTicker(),
+        currentDate: currentDate
     )
 }

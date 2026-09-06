@@ -176,15 +176,19 @@ final class MetronomeManager: MetronomeFeature {
     private let presetRepository: any PresetRepository
     private let audioPlayer: any MetronomeAudioPlayer
     private let ticker: any MetronomeTicker
+    /// Supplies the current date so time-based rules can be tested without waiting for real time.
+    private let currentDate: () -> Date
 
     init(
         presetRepository: any PresetRepository,
         audioPlayer: any MetronomeAudioPlayer,
-        ticker: any MetronomeTicker
+        ticker: any MetronomeTicker,
+        currentDate: @escaping () -> Date
     ) {
         self.presetRepository = presetRepository
         self.audioPlayer = audioPlayer
         self.ticker = ticker
+        self.currentDate = currentDate
         audioPlayer.prepare()
         setupDefaultPattern()
         restorePresets()
@@ -412,7 +416,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func tapTempo() {
-        let now = Date()
+        let now = currentDate()
         
         // Increment tap count (never resets, just keeps counting)
         tapCount += 1
@@ -467,7 +471,7 @@ final class MetronomeManager: MetronomeFeature {
         tapPointTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
-            let now = Date()
+            let now = self.currentDate()
             var hasActiveTaps = false
             
             // Update opacity and scale for each tap point
