@@ -7,6 +7,8 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
 
     private var accentClickFile: AVAudioFile?
     private var normalClickFile: AVAudioFile?
+    private var accentClickBuffer: AVAudioPCMBuffer?
+    private var normalClickBuffer: AVAudioPCMBuffer?
     private var isPrepared = false
     private var isConnected = false
 
@@ -27,6 +29,13 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
 
         accentClickFile = loadSoundFile(named: "accent_click")
         normalClickFile = loadSoundFile(named: "normal_click")
+        // Missing bundled sounds are synthesised once, not on every beat.
+        if accentClickFile == nil {
+            accentClickBuffer = makeClickBuffer(accented: true)
+        }
+        if normalClickFile == nil {
+            normalClickBuffer = makeClickBuffer(accented: false)
+        }
         isPrepared = true
     }
 
@@ -52,7 +61,7 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
         let audioFile = accented ? accentClickFile : normalClickFile
         if let audioFile {
             playerNode.scheduleFile(audioFile, at: nil)
-        } else if let buffer = makeClickBuffer(accented: accented) {
+        } else if let buffer = accented ? accentClickBuffer : normalClickBuffer {
             playerNode.scheduleBuffer(buffer, at: nil)
         } else {
             throw NSError(domain: "MetronomeAudio", code: 1,

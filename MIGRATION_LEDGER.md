@@ -1,5 +1,46 @@
 # AppBrain Migration Ledger
 
+## Pass Ten: Off-Main Feature Execution — In Progress
+
+First checkpoint enables complete concurrency checking in Debug and Release
+for all three targets, retaining Swift 5 language mode. App Intent metadata is
+immutable and the grid-settings binding uses an explicitly inferred closure.
+Fallback audio buffers are prepared once per player instead of generated on
+every fallback click. No unchecked Sendable annotations were introduced.
+
+The full generic iOS Simulator Debug build succeeds. Focused Swift typechecking
+with complete checking and warnings-as-errors also succeeds (excluding the App
+and root preview files; these are covered by the full build). Project syntax and
+diff whitespace checks pass. The MetronomeTests suite passes on the iPhone Air
+iOS 26.2 simulator. Actual fallback playback and profiling still require
+verification; this is not a completed responsiveness pass. Existing app-icon
+and weak-variable compiler warnings remain unrelated to concurrency checking.
+
+Next checkpoints, in order:
+
+1. Capture a combined cold-start, star-field animation, and playback baseline
+   using Instruments on a representative device. Include missing audio files
+   and preset loading/saving. No latency or frame-time measurements exist yet.
+2. Give the existing audio implementation one serial off-main execution owner
+   for its mutable engine, files, and buffers. Respect AVFoundation's execution
+   requirements; bridge unavoidable blocking setup without blocking the
+   cooperative pool. Expose awaited preparation/start results and prevent a
+   cancelled or superseded start from restarting playback. Keep scheduling
+   ordered with stop and tempo changes; do not launch detached work per beat.
+3. Give persistence its own off-main execution owner, with async load/save and
+   Sendable value snapshots. Preserve save ordering, unsaved-change errors,
+   retry behaviour, and independent startup work. Keep feature rules in
+   MetronomeManager and small observable state updates on the Main Actor.
+4. Test the real ticker's cancellation, replacement, and missed deadlines;
+   agree and document late-tick behaviour before changing its current catch-up
+   policy. Compare timing under animation load.
+5. Repeat profiling, strict checking, and regressions. Move costly animation
+   calculations off-main only if measurements warrant it, publishing completed
+   frames without stale results. Do not add Task.yield merely as a showcase.
+
+Audio preparation and persistence are still synchronous in this checkpoint.
+The off-main conversions, real ticker tests, and performance gates remain open.
+
 ## Pass Seven: Feature-owned Model Files
 
 Moved all eight audio, preset-storage, and timing source files beneath

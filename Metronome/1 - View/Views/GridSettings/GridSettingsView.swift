@@ -16,7 +16,7 @@ struct GridSettingsView: View {
                         let maxBeats = viewModel.maximumBeatCount
                         Slider(value: Binding(
                             get: { Double(viewModel.beatsPerMeasure) },
-                            set: viewModel.updateBeatCount
+                            set: { viewModel.updateBeatCount($0) }
                         ), in: viewModel.sliderRange, step: 1)
                         .accentColor(theme.accent)
                         

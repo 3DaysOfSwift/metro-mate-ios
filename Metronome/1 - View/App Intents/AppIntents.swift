@@ -17,9 +17,9 @@ enum BPMValue: Int, AppEnum {
     case bpm180 = 180
     case bpm200 = 200
     
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "BPM")
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "BPM")
     
-    static var caseDisplayRepresentations: [BPMValue: DisplayRepresentation] = [
+    static let caseDisplayRepresentations: [BPMValue: DisplayRepresentation] = [
         .bpm60: "60",
         .bpm70: "70", 
         .bpm80: "80",
@@ -38,8 +38,8 @@ enum BPMValue: Int, AppEnum {
 
 // Haupt-Intent: Öffne Metronom und spiele X Beats
 struct PlayMetronomeIntent: AppIntent {
-    static var title: LocalizedStringResource = "Play Metronome"
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Play Metronome"
+    static let openAppWhenRun: Bool = true
     
     @Parameter(title: "BPM")
     var bpm: BPMValue
@@ -59,8 +59,8 @@ struct PlayMetronomeIntent: AppIntent {
 
 // Einfacher Start Intent
 struct StartMetronomeIntent: AppIntent {
-    static var title: LocalizedStringResource = "Start Metronome"
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Start Metronome"
+    static let openAppWhenRun: Bool = true
     
     @MainActor
     func perform() async throws -> some IntentResult {
