@@ -179,9 +179,10 @@ class MetronomeManager: MetronomeFeature {
     private var accentClickFile: AVAudioFile?
     private var normalClickFile: AVAudioFile?
 
-    private let savedBeatsKey = "savedBeatPresets"
+    private let presetRepository: any PresetRepository
 
-    init() {
+    init(presetRepository: any PresetRepository) {
+        self.presetRepository = presetRepository
         setupAudio()
         setupDefaultPattern()
         restorePresets()
@@ -695,28 +696,21 @@ class MetronomeManager: MetronomeFeature {
 
     // MARK: - Preset persistence
 
-    /// Presets are stored in UserDefaults so they survive quitting the app.
-    /// Nothing leaves the device - see PRIVACY.md.
+    /// Persists the current presets through the storage supplied by AppBrain.
+    /// Nothing leaves the device in the live implementation - see PRIVACY.md.
     private func persistPresets() {
         do {
-            let data = try JSONEncoder().encode(savedBeats)
-            UserDefaults.standard.set(data, forKey: savedBeatsKey)
+            try presetRepository.savePresets(savedBeats)
         } catch {
             print("Failed to save beat presets: \(error)")
         }
     }
 
     private func restorePresets() {
-        guard let data = UserDefaults.standard.data(forKey: savedBeatsKey) else { return }
-
         do {
-            savedBeats = try JSONDecoder().decode([BeatPreset].self, from: data)
+            savedBeats = try presetRepository.loadPresets()
         } catch {
-            // Most likely a preset written by an older version whose shape has
-            // since changed. Drop them rather than trapping the user in a
-            // crash loop on every launch.
             print("Failed to load beat presets: \(error)")
-            UserDefaults.standard.removeObject(forKey: savedBeatsKey)
         }
     }
     

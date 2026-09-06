@@ -5,7 +5,11 @@ import Testing
 @Suite(.serialized)
 struct ContentViewModelTests {
     @Test func presentationIntentsExposeTheRequestedSheet() {
-        let viewModel = ContentViewModel(brain: AppBrain(metronome: MetronomeManager()))
+        let viewModel = ContentViewModel(
+            brain: AppBrain(
+                metronome: MetronomeManager(presetRepository: InMemoryPresetRepository())
+            )
+        )
 
         viewModel.showBeatPresets()
         viewModel.showSettings()
@@ -17,7 +21,7 @@ struct ContentViewModelTests {
     }
 
     @Test func bpmButtonsRespectTheExistingLimits() {
-        let metronome = MetronomeManager()
+        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
         let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
 
         metronome.bpm = 40
@@ -30,7 +34,7 @@ struct ContentViewModelTests {
     }
 
     @Test func bpmDragUsesTheExistingSensitivityAndLimits() {
-        let metronome = MetronomeManager()
+        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
         let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
 
         metronome.bpm = 100

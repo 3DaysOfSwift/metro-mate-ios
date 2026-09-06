@@ -5,7 +5,7 @@ import Testing
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
     @Test func newManagerUsesTheExistingDefaultBeat() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
 
         #expect(manager.isPlaying == false)
         #expect(manager.bpm == 60)
@@ -18,7 +18,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func changingToSixteenthsRebuildsTheExistingDefaultPattern() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
 
         manager.updateNoteValue(.sixteenth)
 
@@ -31,7 +31,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func changingToEighthTripletsRebuildsTheExistingDefaultPattern() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
 
         manager.updateNoteValue(.eighthTriplet)
 
@@ -44,7 +44,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func editingThePatternMarksItAsCustom() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
 
         manager.toggleGridCell(row: 0, col: 1)
 
@@ -58,7 +58,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func gridBeatLimitsDependOnWhetherThePatternIsATriplet() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
 
         manager.updateNoteValue(.eighthTriplet)
         manager.updateGridBeats(99)
@@ -70,7 +70,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func resetRestoresTheExistingBasicBeat() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
         manager.updateNoteValue(.sixteenthTriplet)
         manager.bpm = 147
         manager.toggleGridCell(row: 0, col: 1)
@@ -87,7 +87,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func randomBeatPreservesTempoAndAlwaysStartsWithAnAccentedBeat() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
         manager.bpm = 123
 
         manager.randomizeBeat()
@@ -101,7 +101,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func loadingPresetRestoresAllPersistedConfiguration() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
         let preset = BeatPreset(
             name: "Characterisation",
             noteValue: .quarterTriplet,
@@ -124,7 +124,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func savingTheSameNameReplacesTheExistingPreset() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
         let name = "Characterisation-\(UUID().uuidString)"
 
         manager.bpm = 80
@@ -142,7 +142,7 @@ struct MetronomeManagerCharacterisationTests {
     }
 
     @Test func deletingTheSelectedPresetRestoresTheExistingTitle() {
-        let manager = MetronomeManager()
+        let manager = makeManager()
         let name = "Characterisation-\(UUID().uuidString)"
         manager.saveBeatPreset(name: name)
         let preset = manager.savedBeats.first { $0.name == name }
@@ -155,7 +155,27 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.currentBeatName == "Eighth")
     }
 
+    @Test func savedPresetsAreRestoredByTheNextFeatureInstance() {
+        let repository = InMemoryPresetRepository()
+        let firstManager = makeManager(repository: repository)
+
+        firstManager.updateBPM(96)
+        firstManager.saveBeatPreset(name: "Stored Beat")
+
+        let restoredManager = makeManager(repository: repository)
+
+        #expect(restoredManager.savedBeats.count == 1)
+        #expect(restoredManager.savedBeats.first?.name == "Stored Beat")
+        #expect(restoredManager.savedBeats.first?.bpm == 96)
+    }
+
     private func activeIndices(in values: [Bool]) -> [Int] {
         values.indices.filter { values[$0] }
+    }
+
+    private func makeManager(
+        repository: InMemoryPresetRepository = InMemoryPresetRepository()
+    ) -> MetronomeManager {
+        MetronomeManager(presetRepository: repository)
     }
 }

@@ -10,6 +10,12 @@ final class AppBrain {
 
     /// Produces the live, non-test AppBrain and constructs all production dependencies in one place.
     static func live() -> AppBrain {
-        AppBrain(metronome: MetronomeManager())
+        let presetRepository = UserDefaultsPresetRepository(
+            userDefaults: .standard,
+            storageKey: "savedBeatPresets"
+        )
+        let metronome = MetronomeManager(presetRepository: presetRepository)
+
+        return AppBrain(metronome: metronome)
     }
 }
