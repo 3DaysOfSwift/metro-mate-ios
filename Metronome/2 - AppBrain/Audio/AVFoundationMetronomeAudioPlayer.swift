@@ -109,4 +109,3 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
         return buffer
     }
 }
-

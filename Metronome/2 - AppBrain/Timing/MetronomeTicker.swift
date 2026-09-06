@@ -7,4 +7,3 @@ protocol MetronomeTicker: AnyObject {
     )
     func stop()
 }
-

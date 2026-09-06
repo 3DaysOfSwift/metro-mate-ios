@@ -4,4 +4,3 @@ protocol MetronomeAudioPlayer: AnyObject {
     func stop()
     func playClick(accented: Bool)
 }
-

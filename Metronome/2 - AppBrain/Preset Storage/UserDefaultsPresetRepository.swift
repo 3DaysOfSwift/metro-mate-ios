@@ -28,4 +28,3 @@ final class UserDefaultsPresetRepository: PresetRepository {
         userDefaults.set(data, forKey: storageKey)
     }
 }
-

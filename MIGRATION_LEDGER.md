@@ -2,6 +2,10 @@
 
 ## Starting Architecture
 
+The current folder structure is documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+Screens formerly grouped in ContentView.swift now have separate files beside
+their ViewModels. Musical data types live with the metronome feature.
+
 The original application places most presentation, feature, audio, timing, and
 persistence responsibilities in two files: `ContentView.swift` and
 `MetronomeManager.swift`. This ledger records temporary ownership explicitly so

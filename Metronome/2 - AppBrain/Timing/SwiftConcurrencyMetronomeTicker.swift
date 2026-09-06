@@ -37,4 +37,3 @@ final class SwiftConcurrencyMetronomeTicker: MetronomeTicker {
         tickingTask?.cancel()
     }
 }
-
