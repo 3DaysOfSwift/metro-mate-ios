@@ -7,6 +7,24 @@ import Testing
 @Suite(.serialized)
 struct MetronomeAudioConcurrencyTests {
     @Test(.timeLimit(.minutes(1)))
+    func audioReceivesTempoAndPatternChangesWithoutAnyUITicks() async throws {
+        let audio = RecordingMetronomeAudioPlayer()
+        let manager = makeTestMetronome(audioPlayer: audio, ticker: ControllableMetronomeTicker())
+        try await manager.startPlayback()
+        await audio.waitForSchedule()
+        #expect(audio.scheduledPatterns.last?.interval == 0.5)
+        manager.updateBPM(120)
+        await audio.waitForSchedule()
+        #expect(audio.scheduledPatterns.last?.interval == 0.25)
+        manager.toggleGridCell(row: 0, col: 0)
+        await audio.waitForSchedule()
+        #expect(audio.scheduledPatterns.last?.beats[0] == nil)
+        #expect(audio.playedAccents.isEmpty)
+        await manager.togglePlayback()
+        #expect(audio.stopCallCount == 1)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func repeatedRequestsShareThePendingStart() async throws {
         let audio = SuspendedMetronomeAudioPlayer()
         audio.suspendedOperation = .start
@@ -69,7 +87,7 @@ struct MetronomeAudioConcurrencyTests {
         let manager = makeTestMetronome(audioPlayer: audio, ticker: ticker)
         try await manager.startPlayback()
         audio.suspendedOperation = .click
-        let tick = Task { await ticker.sendTick() }
+        let tick = Task { await manager.tapTempo() }
         await audio.waitForSuspension()
         let stopped = AsyncStream<Void>.makeStream()
         withObservationTracking {

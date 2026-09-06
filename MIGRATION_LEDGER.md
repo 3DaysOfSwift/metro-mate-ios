@@ -19,6 +19,37 @@ backlog. Consult the final report for current ownership and evidence limits.
 
 ### Reopened: User-reported Irregular Playback
 
+### Corrective Execution Refactor — Awaiting Listening Approval
+
+At the developer's request, repeating sound now uses a rendered rhythm buffer
+looped by AVAudioPlayerNode rather than clicks triggered by Main Actor ticks.
+Beat positions are spaced in audio samples, with silence and overlapping tails
+mixed into the loop. Bundled 44.1 kHz click samples and fallback samples are
+cached on the audio executor. Tap feedback remains separate. The display polls
+the audio playhead and skips visual updates it missed instead of replaying sound.
+
+Tempo/pattern edits replace the loop and schedule its next start after the new
+interval, retaining the next beat where possible; note/count resets start at
+beat zero. Replacement rebuilds and resets the player timeline, so transition
+quality must be verified by listening. Sample periods are rounded to whole
+frames. This is a deliberate scheduling change, not a claim of exact legacy
+timing equivalence or immunity from audio-device overload/interruption.
+
+StarFieldRenderer calculates frames on its own actor from value inputs. One
+animation task awaits each result; it rejects stale canvas revisions and
+cancelled frames. The ViewModel is not retained across frame calculation.
+
+Added sample-layout, silence/accent, tail-overlap, rotation, and invalid-timing
+tests; a no-UI-ticks configuration test; and renderer executor/resize tests.
+Existing playback tests now model audio progress independently of UI polling.
+The complete MetronomeTests run passed on the iPhone Air simulator on 6 September
+2026. It includes an offline audio-engine test that renders repeated pulses and
+checks their sample spacing without UI ticks. This validates the loop mechanics,
+not real-time hardware performance or the production player's live transitions.
+These automated checks do not establish speaker timing. Keep this regression
+open until continuous playback, tempo/preset edits, rapid stop/start, tap feedback,
+and animation are heard and observed under load.
+
 After this conversion the developer reported irregular beats and an unusable
 metronome. This overrides any implication that passing state tests establishes
 product correctness. Pass Twelve remains open until audible playback is verified.

@@ -26,13 +26,13 @@ struct MetronomeManagerCharacterisationTests {
         try await manager.startPlayback(atBPM: 120)
         #expect(manager.isPlaying)
         #expect(manager.bpm == 120)
-        #expect(ticker.interval == .milliseconds(250))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
         #expect(ticker.startCallCount == 1)
 
         try await manager.startPlayback(atBPM: 60)
         #expect(manager.isPlaying)
         #expect(manager.bpm == 60)
-        #expect(ticker.interval == .milliseconds(500))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
         #expect(ticker.startCallCount == 2)
         await manager.togglePlayback()
     }
@@ -102,7 +102,7 @@ struct MetronomeManagerCharacterisationTests {
         await manager.togglePlayback()
         manager.adjustBPM(by: 60)
         #expect(manager.bpm == 120)
-        #expect(ticker.interval == .milliseconds(250))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
         #expect(ticker.startCallCount == 2)
     }
 
@@ -335,13 +335,15 @@ struct MetronomeManagerCharacterisationTests {
         await manager.togglePlayback()
 
         #expect(ticker.initialDelay == .milliseconds(10))
-        #expect(ticker.interval == .milliseconds(500))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
         #expect(manager.currentBeat == -1)
 
+        audioPlayer.currentPlaybackBeat = 0
         await ticker.sendTick()
 
         #expect(manager.currentBeat == 0)
-        #expect(audioPlayer.playedAccents == [true])
+        #expect(audioPlayer.playedAccents.isEmpty)
+        #expect(audioPlayer.scheduledPatterns.first?.beats.first! == true)
     }
 
     @Test func tapTempoUsesTheAverageOfRecentTapIntervals() async {
@@ -419,7 +421,7 @@ struct MetronomeManagerCharacterisationTests {
 
         #expect(ticker.startCallCount == 2)
         #expect(ticker.initialDelay == .milliseconds(250))
-        #expect(ticker.interval == .milliseconds(250))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
     }
 
     @Test func loadingAPresetWhilePlayingAdvancesExactlyOncePerTick() async {
@@ -427,6 +429,7 @@ struct MetronomeManagerCharacterisationTests {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(audioPlayer: audio, ticker: ticker)
         await manager.togglePlayback()
+        audio.currentPlaybackBeat = 0
         await ticker.sendTick()
         #expect(manager.currentBeat == 0)
 
@@ -438,23 +441,25 @@ struct MetronomeManagerCharacterisationTests {
         manager.loadBeatPreset(preset)
         #expect(manager.isPlaying)
         #expect(ticker.startCallCount == 2)
-        #expect(ticker.interval == .milliseconds(500))
+        #expect(ticker.interval == .seconds(1.0 / 60.0))
         #expect(ticker.initialDelay == .milliseconds(500))
         #expect(audio.startCallCount == 1)
-        #expect(audio.playedAccents.count == 1)
+        #expect(audio.playedAccents.isEmpty)
 
+        audio.currentPlaybackBeat = 1
         await ticker.sendTick()
         #expect(manager.currentBeat == 1)
-        #expect(audio.playedAccents == [true, false])
+        #expect(audio.playedAccents.isEmpty)
+        audio.currentPlaybackBeat = 2
         await ticker.sendTick()
         #expect(manager.currentBeat == 2)
-        #expect(audio.playedAccents == [true, false, false])
+        #expect(audio.playedAccents.isEmpty)
 
         await manager.togglePlayback()
         await ticker.sendTick()
         #expect(!manager.isPlaying)
         #expect(manager.currentBeat == -1)
-        #expect(audio.playedAccents.count == 3)
+        #expect(audio.playedAccents.isEmpty)
     }
 
     private func activeIndices(in values: [Bool]) -> [Int] {

@@ -16,8 +16,17 @@ AVFoundationMetronomeAudioPlayer also owns a serial off-main executor. Its engin
 and player are created on first explicit audio use on that executor, not during
 AppBrain construction. The feature awaits audio commands in submission order,
 invalidates superseded starts and queued ticks, and publishes a starting state.
-The ticker awaits each click; it does not launch detached work per beat.
+Repeating audio is rendered as a sample-spaced buffer and looped by AVAudioPlayerNode.
+The main-actor ticker only polls the audio playhead for display; it never triggers
+an audible beat. Tap feedback uses a separate node. Tempo/pattern edits replace
+the loop through ordered audio commands. Cached click samples are mixed so
+sound tails can overlap subdivisions instead of queuing whole files end to end.
 AppBrain starts audio preparation and preset loading as independent child tasks.
+
+StarFieldRenderer is a presentation actor that calculates dot frames outside
+the Main Actor. StarFieldViewModel retains its single animation task, submits
+value inputs, and publishes completed frames. Resize revisions and cancellation
+prevent stale publication. SwiftUI drawing still belongs to presentation.
 
 Each ViewModel keeps its feature reference private. Views read screen-facing
 properties and call ViewModel actions; they cannot reach through a ViewModel
@@ -54,7 +63,7 @@ Metronome/
 │       ├── GridSettings/    GridSettingsView.swift, GridSettingsViewModel.swift
 │       ├── BeatPresets/     BeatPresetsView.swift, BeatPresetsViewModel.swift
 │       ├── BeatTile/        BeatTile.swift, BeatTileViewModel.swift
-│       ├── StarField/       StarFieldView.swift, StarFieldViewModel.swift
+│       ├── StarField/       StarFieldView.swift, StarFieldViewModel.swift, StarFieldRenderer.swift
 │       └── NoteValuePicker/ NoteValuePicker.swift, NoteValuePickerViewModel.swift
 ├── 2 - AppBrain/
 │   ├── AppBrain.swift
@@ -68,6 +77,7 @@ Metronome/
 │       │   └── QuickPreset.swift
 │       ├── Audio/
 │       │   ├── MetronomeAudioPlayer.swift
+│       │   ├── MetronomePlaybackPattern.swift
 │       │   └── AVFoundationMetronomeAudioPlayer.swift
 │       ├── Preset Storage/
 │       │   ├── PresetRepository.swift
@@ -93,6 +103,7 @@ MetronomeTests/
 │       ├── MetronomeManagerCharacterisationTests.swift
 │       ├── Audio/
 │       │   ├── MetronomeAudioFailureTests.swift
+│       │   ├── MetronomePlaybackPatternTests.swift
 │       │   └── MetronomeAudioConcurrencyTests.swift
 │       ├── Data Types/NoteValueTests.swift
 │       ├── Preset Storage/

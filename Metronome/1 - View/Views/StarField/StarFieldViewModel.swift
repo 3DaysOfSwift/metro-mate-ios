@@ -1,7 +1,7 @@
 import Observation
 import UIKit
 
-struct Dot {
+struct Dot: Sendable {
     var baseX: CGFloat
     var baseY: CGFloat
     var x: CGFloat
@@ -17,7 +17,8 @@ final class StarFieldViewModel {
 
     private let metronome: any MetronomeFeature
     var shouldBlink: Bool { metronome.shouldBlink }
-    let dotSpacing: CGFloat = 10
+    private let renderer = StarFieldRenderer()
+    @ObservationIgnored private var canvasRevision = 0
 
     @ObservationIgnored private var canvasSize: CGSize = .zero
     @ObservationIgnored private var wavePhase: CGFloat = 0
@@ -74,33 +75,18 @@ final class StarFieldViewModel {
 
     private func setupDots(in size: CGSize) {
         canvasSize = size
-        let centerX = size.width / 2
-        let centerY = size.height / 2
-        let columns = Int(size.width / dotSpacing) + 6
-        let rows = Int(size.height / dotSpacing) + 6
-        let startX = -dotSpacing * 2
-        let startY = -dotSpacing * 2
+        canvasRevision += 1
+    }
 
-        dots = (0..<rows).map { row in
-            (0..<columns).map { column in
-                let baseX = startX + CGFloat(column) * dotSpacing
-                let baseY = startY + CGFloat(row) * dotSpacing
-                let distance = hypot(baseX - centerX, baseY - centerY)
-                return Dot(
-                    baseX: baseX,
-                    baseY: baseY,
-                    x: baseX,
-                    y: baseY,
-                    size: 1.5,
-                    distanceFromCenter: distance
-                )
-            }
-        }
+    private func frameInput() -> (size: CGSize, bpm: Double, phase: CGFloat, pulse: CGFloat, intensity: CGFloat, revision: Int) {
+        wavePhase += 0.03 * max(0.5, 1 - (metronome.bpm - 80) / 160)
+        if pulseTime < 1 { pulseTime += 1 / 30 }
+        return (canvasSize, metronome.bpm, wavePhase, pulseTime, pulseIntensity, canvasRevision)
     }
 
     private func startAnimation() {
         guard animationTask == nil else { return }
-        animationTask = Task { [weak self] in
+        animationTask = Task { [weak self, renderer] in
             let clock = ContinuousClock()
             let frameInterval = Duration.seconds(1.0 / 60.0)
             var nextFrame = clock.now.advanced(by: frameInterval)
@@ -109,8 +95,13 @@ final class StarFieldViewModel {
                 while !Task.isCancelled {
                     try await clock.sleep(until: nextFrame, tolerance: .zero)
                     try Task.checkCancellation()
-                    guard let self else { return }
-                    self.updateDots()
+                    guard let input = self?.frameInput() else { return }
+                    let frame = try await renderer.render(
+                        size: input.size, bpm: input.bpm, wavePhase: input.phase,
+                        pulseTime: input.pulse, intensity: input.intensity
+                    )
+                    try Task.checkCancellation()
+                    if self?.canvasRevision == input.revision { self?.dots = frame }
 
                     nextFrame = nextFrame.advanced(by: frameInterval)
                     // Skip missed frames instead of replaying them in a burst.
@@ -124,54 +115,5 @@ final class StarFieldViewModel {
                 return
             }
         }
-    }
-
-    private func updateDots() {
-        let speedScale = max(0.5, 1 - (metronome.bpm - 80) / 160)
-        wavePhase += 0.03 * speedScale
-
-        if pulseTime < 1 {
-            pulseTime += 1 / 30
-        }
-
-        guard !dots.isEmpty else { return }
-        let centerX = canvasSize.width / 2
-        let centerY = canvasSize.height / 2
-        let intensity = pulseIntensity
-        // Build a frame in ordinary value storage. Mutating the observed array
-        // once per dot repeatedly enters Observation on the playback actor.
-        // Publish only the completed frame so rendering sees a coherent snapshot.
-        var nextDots = dots
-
-        for row in nextDots.indices {
-            for column in nextDots[row].indices {
-                var dot = nextDots[row][column]
-                let waveRadius = pulseTime * 600
-                let waveDistance = abs(dot.distanceFromCenter - waveRadius)
-                var displacement: CGFloat = 0
-                var sizeMultiplier: CGFloat = 1
-
-                if waveDistance < 80, pulseTime < 1, intensity > 0 {
-                    let waveStrength = 1 - waveDistance / 80
-                    let fadeOut = 1 - pulseTime
-                    displacement = sin(waveDistance * 0.1) * 20 * waveStrength * fadeOut * intensity
-                    sizeMultiplier = 1 + waveStrength * fadeOut * intensity
-                }
-
-                let angle = atan2(dot.baseY - centerY, dot.baseX - centerX)
-                let bpmScale = max(0.3, 1 - (metronome.bpm - 80) / 120)
-                let ambientWave = sin(wavePhase + dot.distanceFromCenter * 0.008) * 2 * bpmScale
-
-                dot.x = dot.baseX
-                    + cos(angle) * displacement
-                    + cos(wavePhase * 0.5 + CGFloat(row) * 0.05) * ambientWave
-                dot.y = dot.baseY
-                    + sin(angle) * displacement
-                    + sin(wavePhase * 0.5 + CGFloat(column) * 0.05) * ambientWave
-                dot.size = 1.5 * sizeMultiplier
-                nextDots[row][column] = dot
-            }
-        }
-        dots = nextDots
     }
 }

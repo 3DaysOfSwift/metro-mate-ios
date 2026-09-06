@@ -7,6 +7,8 @@ final class SuspendedMetronomeAudioPlayer: MetronomeAudioPlayer {
     private let arrivals = AsyncStream<Operation>.makeStream()
     private var pending: CheckedContinuation<Void, Never>?
     private(set) var commands: [String] = []
+    func schedulePlayback(_ pattern: MetronomePlaybackPattern, initialDelay: Double) {}
+    func playbackBeat() -> Int? { nil }
 
     func prepare() async throws {
         commands.append("prepare")

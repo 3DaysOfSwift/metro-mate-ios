@@ -8,6 +8,14 @@ This handover adds documentation only to that implementation.
 
 ## Post-migration Addendum: Pass Twelve
 
+Subsequent timing-regression work changes the execution described at the original
+milestone: AVAudioPlayerNode now loops a rendered rhythm buffer independently of
+Main Actor tick delivery. UI polling reads the audio playhead; tap feedback is
+separate. StarFieldRenderer performs frame calculation on a presentation actor.
+The latest architecture and ledger describe these changes and their remaining
+listening checks. The original per-click timing discussion below is historical,
+not the current playback implementation. No measured speedup is claimed.
+
 The original completion record below remains a historical milestone. The
 subsequent Swift Observation conversion replaces Combine notification forwarding
 with @Observable in MetronomeManager, all eight ViewModels, and ThemeManager.

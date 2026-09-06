@@ -7,6 +7,22 @@ final class RecordingMetronomeAudioPlayer: MetronomeAudioPlayer {
     private(set) var stopCallCount = 0
     private(set) var playedAccents: [Bool] = []
     var failure: Error?
+    var currentPlaybackBeat: Int?
+    private(set) var scheduledPatterns: [MetronomePlaybackPattern] = []
+    private let schedules = AsyncStream<Void>.makeStream()
+
+    func schedulePlayback(_ pattern: MetronomePlaybackPattern, initialDelay: Double) throws {
+        if let failure { throw failure }
+        scheduledPatterns.append(pattern)
+        schedules.continuation.yield()
+    }
+
+    func waitForSchedule() async {
+        var events = schedules.stream.makeAsyncIterator()
+        _ = await events.next()
+    }
+
+    func playbackBeat() -> Int? { currentPlaybackBeat }
 
     func prepare() throws {
         prepareCallCount += 1
