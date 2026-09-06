@@ -38,25 +38,25 @@ Metronome/
 │       └── NoteValuePicker/ NoteValuePicker.swift, NoteValuePickerViewModel.swift
 ├── 2 - AppBrain/
 │   ├── AppBrain.swift
-│   ├── Features/Metronome/
-│   │   ├── MetronomeFeature.swift
-│   │   ├── MetronomeManager.swift
-│   │   └── Data Types/
-│   │       ├── NoteValue.swift
-│   │       ├── GridDisplayMode.swift
-│   │       ├── BeatPreset.swift
-│   │       └── QuickPreset.swift
-│   ├── Audio/
-│   │   ├── MetronomeAudioPlayer.swift
-│   │   └── AVFoundationMetronomeAudioPlayer.swift
-│   ├── Preset Storage/
-│   │   ├── PresetRepository.swift
-│   │   └── UserDefaultsPresetRepository.swift
-│   └── Timing/
-│       ├── MetronomeTicker.swift
-│       ├── SwiftConcurrencyMetronomeTicker.swift
-│       ├── CancellableDelayScheduler.swift
-│       └── SwiftConcurrencyDelayScheduler.swift
+│   └── Features/Metronome/
+│       ├── MetronomeFeature.swift
+│       ├── MetronomeManager.swift
+│       ├── Data Types/
+│       │   ├── NoteValue.swift
+│       │   ├── GridDisplayMode.swift
+│       │   ├── BeatPreset.swift
+│       │   └── QuickPreset.swift
+│       ├── Audio/
+│       │   ├── MetronomeAudioPlayer.swift
+│       │   └── AVFoundationMetronomeAudioPlayer.swift
+│       ├── Preset Storage/
+│       │   ├── PresetRepository.swift
+│       │   └── UserDefaultsPresetRepository.swift
+│       └── Timing/
+│           ├── MetronomeTicker.swift
+│           ├── SwiftConcurrencyMetronomeTicker.swift
+│           ├── CancellableDelayScheduler.swift
+│           └── SwiftConcurrencyDelayScheduler.swift
 └── 3 - App Resources/
     ├── Assets.xcassets
     ├── Metronome.entitlements

@@ -1,5 +1,25 @@
 # AppBrain Migration Ledger
 
+## Pass Seven: Feature-owned Model Files
+
+Moved all eight audio, preset-storage, and timing source files beneath
+Features/Metronome. Their sole feature consumer is MetronomeManager; AppBrain
+continues to construct them. AppBrain.swift is the only Model-layer file outside
+the feature, justified by its application-wide composition responsibility.
+No source contents, resources, or runtime behaviour changed.
+
+## Planned Pass Eight: Test Grouping
+
+- Split mixed AppBrainTests: retain composition/launch tests there, move
+  feature persistence/audio tests to Metronome tests, and observation tests
+  to the appropriate ViewModel or cross-screen integration group.
+- Split SheetViewModelTests and VisualViewModelTests into focused suites.
+- Group domain, audio, timing, and repository tests beneath Metronome where
+  applicable; retain genuinely shared test support without duplication.
+- Preserve assertions and update behaviour-contract test references.
+- Review the resulting groups for coverage gaps and record bounded follow-ups,
+  including clock cadence verification, separately from folder changes.
+
 ## Remaining Review
 
 The presentation-subview pass removed the two closure-fed picker button View
