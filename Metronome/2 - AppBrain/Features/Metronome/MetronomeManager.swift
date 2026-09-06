@@ -252,9 +252,11 @@ final class MetronomeManager: MetronomeFeature {
     
     private func tick(revision: Int) async {
         guard isPlaying, revision == tickerRevision, !Task.isCancelled else { return }
+        let requestedPatternRevision = patternRevision
         // UI follows the audio timeline; a late UI tick cannot delay a click.
         let beat = await audioPlayer.playbackBeat()
         guard isPlaying, revision == tickerRevision, !Task.isCancelled,
+              requestedPatternRevision == patternRevision,
               let beat, beat != lastPlaybackStep else { return }
         lastPlaybackStep = beat
         currentBeat = beat % beatsPerMeasure

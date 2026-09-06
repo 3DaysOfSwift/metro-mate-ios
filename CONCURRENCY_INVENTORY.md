@@ -2,6 +2,10 @@
 
 ## Current Implementation
 
+Pass Fifteen adds pattern-revision validation to in-flight audio-progress reads:
+a result captured before a rhythm edit cannot update the new visual state.
+See the ledger for reviewed ordering/lifetime guarantees and queue-growth limits.
+
 The timing-regression correction supersedes the earlier ticker description:
 repeating sound now comes from a sample-spaced rhythm buffer looped by the audio
 engine. SwiftConcurrencyMetronomeTicker polls audio progress for UI state only.

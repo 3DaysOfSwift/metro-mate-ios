@@ -1,5 +1,13 @@
 # Migration Feature Behaviour Report
 
+## Current Refinement: Pass Fifteen
+
+Audio-progress polling now rejects a result if the pattern changed while the
+read was suspended, preventing an obsolete visual beat or blink from being
+published. Audio output is unchanged. The concurrency review and remaining
+queue-growth and initial-load ordering verification gaps are recorded in the
+migration ledger; this does not claim exhaustive concurrency correctness.
+
 ## Current Refinement: Pass Fourteen
 
 As of 7 September 2026, the UI ticker skips missed polls and waits a fresh

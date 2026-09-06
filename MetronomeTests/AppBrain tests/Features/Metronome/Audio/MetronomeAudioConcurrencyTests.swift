@@ -7,6 +7,27 @@ import Testing
 @Suite(.serialized)
 struct MetronomeAudioConcurrencyTests {
     @Test(.timeLimit(.minutes(1)))
+    func patternReplacementRejectsAnInFlightProgressSnapshot() async throws {
+        let audio = SuspendedMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeTestMetronome(audioPlayer: audio, ticker: ticker)
+        try await manager.startPlayback()
+        audio.currentPlaybackBeat = 3
+        audio.suspendedOperation = .progress
+        let poll = Task { await ticker.sendTick() }
+        await audio.waitForSuspension()
+        manager.toggleGridCell(row: 0, col: 0)
+        audio.finishOperation()
+        await poll.value
+        #expect(manager.currentBeat == -1)
+        #expect(!manager.shouldBlink)
+        audio.currentPlaybackBeat = 0
+        await ticker.sendTick()
+        #expect(manager.currentBeat == 0)
+        await manager.togglePlayback()
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func audioReceivesTempoAndPatternChangesWithoutAnyUITicks() async throws {
         let audio = RecordingMetronomeAudioPlayer()
         let manager = makeTestMetronome(audioPlayer: audio, ticker: ControllableMetronomeTicker())

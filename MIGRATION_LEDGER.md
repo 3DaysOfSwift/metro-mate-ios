@@ -1,5 +1,44 @@
 # AppBrain Migration Ledger
 
+## Pass Fifteen: Concurrency Review — 7 September 2026
+
+Validation: the complete MetronomeTests target passed on the iPhone Air simulator
+with complete concurrency checking enabled, including the new suspended-progress
+regression test. UI tests and physical-device profiling were not rerun.
+
+Reviewed launch, playback start/stop and replacement, visual polling, preset
+load/save/retry, and presentation task lifetimes. Found and corrected a stale
+visual-result window: a poll suspended in playbackBeat() could publish after a
+pattern edit that does not restart the ticker. The poll now checks both ticker
+and pattern revisions after suspension. A controlled-suspension test replaces
+the pattern during that read and verifies that the old beat and blink are not
+published, then verifies a subsequent poll can update the display.
+
+Retained guarantees and their evidence:
+
+- Launch uses independent async-let audio preparation and preset loading;
+  startupLoadsPresetsWhileAudioPreparationIsSuspended exercises the overlap.
+- Pending starts share a Task; playback revisions and ordered audio operations
+  protect stop/restart. Suspended-start and suspended-click tests exercise them.
+- Preset loading is shared. Committed writes await their predecessor and ignore
+  older failures; overlappingSavesPreserveOrderAndIgnoreAnOlderFailure also
+  checks that cancelling the caller does not discard its write.
+- Presentation tasks use cancellation and weak ownership. Star-field frames
+  are awaited one at a time and rejected on cancellation or canvas replacement;
+  ticker callbacks do not overlap and overdue visual polls are skipped.
+- Audio and storage use isolated serial executors; render inputs are Sendable
+  values. Existing executor tests complement complete concurrency checking.
+
+Limits: ordered audio commands and durable preset writes have no fixed queue
+capacity; a persistently slow external API under sustained submissions could
+accumulate pending work. Revision checks skip obsolete queued pattern work but
+do not preempt an already running synchronous audio operation. No new admission
+or command-dropping policy was introduced, since that requires a product
+decision. This is a recorded residual risk, not an approved deferral or a claim
+of bounded memory under arbitrary load. Exact ordering among commands awaiting
+the same initial preset load is not established by the current overlapping-save
+test. Hardware profiling and manual approval of this checkpoint remain pending.
+
 ## Pass Fourteen: Main Actor Review Refinements — 7 September 2026
 
 The developer approved simulator audio playback and reported all tests passing
