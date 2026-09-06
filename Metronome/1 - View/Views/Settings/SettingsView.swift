@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = SettingsViewModel()
     @Environment(\.dismiss) private var dismiss
     
@@ -16,13 +17,13 @@ struct SettingsView: View {
                         ),
                         in: viewModel.beatCountRange
                     )
-                    .foregroundColor(Color(hex: "#DDDDDD"))
-                    .accentColor(Color(hex: "#F54206"))
+                    .foregroundColor(theme.text)
+                    .accentColor(theme.accent)
                 }
             }
-            .background(Color(hex: "#1C1C1B"))
+            .background(theme.background)
             .scrollContentBackground(.hidden)
-            .foregroundColor(Color(hex: "#DDDDDD"))
+            .foregroundColor(theme.text)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark)
@@ -32,11 +33,11 @@ struct SettingsView: View {
                         viewModel.finish()
                         dismiss()
                     }
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                 }
             }
         }
-        .background(Color(hex: "#1C1C1B"))
+        .background(theme.background)
         .preferredColorScheme(.dark)
     }
 }

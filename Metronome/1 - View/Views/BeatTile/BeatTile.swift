@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct BeatTile: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel: BeatTileViewModel
 
     init(beat: Int) {
@@ -21,11 +22,11 @@ struct BeatTile: View {
                     Text(viewModel.label)
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(Color(hex: "#DDDDDD"))
+                        .foregroundColor(theme.text)
                 } else {
                     Image(systemName: "minus")
                         .font(.caption)
-                        .foregroundColor(Color(hex: "#DDDDDD"))
+                        .foregroundColor(theme.text)
                         .opacity(0.3)
                 }
             }
@@ -43,11 +44,11 @@ struct BeatTile: View {
     
     private var tileColor: Color {
         if viewModel.isCurrent {
-            return Color(hex: "#F54206")
+            return theme.accent
         } else if viewModel.isActive {
-            return Color(hex: "#303030")
+            return theme.elevatedSurface
         } else {
-            return Color(hex: "#242424").opacity(0.5)
+            return theme.surface.opacity(0.5)
         }
     }
 }

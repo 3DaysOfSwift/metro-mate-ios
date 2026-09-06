@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GridView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = GridViewModel()
     
     var body: some View {
@@ -37,9 +38,9 @@ struct GridView: View {
     private func getAccentColor(for beat: Int) -> Color {
         if viewModel.isAccentActive(at: beat) {
             if viewModel.isCurrentAccent(at: beat) {
-                return Color(hex: "#F54206") // Orange when playing accent
+                return theme.accent // Orange when playing accent
             } else {
-                return Color(hex: "#303030") // Gray accent dots
+                return theme.elevatedSurface // Gray accent dots
             }
         } else {
             return Color.clear

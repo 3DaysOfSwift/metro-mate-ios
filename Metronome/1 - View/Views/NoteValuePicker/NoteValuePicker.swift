@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct NoteValuePicker: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = NoteValuePickerViewModel()
     @Environment(\.dismiss) private var dismiss
 
@@ -11,11 +12,11 @@ struct NoteValuePicker: View {
             VStack {
                 Text("BEAT PATTERN")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                     .padding(.vertical, 20)
             }
             .frame(maxWidth: .infinity)
-            .background(Color(hex: "#1C1C1B"))
+            .background(theme.background)
             
             // Scrollable content
             ScrollView {
@@ -42,7 +43,7 @@ struct NoteValuePicker: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("QUICK PRESETS")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
+                        .foregroundColor(theme.text.opacity(0.6))
                         .padding(.horizontal)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -62,9 +63,9 @@ struct NoteValuePicker: View {
                 .padding(.top, 20)
                 .padding(.bottom, 40)
             }
-            .background(Color(hex: "#1C1C1B"))
+            .background(theme.background)
         }
-        .background(Color(hex: "#1C1C1B"))
+        .background(theme.background)
         .presentationDetents([.fraction(0.6)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(20)
@@ -77,6 +78,7 @@ struct NoteValuePicker: View {
 }
 
 struct NoteValueButton: View {
+    @Environment(\.appColourTheme) private var theme
     let noteValue: NoteValue
     let isSelected: Bool
     let action: () -> Void
@@ -86,17 +88,17 @@ struct NoteValueButton: View {
             VStack(spacing: 8) {
                 Text(noteValue.displayName)
                     .font(.system(size: 36))
-                    .foregroundColor(isSelected ? Color(hex: "#F54206") : Color(hex: "#DDDDDD"))
+                    .foregroundColor(isSelected ? theme.accent : theme.text)
                 
                 Text(noteValue.rawValue)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
+                    .foregroundColor(theme.text.opacity(0.6))
                 
                 // Visual representation
                 HStack(spacing: 2) {
                     ForEach(0..<getVisualBeats(), id: \.self) { _ in
                         Circle()
-                            .fill(isSelected ? Color(hex: "#F54206") : Color(hex: "#303030"))
+                            .fill(isSelected ? theme.accent : theme.elevatedSurface)
                             .frame(width: 4, height: 4)
                     }
                 }
@@ -104,11 +106,11 @@ struct NoteValueButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(isSelected ? Color(hex: "#303030") : Color(hex: "#242424"))
+            .background(isSelected ? theme.elevatedSurface : theme.surface)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color(hex: "#F54206") : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? theme.accent : Color.clear, lineWidth: 2)
             )
         }
     }
@@ -126,6 +128,7 @@ struct NoteValueButton: View {
 }
 
 struct PresetButton: View {
+    @Environment(\.appColourTheme) private var theme
     let title: String
     let bpm: Int
     let noteValue: NoteValue
@@ -136,18 +139,18 @@ struct PresetButton: View {
             VStack(spacing: 6) {
                 Text(title.uppercased())
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                 
                 Text("\(bpm)")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(Color(hex: "#F54206"))
+                    .foregroundColor(theme.accent)
                 
                 Text(noteValue.displayName)
                     .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
+                    .foregroundColor(theme.text.opacity(0.6))
             }
             .frame(width: 80, height: 80)
-            .background(Color(hex: "#242424"))
+            .background(theme.surface)
             .cornerRadius(12)
         }
     }

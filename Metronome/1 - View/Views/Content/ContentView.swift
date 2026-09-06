@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = ContentViewModel()
 
     
     var body: some View {
         ZStack {
             // Background with animated stars
-            Color(hex: "#1C1C1B")
+            theme.background
                 .ignoresSafeArea()
             
             StarFieldView()
@@ -45,7 +46,7 @@ struct ContentView: View {
                 if let error = viewModel.audioError {
                     VStack {
                         Text("Audio unavailable: \(error)")
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.errorText)
                         Button("Retry audio", action: viewModel.retryAudio)
                     }
                     .padding(.horizontal)
@@ -56,11 +57,11 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("PRESET")
                                 .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
+                                .foregroundColor(theme.text.opacity(0.6))
                             
                             Text(viewModel.currentBeatName.uppercased())
                                 .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                         }
                     }
                     
@@ -69,16 +70,16 @@ struct ContentView: View {
                     Button(action: viewModel.showSettings) {
                         ZStack {
                             Circle()
-                                .fill(Color(hex: "#242424").opacity(0.8))
+                                .fill(theme.surface.opacity(0.8))
                                 .frame(width: 44, height: 44)
                                 .overlay(
                                     Circle()
-                                        .stroke(Color(hex: "#303030"), lineWidth: 1)
+                                        .stroke(theme.elevatedSurface, lineWidth: 1)
                                 )
                             
                             Image(systemName: "ellipsis")
                                 .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                         }
                     }
                 }
@@ -92,7 +93,7 @@ struct ContentView: View {
                         Button(action: viewModel.decreaseBPM) {
                             Image(systemName: "minus")
                                 .font(.title2)
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                         }
                         .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50) {
                             // Long press action
@@ -110,7 +111,7 @@ struct ContentView: View {
                             if Int(viewModel.bpm) > viewModel.minimumBPM {
                                 Text("\(Int(viewModel.bpm) - 1)")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
-                                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.2))
+                                    .foregroundColor(theme.text.opacity(0.2))
                                     .frame(height: 60)
                             } else {
                                 Spacer()
@@ -120,12 +121,12 @@ struct ContentView: View {
                             // Current value with background
                             ZStack {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(hex: "#303030"))
+                                    .fill(theme.elevatedSurface)
                                     .frame(width: 120, height: 60)
                                 
                                 Text("\(Int(viewModel.bpm))")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
-                                    .foregroundColor(Color(hex: "#DDDDDD"))
+                                    .foregroundColor(theme.text)
                             }
                             .frame(height: 60)
                             
@@ -133,7 +134,7 @@ struct ContentView: View {
                             if Int(viewModel.bpm) < viewModel.maximumBPM {
                                 Text("\(Int(viewModel.bpm) + 1)")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
-                                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.2))
+                                    .foregroundColor(theme.text.opacity(0.2))
                                     .frame(height: 60)
                             } else {
                                 Spacer()
@@ -150,7 +151,7 @@ struct ContentView: View {
                         Button(action: viewModel.increaseBPM) {
                             Image(systemName: "plus")
                                 .font(.title2)
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                         }
                         .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50) {
                             // Long press action
@@ -171,19 +172,19 @@ struct ContentView: View {
                     HStack(spacing: 8) {
                         Text("PATTERN")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
+                            .foregroundColor(theme.text.opacity(0.6))
                         
                         Text(viewModel.noteValue.displayName)
                             .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(Color(hex: "#F54206"))
+                            .foregroundColor(theme.accent)
                         
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "#DDDDDD").opacity(0.4))
+                            .foregroundColor(theme.text.opacity(0.4))
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Color(hex: "#242424"))
+                    .background(theme.surface)
                     .cornerRadius(20)
                 }
                 
@@ -199,19 +200,19 @@ struct ContentView: View {
                     Button(action: viewModel.recordTapTempo) {
                         ZStack {
                             Circle()
-                                .fill(Color(hex: "#242424"))
+                                .fill(theme.surface)
                                 .frame(width: 64, height: 64)
                             
                             VStack(spacing: 2) {
                                 Text("TAP")
                                     .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(Color(hex: "#DDDDDD"))
+                                    .foregroundColor(theme.text)
                                 
                                 // Show tap count
                                 if viewModel.tapCount > 0 {
                                     Text("\(viewModel.tapCount)")
                                         .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(Color(hex: "#F54206"))
+                                        .foregroundColor(theme.accent)
                                         .transition(.opacity)
                                 }
                             }
@@ -221,7 +222,7 @@ struct ContentView: View {
                     // Central Play Button
                     ZStack {
                         Circle()
-                            .fill(viewModel.isPlaying ? Color(hex: "#F54206") : Color(hex: "#242424"))
+                            .fill(viewModel.isPlaying ? theme.accent : theme.surface)
                             .frame(width: 96, height: 96)
                             .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : (viewModel.shouldBlink ? 1.1 : 1.0))
                             .animation(.easeInOut(duration: 0.1), value: viewModel.shouldBlink)
@@ -229,7 +230,7 @@ struct ContentView: View {
                         
                         Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 32))
-                            .foregroundColor(Color(hex: "#DDDDDD"))
+                            .foregroundColor(theme.text)
                             .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : 1.0)
                             .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                     }
@@ -246,12 +247,12 @@ struct ContentView: View {
                     Button(action: viewModel.randomizeBeat) {
                         ZStack {
                             Circle()
-                                .fill(Color(hex: "#242424"))
+                                .fill(theme.surface)
                                 .frame(width: 64, height: 64)
                             
                             Image(systemName: "shuffle")
                                 .font(.system(size: 19))
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                         }
                     }
                 }

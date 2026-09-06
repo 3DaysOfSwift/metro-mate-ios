@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct BeatPresetsView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = BeatPresetsViewModel()
     @Environment(\.dismiss) private var dismiss
 
@@ -13,10 +14,10 @@ struct BeatPresetsView: View {
                         VStack(alignment: .leading) {
                             Text(viewModel.currentBeatName)
                                 .font(.headline)
-                                .foregroundColor(Color(hex: "#DDDDDD"))
+                                .foregroundColor(theme.text)
                             Text("\(viewModel.noteValue.displayName) • \(Int(viewModel.bpm)) BPM • \(viewModel.beatsPerMeasure) beats")
                                 .font(.caption)
-                                .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                                .foregroundColor(theme.text.opacity(0.7))
                         }
                         
                         Spacer()
@@ -24,9 +25,9 @@ struct BeatPresetsView: View {
                         Button("Save As...") {
                             viewModel.beginSavingCurrentBeat()
                         }
-                        .foregroundColor(Color(hex: "#F54206"))
+                        .foregroundColor(theme.accent)
                     }
-                    .listRowBackground(Color(hex: "#303030"))
+                    .listRowBackground(theme.elevatedSurface)
                 }
                 
                 Section("Presets") {
@@ -35,10 +36,10 @@ struct BeatPresetsView: View {
                             VStack(alignment: .leading) {
                                 Text(preset.name)
                                     .font(.headline)
-                                    .foregroundColor(Color(hex: "#DDDDDD"))
+                                    .foregroundColor(theme.text)
                                 Text("\(preset.noteValue.displayName) • \(Int(preset.bpm)) BPM • \(preset.beatsPerMeasure) beats")
                                     .font(.caption)
-                                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                                    .foregroundColor(theme.text.opacity(0.7))
                             }
                             
                             Spacer()
@@ -47,11 +48,11 @@ struct BeatPresetsView: View {
                                 viewModel.load(preset)
                                 dismiss()
                             }
-                            .foregroundColor(Color(hex: "#F54206"))
+                            .foregroundColor(theme.accent)
                             .disabled(preset.name == viewModel.currentBeatName)
                             .opacity(preset.name == viewModel.currentBeatName ? 0.5 : 1.0)
                         }
-                        .listRowBackground(Color(hex: "#303030"))
+                        .listRowBackground(theme.elevatedSurface)
                     }
                 }
                 
@@ -69,10 +70,10 @@ struct BeatPresetsView: View {
                             VStack(alignment: .leading) {
                                 Text(preset.name)
                                     .font(.headline)
-                                    .foregroundColor(Color(hex: "#DDDDDD"))
+                                    .foregroundColor(theme.text)
                                 Text("\(preset.noteValue.displayName) • \(Int(preset.bpm)) BPM • \(preset.beatsPerMeasure) beats")
                                     .font(.caption)
-                                    .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                                    .foregroundColor(theme.text.opacity(0.7))
                             }
                             
                             Spacer()
@@ -81,20 +82,20 @@ struct BeatPresetsView: View {
                                 viewModel.load(preset)
                                 dismiss()
                             }
-                            .foregroundColor(Color(hex: "#F54206"))
+                            .foregroundColor(theme.accent)
                             .disabled(preset.name == viewModel.currentBeatName)
                             .opacity(preset.name == viewModel.currentBeatName ? 0.5 : 1.0)
                         }
-                        .listRowBackground(Color(hex: "#303030"))
+                        .listRowBackground(theme.elevatedSurface)
                     }
                     .onDelete { indexSet in
                         viewModel.deleteSavedBeats(at: indexSet)
                     }
                 }
             }
-            .background(Color(hex: "#1C1C1B"))
+            .background(theme.background)
             .scrollContentBackground(.hidden)
-            .foregroundColor(Color(hex: "#DDDDDD"))
+            .foregroundColor(theme.text)
             .navigationTitle("Beat Presets")
             .onAppear(perform: viewModel.loadSavedPresets)
             .navigationBarTitleDisplayMode(.inline)
@@ -105,7 +106,7 @@ struct BeatPresetsView: View {
                         viewModel.reset()
                         dismiss()
                     }
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -113,15 +114,15 @@ struct BeatPresetsView: View {
                         viewModel.finish()
                         dismiss()
                     }
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                 }
             }
         }
-        .background(Color(hex: "#1C1C1B"))
+        .background(theme.background)
         .preferredColorScheme(.dark)
         .alert("Save Beat Preset", isPresented: $viewModel.isShowingSaveDialog) {
             TextField("Beat Name", text: $viewModel.newBeatName)
-                .foregroundColor(.black)
+                .foregroundColor(theme.alertInputText)
             Button("Save") {
                 viewModel.saveCurrentBeat()
             }

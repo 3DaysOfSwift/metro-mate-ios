@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GridSettingsView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = GridSettingsViewModel()
     @Environment(\.dismiss) private var dismiss
     
@@ -10,35 +11,35 @@ struct GridSettingsView: View {
                 Section("Grid Configuration") {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Number of Beats: \(viewModel.beatsPerMeasure)")
-                            .foregroundColor(Color(hex: "#DDDDDD"))
+                            .foregroundColor(theme.text)
                         
                         let maxBeats = viewModel.maximumBeatCount
                         Slider(value: Binding(
                             get: { Double(viewModel.beatsPerMeasure) },
                             set: viewModel.updateBeatCount
                         ), in: viewModel.sliderRange, step: 1)
-                        .accentColor(Color(hex: "#F54206"))
+                        .accentColor(theme.accent)
                         
                         HStack {
                             Text("\(viewModel.minimumBeatCount)")
                                 .font(.caption)
-                                .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                                .foregroundColor(theme.text.opacity(0.7))
                             Spacer()
                             Text("\(maxBeats)")
                                 .font(.caption)
-                                .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                                .foregroundColor(theme.text.opacity(0.7))
                         }
                         
                         Text("Note: Triplets are limited to 12 beats max")
                             .font(.caption)
-                            .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
+                            .foregroundColor(theme.text.opacity(0.7))
                     }
                     .padding(.vertical, 8)
                 }
             }
-            .background(Color(hex: "#1C1C1B"))
+            .background(theme.background)
             .scrollContentBackground(.hidden)
-            .foregroundColor(Color(hex: "#DDDDDD"))
+            .foregroundColor(theme.text)
             .navigationTitle("Grid Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark)
@@ -48,11 +49,11 @@ struct GridSettingsView: View {
                         viewModel.finish()
                         dismiss()
                     }
-                    .foregroundColor(Color(hex: "#DDDDDD"))
+                    .foregroundColor(theme.text)
                 }
             }
         }
-        .background(Color(hex: "#1C1C1B"))
+        .background(theme.background)
         .preferredColorScheme(.dark)
     }
 }

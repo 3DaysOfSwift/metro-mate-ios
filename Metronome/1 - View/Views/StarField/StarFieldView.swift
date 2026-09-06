@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct StarFieldView: View {
+    @Environment(\.appColourTheme) private var theme
     @StateObject private var viewModel = StarFieldViewModel()
     
     var body: some View {
@@ -22,7 +23,7 @@ struct StarFieldView: View {
                         
                         context.fill(
                             Circle().path(in: rect),
-                            with: .color(Color(hex: "#DDDDDD").opacity(opacity))
+                            with: .color(theme.text.opacity(opacity))
                         )
                     }
                 }

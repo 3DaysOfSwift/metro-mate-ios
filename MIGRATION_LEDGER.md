@@ -13,7 +13,6 @@ must not be read as a fresh test-run report.
 
 - Review Combine observation forwarding and direct View access to feature APIs
   against the template before deciding the scope of an Observation conversion.
-- Centralise the existing colour palette without changing the visual design.
 - Review presentation-only subviews against the dedicated ViewModel convention.
 - Finish manual regression journeys, including Siri, saved presets, failure
   recovery, and audio timing on a device under load.

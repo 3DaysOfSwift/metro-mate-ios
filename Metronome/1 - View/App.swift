@@ -10,6 +10,7 @@ import AppIntents
 
 @main
 struct MetronomeApp: App {
+    @StateObject private var themeManager = ThemeManager()
     init() {
         // Register shortcuts
         MetronomeShortcuts.updateAppShortcutParameters()
@@ -18,6 +19,7 @@ struct MetronomeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.appColourTheme, themeManager.selectedTheme)
                 .onAppear {
                     AppBrain.shared.applicationDidFinishLaunching()
                 }

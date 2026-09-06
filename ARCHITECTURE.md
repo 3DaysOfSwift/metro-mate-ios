@@ -26,6 +26,7 @@ Metronome/
 │   ├── App.swift
 │   ├── App Intents/AppIntents.swift
 │   ├── SwiftUI Extensions/ColorExtension.swift
+│   ├── Theme/ AppColourTheme.swift, ThemeManager.swift
 │   └── Views/
 │       ├── Content/         ContentView.swift, ContentViewModel.swift
 │       ├── Grid/            GridView.swift, GridViewModel.swift
@@ -75,7 +76,16 @@ Xcode synchronises these folders with the app and test targets. Resource filenam
 remain unchanged; the signing configurations reference the relocated entitlements.
 The audio analysis sidecar files are preserved from the original project.
 
-## Migration Status
+## Colour Theme
+
+AppColourTheme keeps colour values together. The App owns one ThemeManager and
+supplies its selected palette as a SwiftUI environment value to all screens and
+their presentation subviews. No feature manager is constructed by the environment.
+Classic preserves the original colours. Midnight is an alternate development
+palette, not a new customer setting. Theme selection is in-memory only.
+Views retain their existing opacity and layout choices.
+
+## Remaining Migration Work
 
 This layout makes ownership visible, but does not mean the migration is complete.
 See MIGRATION_LEDGER.md for pending responsibility reviews and
