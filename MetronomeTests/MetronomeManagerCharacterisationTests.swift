@@ -169,13 +169,33 @@ struct MetronomeManagerCharacterisationTests {
         #expect(restoredManager.savedBeats.first?.bpm == 96)
     }
 
+    @Test func playbackCommandsAreForwardedToTheSuppliedAudioPlayer() {
+        let audioPlayer = RecordingMetronomeAudioPlayer()
+        let manager = makeManager(audioPlayer: audioPlayer)
+
+        #expect(audioPlayer.prepareCallCount == 1)
+
+        manager.togglePlayback()
+        #expect(audioPlayer.startCallCount == 1)
+
+        manager.togglePlayback()
+        #expect(audioPlayer.stopCallCount == 1)
+
+        manager.tapTempo()
+        #expect(audioPlayer.playedAccents == [false])
+    }
+
     private func activeIndices(in values: [Bool]) -> [Int] {
         values.indices.filter { values[$0] }
     }
 
     private func makeManager(
-        repository: InMemoryPresetRepository = InMemoryPresetRepository()
+        repository: InMemoryPresetRepository = InMemoryPresetRepository(),
+        audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer()
     ) -> MetronomeManager {
-        MetronomeManager(presetRepository: repository)
+        MetronomeManager(
+            presetRepository: repository,
+            audioPlayer: audioPlayer
+        )
     }
 }

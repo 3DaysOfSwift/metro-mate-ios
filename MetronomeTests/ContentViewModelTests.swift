@@ -7,7 +7,7 @@ struct ContentViewModelTests {
     @Test func presentationIntentsExposeTheRequestedSheet() {
         let viewModel = ContentViewModel(
             brain: AppBrain(
-                metronome: MetronomeManager(presetRepository: InMemoryPresetRepository())
+                metronome: makeTestMetronome()
             )
         )
 
@@ -21,7 +21,7 @@ struct ContentViewModelTests {
     }
 
     @Test func bpmButtonsRespectTheExistingLimits() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
 
         metronome.bpm = 40
@@ -34,7 +34,7 @@ struct ContentViewModelTests {
     }
 
     @Test func bpmDragUsesTheExistingSensitivityAndLimits() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         let viewModel = ContentViewModel(brain: AppBrain(metronome: metronome))
 
         metronome.bpm = 100

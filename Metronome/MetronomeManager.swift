@@ -1,5 +1,4 @@
 import Foundation
-import AVFoundation
 import SwiftUI
 
 struct TapPoint: Identifiable {
@@ -173,88 +172,24 @@ class MetronomeManager: MetronomeFeature {
     private var tapClearTimer: Timer?
     private var tapPointTimer: Timer?
     
-    private var audioEngine: AVAudioEngine?
-    private var playerNode: AVAudioPlayerNode?
     private var timer: DispatchSourceTimer?
-    private var accentClickFile: AVAudioFile?
-    private var normalClickFile: AVAudioFile?
 
     private let presetRepository: any PresetRepository
+    private let audioPlayer: any MetronomeAudioPlayer
 
-    init(presetRepository: any PresetRepository) {
+    init(
+        presetRepository: any PresetRepository,
+        audioPlayer: any MetronomeAudioPlayer
+    ) {
         self.presetRepository = presetRepository
-        setupAudio()
+        self.audioPlayer = audioPlayer
+        audioPlayer.prepare()
         setupDefaultPattern()
         restorePresets()
     }
     
     deinit {
         tapPointTimer?.invalidate()
-    }
-    
-    private func setupAudio() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to setup audio session: \(error)")
-        }
-        
-        audioEngine = AVAudioEngine()
-        playerNode = AVAudioPlayerNode()
-        
-        guard let audioEngine = audioEngine, let playerNode = playerNode else { return }
-        
-        audioEngine.attach(playerNode)
-        audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: nil)
-        
-        do {
-            try audioEngine.start()
-        } catch {
-            print("Failed to start audio engine: \(error)")
-        }
-        
-        loadSoundFiles()
-    }
-    
-    private func loadSoundFiles() {
-        if let accentURL = Bundle.main.url(forResource: "accent_click", withExtension: "wav") {
-            do {
-                accentClickFile = try AVAudioFile(forReading: accentURL)
-            } catch {
-                print("Failed to load accent click file: \(error)")
-            }
-        }
-        
-        if let normalURL = Bundle.main.url(forResource: "normal_click", withExtension: "wav") {
-            do {
-                normalClickFile = try AVAudioFile(forReading: normalURL)
-            } catch {
-                print("Failed to load normal click file: \(error)")
-            }
-        }
-    }
-    
-    private func createClickBuffer(accent: Bool = false) -> AVAudioPCMBuffer? {
-        let sampleRate = 44100.0
-        let duration = 0.1
-        let frameCount = AVAudioFrameCount(sampleRate * duration)
-        
-        guard let audioFormat = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1) else { return nil }
-        guard let audioBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: frameCount) else { return nil }
-        
-        audioBuffer.frameLength = frameCount
-        
-        let frequency: Float = accent ? 800 : 400
-        
-        guard let channelData = audioBuffer.floatChannelData?[0] else { return nil }
-        
-        for frame in 0..<Int(frameCount) {
-            let value = sin(2.0 * Float.pi * frequency * Float(frame) / Float(sampleRate)) * 0.5
-            channelData[frame] = value * Float(1.0 - Double(frame) / Double(frameCount))
-        }
-        
-        return audioBuffer
     }
     
     private func setupDefaultPattern() {
@@ -328,19 +263,7 @@ class MetronomeManager: MetronomeFeature {
         isPlaying = true
         currentBeat = -1  // Start at -1 so first increment makes it 0 (beat 1)
         
-        // Ensure audio engine is running and player is ready
-        if let audioEngine = audioEngine, !audioEngine.isRunning {
-            do {
-                try audioEngine.start()
-            } catch {
-                print("Failed to restart audio engine: \(error)")
-            }
-        }
-        
-        // Ensure player node is ready
-        if let playerNode = playerNode, !playerNode.isPlaying {
-            playerNode.play()
-        }
+        audioPlayer.startIfNeeded()
         
         // Small delay to ensure audio system is ready, then play first beat
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
@@ -370,8 +293,7 @@ class MetronomeManager: MetronomeFeature {
         currentBeat = -1
         shouldBlink = false
         
-        // Stop the player node
-        playerNode?.stop()
+        audioPlayer.stop()
     }
     
     private func tick() {
@@ -390,47 +312,12 @@ class MetronomeManager: MetronomeFeature {
     }
     
     private func playClick() {
-        guard let playerNode = playerNode else { return }
-        
         let shouldAccent = currentBeat < accentPattern.count && accentPattern[currentBeat]
-        let audioFile = shouldAccent ? accentClickFile : normalClickFile
-        
-        if let audioFile = audioFile {
-            playerNode.scheduleFile(audioFile, at: nil)
-        } else {
-            guard let audioBuffer = createClickBuffer(accent: shouldAccent) else { return }
-            playerNode.scheduleBuffer(audioBuffer, at: nil, options: [], completionHandler: nil)
-        }
-        
-        if !playerNode.isPlaying {
-            playerNode.play()
-        }
+        audioPlayer.playClick(accented: shouldAccent)
     }
     
     private func playTapSound() {
-        guard let playerNode = playerNode else { return }
-        
-        // Ensure audio engine is running
-        if let audioEngine = audioEngine, !audioEngine.isRunning {
-            do {
-                try audioEngine.start()
-            } catch {
-                print("Failed to start audio engine for tap: \(error)")
-                return
-            }
-        }
-        
-        // Use normal click sound for tap
-        if let audioFile = normalClickFile {
-            playerNode.scheduleFile(audioFile, at: nil)
-        } else {
-            guard let audioBuffer = createClickBuffer(accent: false) else { return }
-            playerNode.scheduleBuffer(audioBuffer, at: nil, options: [], completionHandler: nil)
-        }
-        
-        if !playerNode.isPlaying {
-            playerNode.play()
-        }
+        audioPlayer.playClick(accented: false)
     }
     
     

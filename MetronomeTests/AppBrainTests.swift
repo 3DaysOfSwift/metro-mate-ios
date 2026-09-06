@@ -4,7 +4,7 @@ import Testing
 @MainActor
 struct AppBrainTests {
     @Test func storesTheFeatureManagerProvidedByTheCompositionRoot() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
 
         let brain = AppBrain(metronome: metronome)
 
@@ -12,7 +12,7 @@ struct AppBrainTests {
     }
 
     @Test func viewModelsUseTheFeatureFromTheirProvidedBrain() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         let brain = AppBrain(metronome: metronome)
 
         let content = ContentViewModel(brain: brain)

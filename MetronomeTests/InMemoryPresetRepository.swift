@@ -15,3 +15,13 @@ final class InMemoryPresetRepository: PresetRepository {
         self.presets = presets
     }
 }
+
+func makeTestMetronome(
+    presetRepository: InMemoryPresetRepository = InMemoryPresetRepository(),
+    audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer()
+) -> MetronomeManager {
+    MetronomeManager(
+        presetRepository: presetRepository,
+        audioPlayer: audioPlayer
+    )
+}

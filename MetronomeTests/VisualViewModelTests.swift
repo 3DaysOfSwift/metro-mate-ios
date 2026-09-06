@@ -6,7 +6,7 @@ import Testing
 @Suite(.serialized)
 struct VisualViewModelTests {
     @Test func gridLayoutUsesFourColumnsForOrdinaryNotes() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         let viewModel = GridViewModel(brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.tilesPerRow == 4)
@@ -16,7 +16,7 @@ struct VisualViewModelTests {
     }
 
     @Test func gridLayoutUsesThreeColumnsForTriplets() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         metronome.updateNoteValue(.eighthTriplet)
         let viewModel = GridViewModel(brain: AppBrain(metronome: metronome))
 
@@ -27,7 +27,7 @@ struct VisualViewModelTests {
     }
 
     @Test func beatTileReadsAndUpdatesItsOwnBeat() {
-        let metronome = MetronomeManager(presetRepository: InMemoryPresetRepository())
+        let metronome = makeTestMetronome()
         let viewModel = BeatTileViewModel(beat: 1, brain: AppBrain(metronome: metronome))
 
         #expect(viewModel.isActive)
@@ -42,7 +42,7 @@ struct VisualViewModelTests {
     @Test func starFieldBuildsDotsForItsCanvasAndCanStopAnimating() {
         let viewModel = StarFieldViewModel(
             brain: AppBrain(
-                metronome: MetronomeManager(presetRepository: InMemoryPresetRepository())
+                metronome: makeTestMetronome()
             )
         )
 
