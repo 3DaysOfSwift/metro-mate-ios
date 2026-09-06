@@ -31,6 +31,13 @@ AVFoundation call cannot be preempted, so Stop waits behind it. Startup uses
 async let for independent audio and preset preparation. Deadline advancement is
 unchanged; catch-up behaviour and real-time cadence still require evaluation.
 
+SwiftConcurrencyMetronomeTickerTests now exercise the real clock and task:
+stopping before the first deadline, replacing a sleeping task, stopping or
+replacing during a suspended callback, destruction, and a callback that takes
+longer than its interval. The tests check cancellation and non-overlap, using
+bounded observation windows rather than tight timing assertions. They do not
+establish audio cadence, scheduling jitter, or acceptable catch-up sound under load.
+
 There is no DispatchSource, scheduledTimer, or Timer construction.
 Syntax replacement does not prove timing equivalence. Cooperative tasks are not real-time audio scheduling:
 device testing under load remains essential before declaring this migration done.

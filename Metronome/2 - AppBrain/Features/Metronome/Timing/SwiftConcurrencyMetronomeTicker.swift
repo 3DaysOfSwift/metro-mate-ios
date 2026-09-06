@@ -18,6 +18,9 @@ final class SwiftConcurrencyMetronomeTicker: MetronomeTicker {
                     try await clock.sleep(until: nextTick, tolerance: .zero)
                     try Task.checkCancellation()
                     await tick()
+                    // Preserve the original cadence: advance from the planned
+                    // deadline, not completion time. Overdue ticks may catch up
+                    // in a burst; callbacks are awaited and never overlap here.
                     nextTick = nextTick.advanced(by: interval)
                 }
             } catch is CancellationError {

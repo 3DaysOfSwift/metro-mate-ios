@@ -83,11 +83,14 @@ MetronomeTests/
 │   ├── AppBrainTests.swift
 │   └── Features/Metronome/
 │       ├── MetronomeManagerCharacterisationTests.swift
-│       ├── Audio/MetronomeAudioFailureTests.swift
+│       ├── Audio/
+│       │   ├── MetronomeAudioFailureTests.swift
+│       │   └── MetronomeAudioConcurrencyTests.swift
 │       ├── Data Types/NoteValueTests.swift
-│       └── Preset Storage/
-│           ├── MetronomePresetPersistenceTests.swift
-│           └── UserDefaultsPresetRepositoryTests.swift
+│       ├── Preset Storage/
+│       │   ├── MetronomePresetPersistenceTests.swift
+│       │   └── UserDefaultsPresetRepositoryTests.swift
+│       └── Timing/SwiftConcurrencyMetronomeTickerTests.swift
 ├── View model tests/
 │   ├── ContentViewModelTests.swift
 │   ├── SettingsViewModelTests.swift

@@ -74,6 +74,25 @@ including all five new audio concurrency tests. Focused production-source
 typechecking with complete checking and warnings-as-errors passes. Device audio
 quality, fallback playback, and combined-load latency are not claimed verified.
 
+### Real Ticker Checkpoint
+
+Added six tests using SwiftConcurrencyMetronomeTicker itself, not its controllable
+test double. They cover cancellation before the first deadline, replacement
+while sleeping, stop and replacement during a suspended callback, destruction,
+and non-overlapping callbacks when work exceeds the interval. The tests suspend
+cooperatively and use bounded observation windows, with no tight upper-bound
+latency assertions that would be unreliable on a busy CI machine.
+
+Documented the existing missed-deadline policy in the implementation: advance
+from the planned deadline, not callback completion. This can produce catch-up
+bursts. No scheduling or musical behaviour was changed. The delayed-callback
+test verifies non-overlap, not the spacing or musical suitability of catch-up
+ticks. That remains a profiling and product-policy decision.
+
+Verification: the full MetronomeTests automated suite passed on the iPhone Air
+simulator, including these six real-ticker tests. This does not replace device
+profiling or manual audio regression checks.
+
 Remaining checkpoints:
 
 1. Capture a combined cold-start, star-field animation, and playback baseline
@@ -81,15 +100,15 @@ Remaining checkpoints:
    and preset loading/saving. No latency or frame-time measurements exist yet.
 2. Verify bundled and fallback audio by listening on device, including rapid
    start/stop, tempo changes, and simultaneous animation.
-3. Test the real ticker's cancellation, replacement, and missed deadlines;
-   agree and document late-tick behaviour before changing its current catch-up
-   policy. Compare timing under animation load.
+3. Measure real ticker cadence and catch-up spacing under animation load.
+   Agree on any change to the existing late-tick policy before implementing it.
 4. Repeat profiling, strict checking, and regressions. Move costly animation
    calculations off-main only if measurements warrant it, publishing completed
    frames without stale results. Do not add Task.yield merely as a showcase.
 
-The audio and persistence ownership changes are implemented. Real ticker tests,
-fallback playback verification, and performance gates remain open.
+The audio and persistence ownership changes and real ticker lifetime tests are
+implemented. Catch-up cadence, fallback playback verification, and performance
+gates remain open.
 
 ## Pass Seven: Feature-owned Model Files
 
