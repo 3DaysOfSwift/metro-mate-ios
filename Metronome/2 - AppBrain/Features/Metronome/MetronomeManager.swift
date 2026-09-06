@@ -38,6 +38,8 @@ final class MetronomeManager: MetronomeFeature {
     private let currentDate: () -> Date
     private var hasLoadedPresets = false
     @Published private(set) var presetLoadError: String?
+    @Published private(set) var presetSaveError: String?
+    @Published private(set) var audioError: String?
 
     init(
         presetRepository: any PresetRepository,
@@ -58,7 +60,12 @@ final class MetronomeManager: MetronomeFeature {
 
     /// Warms the audio system without starting metronome playback.
     func prepareAudio() {
-        audioPlayer.prepare()
+        do {
+            try audioPlayer.prepare()
+            audioError = nil
+        } catch {
+            audioError = error.localizedDescription
+        }
     }
     
     private func setupDefaultPattern() {
@@ -129,10 +136,16 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     private func start() {
+        do {
+            try audioPlayer.startIfNeeded()
+            audioError = nil
+        } catch {
+            audioError = error.localizedDescription
+            return
+        }
         isPlaying = true
         currentBeat = -1  // Start at -1 so first increment makes it 0 (beat 1)
         
-        audioPlayer.startIfNeeded()
         
         startTicker(after: .milliseconds(10))
     }
@@ -164,11 +177,21 @@ final class MetronomeManager: MetronomeFeature {
     
     private func playClick() {
         let shouldAccent = currentBeat < accentPattern.count && accentPattern[currentBeat]
-        audioPlayer.playClick(accented: shouldAccent)
+        playSound(accented: shouldAccent)
     }
     
     private func playTapSound() {
-        audioPlayer.playClick(accented: false)
+        playSound(accented: false)
+    }
+
+    private func playSound(accented: Bool) {
+        do {
+            try audioPlayer.playClick(accented: accented)
+            audioError = nil
+        } catch {
+            stop()
+            audioError = error.localizedDescription
+        }
     }
     
     
@@ -442,9 +465,16 @@ final class MetronomeManager: MetronomeFeature {
     private func persistPresets() {
         do {
             try presetRepository.savePresets(savedBeats)
+            presetSaveError = nil
         } catch {
-            print("Failed to save beat presets: \(error)")
+            presetSaveError = error.localizedDescription
         }
+    }
+
+    /// Retries the current unsaved collection without adding or deleting anything again.
+    func retrySavingPresets() {
+        guard hasLoadedPresets, presetSaveError != nil else { return }
+        persistPresets()
     }
 
     /// Loads once after success. Failed requests can be retried without rebuilding the feature.

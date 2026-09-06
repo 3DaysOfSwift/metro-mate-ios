@@ -3,6 +3,43 @@ import Testing
 
 @MainActor
 struct AppBrainTests {
+    @Test func failedSaveRetainsChangesForRetryWithoutDuplicatingPresets() {
+        enum Failure: Error { case unavailable }
+        let repository = InMemoryPresetRepository()
+        let manager = makeTestMetronome(presetRepository: repository)
+        repository.saveError = Failure.unavailable
+        manager.saveBeatPreset(name: "My Beat")
+        #expect(manager.presetSaveError != nil)
+        #expect(repository.presets.isEmpty)
+        #expect(manager.savedBeats.count == 1)
+        repository.saveError = nil
+        manager.retrySavingPresets()
+        #expect(manager.presetSaveError == nil)
+        #expect(repository.presets.map(\.name) == ["My Beat"])
+    }
+
+    @Test func audioFailureDoesNotStartPlaybackAndCanBeRetried() {
+        enum Failure: Error { case unavailable }
+        let audio = RecordingMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeTestMetronome(audioPlayer: audio, ticker: ticker)
+        audio.failure = Failure.unavailable
+        manager.prepareAudio()
+        #expect(manager.audioError != nil)
+        manager.togglePlayback()
+        #expect(!manager.isPlaying)
+        #expect(ticker.startCallCount == 0)
+        audio.failure = nil
+        manager.prepareAudio()
+        #expect(manager.audioError == nil)
+        manager.togglePlayback()
+        #expect(manager.isPlaying)
+        audio.failure = Failure.unavailable
+        manager.tapTempo()
+        #expect(!manager.isPlaying)
+        #expect(manager.audioError != nil)
+    }
+
     @Test func failedLoadIsVisibleAndRetryCanSucceedWithoutReplacingStoredBeats() {
         enum LoadFailure: Error { case unavailable }
         let repository = InMemoryPresetRepository()

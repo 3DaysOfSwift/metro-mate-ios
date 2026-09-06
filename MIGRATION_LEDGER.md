@@ -13,7 +13,22 @@ Playback retains its existing audio readiness check, including the Siri path.
 Added tests for side-effect-free construction, launch loading, repeated successful
 requests, saving before launch, and failure/retry. Production subset typechecking
 passed; full Xcode build and test execution remain to be verified. Audio readiness
-failure handling and preset save-error presentation remain for the next pass.
+failure handling and preset save-error presentation are implemented in the next
+pass below.
+
+## Audio and Save Failure Pass
+
+Audio preparation, playback start, and click scheduling now propagate errors to
+the feature. Preparation only becomes successful after setup completes; a retry
+does not attach the audio node twice. Playback stays stopped when starting fails
+and stops if a click fails. The main screen exposes audio failure and a retry
+action; Siri no longer announces successful playback after an audio failure.
+The existing generated-click fallback for missing audio files is retained.
+
+Failed preset writes retain the edited collection in memory, explicitly show
+that changes are not saved, and allow retrying the collection without repeating
+the edit. These pending edits are not durable until the write succeeds.
+Added failure/recovery tests. Full runtime verification remains an Xcode step.
 
 ## Starting Architecture
 

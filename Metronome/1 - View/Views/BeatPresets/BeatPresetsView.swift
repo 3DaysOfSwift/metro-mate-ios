@@ -57,6 +57,10 @@ struct BeatPresetsView: View {
                 }
                 
                 Section("Saved Beats") {
+                    if let error = viewModel.saveError {
+                        Text("Changes are not saved: \(error)")
+                        Button("Retry saving", action: viewModel.retrySavingPresets)
+                    }
                     if let error = viewModel.loadError {
                         Text("Could not load saved beats: \(error)")
                         Button("Retry", action: viewModel.loadSavedPresets)

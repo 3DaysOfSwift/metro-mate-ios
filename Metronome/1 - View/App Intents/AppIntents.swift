@@ -61,6 +61,10 @@ struct PlayMetronomeIntent: AppIntent {
             metronome.togglePlayback()
         }
         
+        if let error = metronome.audioError {
+            throw NSError(domain: "MetronomeAudio", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: error])
+        }
         return .result(dialog: "Playing at \(bpm.rawValue) BPM")
     }
 }
@@ -75,6 +79,10 @@ struct StartMetronomeIntent: AppIntent {
         let metronome = AppBrain.shared.metronome
         if !metronome.isPlaying {
             metronome.togglePlayback()
+        }
+        if let error = metronome.audioError {
+            throw NSError(domain: "MetronomeAudio", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: error])
         }
         return .result()
     }

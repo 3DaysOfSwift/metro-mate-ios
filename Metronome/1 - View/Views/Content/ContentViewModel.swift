@@ -10,6 +10,11 @@ final class ContentViewModel: ObservableObject {
     @Published var isPlayButtonPressed = false
 
     let metronome: any MetronomeFeature
+    var audioError: String? { metronome.audioError }
+
+    func retryAudio() {
+        metronome.prepareAudio()
+    }
 
     private var repeatTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?

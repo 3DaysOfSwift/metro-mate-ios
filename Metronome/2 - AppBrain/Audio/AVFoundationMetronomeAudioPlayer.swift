@@ -8,44 +8,33 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
     private var accentClickFile: AVAudioFile?
     private var normalClickFile: AVAudioFile?
     private var isPrepared = false
+    private var isConnected = false
 
     init(bundle: Bundle) {
         self.bundle = bundle
     }
 
-    func prepare() {
+    func prepare() throws {
         guard !isPrepared else { return }
-        isPrepared = true
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to setup audio session: \(error)")
+        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try AVAudioSession.sharedInstance().setActive(true)
+        if !isConnected {
+            audioEngine.attach(playerNode)
+            audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: nil)
+            isConnected = true
         }
-
-        audioEngine.attach(playerNode)
-        audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: nil)
-
-        do {
-            try audioEngine.start()
-        } catch {
-            print("Failed to start audio engine: \(error)")
-        }
+        try audioEngine.start()
 
         accentClickFile = loadSoundFile(named: "accent_click")
         normalClickFile = loadSoundFile(named: "normal_click")
+        isPrepared = true
     }
 
-    func startIfNeeded() {
-        prepare()
+    func startIfNeeded() throws {
+        try prepare()
 
         if !audioEngine.isRunning {
-            do {
-                try audioEngine.start()
-            } catch {
-                print("Failed to restart audio engine: \(error)")
-            }
+            try audioEngine.start()
         }
 
         if !playerNode.isPlaying {
@@ -57,14 +46,17 @@ final class AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
         playerNode.stop()
     }
 
-    func playClick(accented: Bool) {
-        startIfNeeded()
+    func playClick(accented: Bool) throws {
+        try startIfNeeded()
 
         let audioFile = accented ? accentClickFile : normalClickFile
         if let audioFile {
             playerNode.scheduleFile(audioFile, at: nil)
         } else if let buffer = makeClickBuffer(accented: accented) {
             playerNode.scheduleBuffer(buffer, at: nil)
+        } else {
+            throw NSError(domain: "MetronomeAudio", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not create the metronome click sound."])
         }
     }
 

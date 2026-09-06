@@ -6,6 +6,7 @@ final class InMemoryPresetRepository: PresetRepository {
     private(set) var presets: [BeatPreset]
     private(set) var loadCallCount = 0
     var loadError: Error?
+    var saveError: Error?
 
     init(presets: [BeatPreset] = []) {
         self.presets = presets
@@ -18,6 +19,7 @@ final class InMemoryPresetRepository: PresetRepository {
     }
 
     func savePresets(_ presets: [BeatPreset]) throws {
+        if let saveError { throw saveError }
         self.presets = presets
     }
 }

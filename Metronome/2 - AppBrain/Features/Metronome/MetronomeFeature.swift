@@ -17,11 +17,14 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var currentBeatName: String { get }
     var savedBeats: [BeatPreset] { get }
     var presetLoadError: String? { get }
+    var presetSaveError: String? { get }
+    var audioError: String? { get }
     var defaultPresets: [BeatPreset] { get }
     var quickPresets: [QuickPreset] { get }
     var tapCount: Int { get }
 
     func prepareAudio()
+    func retrySavingPresets()
     func loadSavedPresets()
     func togglePlayback()
     func updateBPM(_ bpm: Double)

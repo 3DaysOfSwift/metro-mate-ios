@@ -43,6 +43,14 @@ struct ContentView: View {
     
     private var content: some View {
         VStack(spacing: 12) {
+                if let error = viewModel.audioError {
+                    VStack {
+                        Text("Audio unavailable: \(error)")
+                            .foregroundStyle(.white)
+                        Button("Retry audio", action: viewModel.retryAudio)
+                    }
+                    .padding(.horizontal)
+                }
                 // Header with settings
                 HStack {
                     Button(action: viewModel.showBeatPresets) {

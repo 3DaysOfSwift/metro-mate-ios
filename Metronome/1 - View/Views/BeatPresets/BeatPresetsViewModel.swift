@@ -20,6 +20,11 @@ final class BeatPresetsViewModel: ObservableObject {
 
     var defaultPresets: [BeatPreset] { metronome.defaultPresets }
     var loadError: String? { metronome.presetLoadError }
+    var saveError: String? { metronome.presetSaveError }
+
+    func retrySavingPresets() {
+        metronome.retrySavingPresets()
+    }
 
     func loadSavedPresets() {
         metronome.loadSavedPresets()
