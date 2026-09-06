@@ -138,10 +138,14 @@ final class StarFieldViewModel {
         let centerX = canvasSize.width / 2
         let centerY = canvasSize.height / 2
         let intensity = pulseIntensity
+        // Build a frame in ordinary value storage. Mutating the observed array
+        // once per dot repeatedly enters Observation on the playback actor.
+        // Publish only the completed frame so rendering sees a coherent snapshot.
+        var nextDots = dots
 
-        for row in dots.indices {
-            for column in dots[row].indices {
-                var dot = dots[row][column]
+        for row in nextDots.indices {
+            for column in nextDots[row].indices {
+                var dot = nextDots[row][column]
                 let waveRadius = pulseTime * 600
                 let waveDistance = abs(dot.distanceFromCenter - waveRadius)
                 var displacement: CGFloat = 0
@@ -165,8 +169,9 @@ final class StarFieldViewModel {
                     + sin(angle) * displacement
                     + sin(wavePhase * 0.5 + CGFloat(column) * 0.05) * ambientWave
                 dot.size = 1.5 * sizeMultiplier
-                dots[row][column] = dot
+                nextDots[row][column] = dot
             }
         }
+        dots = nextDots
     }
 }

@@ -17,6 +17,25 @@ backlog. Consult the final report for current ownership and evidence limits.
 
 ## Pass Twelve: Swift Observation — Implemented, Manual UI Check Pending
 
+### Reopened: User-reported Irregular Playback
+
+After this conversion the developer reported irregular beats and an unusable
+metronome. This overrides any implication that passing state tests establishes
+product correctness. Pass Twelve remains open until audible playback is verified.
+
+The star-field loop mutated its observed nested array once per dot on the Main
+Actor, which also triggers playback ticks. The first corrective change builds
+an ordinary local frame and assigns the observed array once when complete.
+This removes per-dot Observation mutation work without changing the visual
+formula or the musical timing policy. A full-size canvas test protects frame
+updates and retained snapshot values; it is not an audio timing test.
+
+The attempted pre-change targeted run did not provide a usable timing baseline.
+No before/after latency figure or confirmed root cause is claimed. Playback still
+depends on Main Actor tick delivery; reducing animation overhead alone does not
+establish that sound remains regular under UI load. Manual listening and further
+timing investigation are required if the regression persists.
+
 Requested after migration closure; this does not invalidate the completed
 migration milestone. MetronomeManager, all eight dedicated ViewModels, and
 ThemeManager now use @Observable with their existing Main Actor isolation.

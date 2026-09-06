@@ -6,6 +6,23 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct StarFieldViewModelTests {
+    @Test(.timeLimit(.minutes(1)))
+    func fullScreenAnimationPublishesANewFrameWithoutChangingTheOldSnapshot() async throws {
+        let viewModel = StarFieldViewModel(brain: AppBrain(metronome: makeTestMetronome()))
+        viewModel.appear(in: CGSize(width: 430, height: 932))
+        defer { viewModel.disappear() }
+        let clock = ContinuousClock()
+        let snapshot = viewModel.dots
+        let originalLastX = snapshot.last!.last!.x
+        let deadline = clock.now.advanced(by: .seconds(3))
+        while viewModel.dots.last!.last!.x == originalLastX && clock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(viewModel.dots.last!.last!.x != originalLastX)
+        #expect(snapshot.last!.last!.x == originalLastX)
+        #expect(viewModel.dots.count == snapshot.count)
+    }
+
     @Test func starFieldBuildsDotsForItsCanvasAndCanStopAnimating() {
         let viewModel = StarFieldViewModel(
             brain: AppBrain(
