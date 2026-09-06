@@ -8,13 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var metronome = MetronomeManager.shared
-    @State private var showSettings = false
-    @State private var showQuickNoteValuePicker = false
-    @State private var showGridSettings = false
-    @State private var showBeatPresets = false
-    @State private var repeatTimer: Timer?
-    @State private var isPlayButtonPressed = false
+    @StateObject private var viewModel = ContentViewModel()
+
+    private var metronome: MetronomeManager { viewModel.metronome }
     
     var body: some View {
         ZStack {
@@ -31,17 +27,17 @@ struct ContentView: View {
                 content
             }
         }
-        .sheet(isPresented: $showSettings) {
+        .sheet(isPresented: $viewModel.isShowingSettings) {
             SettingsView(metronome: metronome)
         }
-        .sheet(isPresented: $showGridSettings) {
+        .sheet(isPresented: $viewModel.isShowingGridSettings) {
             GridSettingsView(metronome: metronome)
         }
-        .sheet(isPresented: $showBeatPresets) {
+        .sheet(isPresented: $viewModel.isShowingBeatPresets) {
             BeatPresetsView(metronome: metronome)
         }
-        .sheet(isPresented: $showQuickNoteValuePicker) {
-            NoteValuePicker(metronome: metronome, isPresented: $showQuickNoteValuePicker)
+        .sheet(isPresented: $viewModel.isShowingNoteValuePicker) {
+            NoteValuePicker(metronome: metronome, isPresented: $viewModel.isShowingNoteValuePicker)
         }
     }
     
@@ -49,11 +45,7 @@ struct ContentView: View {
         VStack(spacing: 12) {
                 // Header with settings
                 HStack {
-                    Button(action: { 
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                        showBeatPresets = true 
-                    }) {
+                    Button(action: viewModel.showBeatPresets) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("PRESET")
                                 .font(.system(size: 10, weight: .semibold))
@@ -67,11 +59,7 @@ struct ContentView: View {
                     
                     Spacer()
                     
-                    Button(action: { 
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                        showSettings.toggle() 
-                    }) {
+                    Button(action: viewModel.showSettings) {
                         ZStack {
                             Circle()
                                 .fill(Color(hex: "#242424").opacity(0.8))
@@ -94,13 +82,7 @@ struct ContentView: View {
                 // BPM Display
                 VStack {
                     HStack(spacing: 20) {
-                        Button(action: { 
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            let newBPM = max(metronome.bpm - 1, 40)
-                            metronome.bpm = newBPM
-                            metronome.updateBPM(newBPM)
-                        }) {
+                        Button(action: viewModel.decreaseBPM) {
                             Image(systemName: "minus")
                                 .font(.title2)
                                 .foregroundColor(Color(hex: "#DDDDDD"))
@@ -109,9 +91,9 @@ struct ContentView: View {
                             // Long press action
                         } onPressingChanged: { pressing in
                             if pressing {
-                                startRepeatingDecrease()
+                                viewModel.startRepeatingBPMDecrease()
                             } else {
-                                stopRepeating()
+                                viewModel.stopRepeatingBPMChange()
                             }
                         }
                         
@@ -154,28 +136,11 @@ struct ContentView: View {
                         .gesture(
                             DragGesture()
                                 .onChanged { gesture in
-                                    let sensitivity: Double = 0.02
-                                    let change = -Double(gesture.translation.height) * sensitivity
-                                    let newBPM = max(40, min(200, metronome.bpm + change))
-                                    
-                                    // Haptic feedback on BPM change
-                                    if Int(newBPM) != Int(metronome.bpm) {
-                                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                        impactFeedback.impactOccurred()
-                                    }
-                                    
-                                    metronome.bpm = newBPM
-                                    metronome.updateBPM(newBPM)
+                                    viewModel.dragBPM(verticalTranslation: gesture.translation.height)
                                 }
                         )
                         
-                        Button(action: { 
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            let newBPM = min(metronome.bpm + 1, 200)
-                            metronome.bpm = newBPM
-                            metronome.updateBPM(newBPM)
-                        }) {
+                        Button(action: viewModel.increaseBPM) {
                             Image(systemName: "plus")
                                 .font(.title2)
                                 .foregroundColor(Color(hex: "#DDDDDD"))
@@ -184,9 +149,9 @@ struct ContentView: View {
                             // Long press action
                         } onPressingChanged: { pressing in
                             if pressing {
-                                startRepeatingIncrease()
+                                viewModel.startRepeatingBPMIncrease()
                             } else {
-                                stopRepeating()
+                                viewModel.stopRepeatingBPMChange()
                             }
                         }
                     }
@@ -195,11 +160,7 @@ struct ContentView: View {
                 Spacer()
                     .frame(height: 20)
                 
-                Button(action: {
-                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                    impactFeedback.impactOccurred()
-                    showQuickNoteValuePicker = true
-                }) {
+                Button(action: viewModel.showNoteValuePicker) {
                     HStack(spacing: 8) {
                         Text("PATTERN")
                             .font(.system(size: 11, weight: .semibold))
@@ -228,11 +189,7 @@ struct ContentView: View {
                 // Play and Tap Tempo Buttons
                 HStack(spacing: 20) {
                     // Tap Tempo Button
-                    Button(action: {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                        impactFeedback.impactOccurred()
-                        metronome.tapTempo()
-                    }) {
+                    Button(action: viewModel.recordTapTempo) {
                         ZStack {
                             Circle()
                                 .fill(Color(hex: "#242424"))
@@ -259,33 +216,27 @@ struct ContentView: View {
                         Circle()
                             .fill(metronome.isPlaying ? Color(hex: "#F54206") : Color(hex: "#242424"))
                             .frame(width: 96, height: 96)
-                            .scaleEffect(isPlayButtonPressed ? 0.95 : (metronome.shouldBlink ? 1.1 : 1.0))
+                            .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : (metronome.shouldBlink ? 1.1 : 1.0))
                             .animation(.easeInOut(duration: 0.1), value: metronome.shouldBlink)
-                            .animation(.easeInOut(duration: 0.1), value: isPlayButtonPressed)
+                            .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                         
                         Image(systemName: metronome.isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 32))
                             .foregroundColor(Color(hex: "#DDDDDD"))
-                            .scaleEffect(isPlayButtonPressed ? 0.95 : 1.0)
-                            .animation(.easeInOut(duration: 0.1), value: isPlayButtonPressed)
+                            .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : 1.0)
+                            .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                     }
                     .onTapGesture {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                        impactFeedback.impactOccurred()
-                        metronome.togglePlayback()
+                        viewModel.togglePlayback()
                     }
                     .onLongPressGesture(minimumDuration: .infinity, maximumDistance: .infinity) {
                         // Never triggers
                     } onPressingChanged: { pressing in
-                        isPlayButtonPressed = pressing
+                        viewModel.isPlayButtonPressed = pressing
                     }
                     
                     // Randomize Beat Button
-                    Button(action: {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                        metronome.randomizeBeat()
-                    }) {
+                    Button(action: viewModel.randomizeBeat) {
                         ZStack {
                             Circle()
                                 .fill(Color(hex: "#242424"))
@@ -303,32 +254,6 @@ struct ContentView: View {
             .padding()
     }
     
-    private func startRepeatingIncrease() {
-        repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            let newBPM = min(metronome.bpm + 1, 200)
-            metronome.bpm = newBPM
-            metronome.updateBPM(newBPM)
-            
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
-        }
-    }
-    
-    private func startRepeatingDecrease() {
-        repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            let newBPM = max(metronome.bpm - 1, 40)
-            metronome.bpm = newBPM
-            metronome.updateBPM(newBPM)
-            
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
-        }
-    }
-    
-    private func stopRepeating() {
-        repeatTimer?.invalidate()
-        repeatTimer = nil
-    }
 }
 
 struct GridView: View {
