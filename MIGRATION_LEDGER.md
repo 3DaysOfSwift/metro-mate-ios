@@ -15,6 +15,29 @@ timing checks remain documented follow-ups. Entries below retain the historical
 state at each checkpoint; the Starting Architecture table is not a current
 backlog. Consult the final report for current ownership and evidence limits.
 
+## Pass Twelve: Swift Observation — Planned Post-migration Work
+
+Requested after migration closure; this does not invalidate the completed
+migration milestone. No Observation conversion has been implemented yet.
+
+1. Convert MetronomeManager, the eight dedicated ViewModels, and ThemeManager
+   to @Observable while retaining their Main Actor isolation. Remove Combine
+   requirements from MetronomeFeature and manual notification forwarding.
+2. Adapt screen-owned state and bindings, preserving ViewModel identity and
+   side-effect-free construction. Keep retained task handles in their current
+   owners and outside observation tracking where appropriate.
+3. Replace publisher-specific tests with tracking tests through screen-facing
+   computed properties and the real feature protocol. Verify shared state,
+   collection changes, themes, errors/retry, and unrelated-change behaviour.
+4. Run strict checks and the full relevant suite; verify sheet/navigation state
+   and cancellation/lifetime behaviour. Update ARCHITECTURE.md and the feature
+   report only once the implementation and evidence support the new description.
+
+The feature remains the single state owner. Audio/storage executors, playback
+ordering, persistence guarantees, and timing policy are not part of this change.
+Observation replaces UI notification wiring, not Swift Concurrency itself.
+The reusable pass is recorded in Trend's legacy-application-migration.md.
+
 ## Pass Ten: Off-Main Feature Execution — Closed
 
 Closed on 6 September 2026 with the developer's agreement to defer additional
