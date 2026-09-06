@@ -3,7 +3,7 @@ import UIKit
 
 @MainActor
 final class GridSettingsViewModel: ObservableObject {
-    let metronome: any MetronomeFeature
+    private let metronome: any MetronomeFeature
 
     private var metronomeUpdates: AnyCancellable?
 

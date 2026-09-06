@@ -35,7 +35,7 @@ struct StarFieldView: View {
             }
         }
         .ignoresSafeArea() // Cover entire screen including safe areas
-        .onChange(of: viewModel.metronome.shouldBlink) { _, newValue in
+        .onChange(of: viewModel.shouldBlink) { _, newValue in
             viewModel.metronomeDidBlink(newValue)
         }
         .onDisappear {

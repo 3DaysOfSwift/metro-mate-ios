@@ -5,6 +5,7 @@ protocol MetronomeFeature: AnyObject, ObservableObject
 where ObjectWillChangePublisher == ObservableObjectPublisher {
     var isPlaying: Bool { get }
     var bpm: Double { get }
+    var tempoRange: ClosedRange<Double> { get }
     var beatsPerMeasure: Int { get }
     var beatCountRange: ClosedRange<Int> { get }
     var gridBeatCountRange: ClosedRange<Int> { get }

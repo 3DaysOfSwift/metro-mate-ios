@@ -4,7 +4,6 @@ struct NoteValuePicker: View {
     @StateObject private var viewModel = NoteValuePickerViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,7 +27,7 @@ struct NoteValuePicker: View {
                     ForEach(NoteValue.allCases, id: \.self) { noteValue in
                         NoteValueButton(
                             noteValue: noteValue,
-                            isSelected: metronome.noteValue == noteValue,
+                            isSelected: viewModel.noteValue == noteValue,
                             action: {
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     viewModel.select(noteValue)

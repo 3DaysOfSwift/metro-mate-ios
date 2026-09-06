@@ -5,7 +5,8 @@ import UIKit
 final class NoteValuePickerViewModel: ObservableObject {
     @Published private(set) var shouldDismiss = false
 
-    let metronome: any MetronomeFeature
+    private let metronome: any MetronomeFeature
+    var noteValue: NoteValue { metronome.noteValue }
     var quickPresets: [QuickPreset] { metronome.quickPresets }
 
     private var dismissalTask: Task<Void, Never>?

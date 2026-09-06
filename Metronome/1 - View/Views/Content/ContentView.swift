@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
 
-    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         ZStack {
@@ -59,7 +58,7 @@ struct ContentView: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
                             
-                            Text(metronome.currentBeatName.uppercased())
+                            Text(viewModel.currentBeatName.uppercased())
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(Color(hex: "#DDDDDD"))
                         }
@@ -108,8 +107,8 @@ struct ContentView: View {
                         // Custom BPM Picker
                         VStack(spacing: 0) {
                             // Upper value (only show if not at minimum)
-                            if Int(metronome.bpm) > 40 {
-                                Text("\(Int(metronome.bpm) - 1)")
+                            if Int(viewModel.bpm) > viewModel.minimumBPM {
+                                Text("\(Int(viewModel.bpm) - 1)")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
                                     .foregroundColor(Color(hex: "#DDDDDD").opacity(0.2))
                                     .frame(height: 60)
@@ -124,15 +123,15 @@ struct ContentView: View {
                                     .fill(Color(hex: "#303030"))
                                     .frame(width: 120, height: 60)
                                 
-                                Text("\(Int(metronome.bpm))")
+                                Text("\(Int(viewModel.bpm))")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
                                     .foregroundColor(Color(hex: "#DDDDDD"))
                             }
                             .frame(height: 60)
                             
                             // Lower value (only show if not at maximum)
-                            if Int(metronome.bpm) < 200 {
-                                Text("\(Int(metronome.bpm) + 1)")
+                            if Int(viewModel.bpm) < viewModel.maximumBPM {
+                                Text("\(Int(viewModel.bpm) + 1)")
                                     .font(.system(size: 48, weight: .light, design: .monospaced))
                                     .foregroundColor(Color(hex: "#DDDDDD").opacity(0.2))
                                     .frame(height: 60)
@@ -174,7 +173,7 @@ struct ContentView: View {
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(Color(hex: "#DDDDDD").opacity(0.6))
                         
-                        Text(metronome.noteValue.displayName)
+                        Text(viewModel.noteValue.displayName)
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(Color(hex: "#F54206"))
                         
@@ -209,8 +208,8 @@ struct ContentView: View {
                                     .foregroundColor(Color(hex: "#DDDDDD"))
                                 
                                 // Show tap count
-                                if metronome.tapCount > 0 {
-                                    Text("\(metronome.tapCount)")
+                                if viewModel.tapCount > 0 {
+                                    Text("\(viewModel.tapCount)")
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundColor(Color(hex: "#F54206"))
                                         .transition(.opacity)
@@ -222,13 +221,13 @@ struct ContentView: View {
                     // Central Play Button
                     ZStack {
                         Circle()
-                            .fill(metronome.isPlaying ? Color(hex: "#F54206") : Color(hex: "#242424"))
+                            .fill(viewModel.isPlaying ? Color(hex: "#F54206") : Color(hex: "#242424"))
                             .frame(width: 96, height: 96)
-                            .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : (metronome.shouldBlink ? 1.1 : 1.0))
-                            .animation(.easeInOut(duration: 0.1), value: metronome.shouldBlink)
+                            .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : (viewModel.shouldBlink ? 1.1 : 1.0))
+                            .animation(.easeInOut(duration: 0.1), value: viewModel.shouldBlink)
                             .animation(.easeInOut(duration: 0.1), value: viewModel.isPlayButtonPressed)
                         
-                        Image(systemName: metronome.isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 32))
                             .foregroundColor(Color(hex: "#DDDDDD"))
                             .scaleEffect(viewModel.isPlayButtonPressed ? 0.95 : 1.0)

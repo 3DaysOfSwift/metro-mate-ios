@@ -2,6 +2,11 @@
 
 ## Remaining Review
 
+The latest boundary pass made every screen ViewModel's feature reference private,
+removed direct feature access from Views, and centralised the remaining hard-coded
+tempo limits. A two-screen notification test was added for the retained Combine
+forwarding. Production subset typechecking passes; the new test needs an Xcode run.
+
 The GCD/timer replacement implementation and folder organisation are in place.
 The older per-pass entries below retain historical verification notes; they
 must not be read as a fresh test-run report.

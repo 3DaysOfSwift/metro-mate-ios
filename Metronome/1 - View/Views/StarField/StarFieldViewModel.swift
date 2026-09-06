@@ -14,7 +14,8 @@ struct Dot {
 final class StarFieldViewModel: ObservableObject {
     @Published private(set) var dots: [[Dot]] = []
 
-    let metronome: any MetronomeFeature
+    private let metronome: any MetronomeFeature
+    var shouldBlink: Bool { metronome.shouldBlink }
     let dotSpacing: CGFloat = 10
 
     private var canvasSize: CGSize = .zero

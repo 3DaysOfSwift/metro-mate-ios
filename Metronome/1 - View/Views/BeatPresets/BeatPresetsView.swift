@@ -4,7 +4,6 @@ struct BeatPresetsView: View {
     @StateObject private var viewModel = BeatPresetsViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    private var metronome: any MetronomeFeature { viewModel.metronome }
     
     var body: some View {
         NavigationView {
@@ -12,10 +11,10 @@ struct BeatPresetsView: View {
                 Section("Current Beat") {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(metronome.currentBeatName)
+                            Text(viewModel.currentBeatName)
                                 .font(.headline)
                                 .foregroundColor(Color(hex: "#DDDDDD"))
-                            Text("\(metronome.noteValue.displayName) • \(Int(metronome.bpm)) BPM • \(metronome.beatsPerMeasure) beats")
+                            Text("\(viewModel.noteValue.displayName) • \(Int(viewModel.bpm)) BPM • \(viewModel.beatsPerMeasure) beats")
                                 .font(.caption)
                                 .foregroundColor(Color(hex: "#DDDDDD").opacity(0.7))
                         }
@@ -49,8 +48,8 @@ struct BeatPresetsView: View {
                                 dismiss()
                             }
                             .foregroundColor(Color(hex: "#F54206"))
-                            .disabled(preset.name == metronome.currentBeatName)
-                            .opacity(preset.name == metronome.currentBeatName ? 0.5 : 1.0)
+                            .disabled(preset.name == viewModel.currentBeatName)
+                            .opacity(preset.name == viewModel.currentBeatName ? 0.5 : 1.0)
                         }
                         .listRowBackground(Color(hex: "#303030"))
                     }
@@ -65,7 +64,7 @@ struct BeatPresetsView: View {
                         Text("Could not load saved beats: \(error)")
                         Button("Retry", action: viewModel.loadSavedPresets)
                     }
-                    ForEach(metronome.savedBeats) { preset in
+                    ForEach(viewModel.savedBeats) { preset in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(preset.name)
@@ -83,8 +82,8 @@ struct BeatPresetsView: View {
                                 dismiss()
                             }
                             .foregroundColor(Color(hex: "#F54206"))
-                            .disabled(preset.name == metronome.currentBeatName)
-                            .opacity(preset.name == metronome.currentBeatName ? 0.5 : 1.0)
+                            .disabled(preset.name == viewModel.currentBeatName)
+                            .opacity(preset.name == viewModel.currentBeatName ? 0.5 : 1.0)
                         }
                         .listRowBackground(Color(hex: "#303030"))
                     }

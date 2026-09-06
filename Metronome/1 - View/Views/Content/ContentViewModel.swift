@@ -9,7 +9,15 @@ final class ContentViewModel: ObservableObject {
     @Published var isShowingBeatPresets = false
     @Published var isPlayButtonPressed = false
 
-    let metronome: any MetronomeFeature
+    private let metronome: any MetronomeFeature
+    var currentBeatName: String { metronome.currentBeatName }
+    var bpm: Double { metronome.bpm }
+    var noteValue: NoteValue { metronome.noteValue }
+    var tapCount: Int { metronome.tapCount }
+    var isPlaying: Bool { metronome.isPlaying }
+    var shouldBlink: Bool { metronome.shouldBlink }
+    var minimumBPM: Int { Int(metronome.tempoRange.lowerBound) }
+    var maximumBPM: Int { Int(metronome.tempoRange.upperBound) }
     var audioError: String? { metronome.audioError }
 
     func retryAudio() {

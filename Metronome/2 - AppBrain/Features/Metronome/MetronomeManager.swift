@@ -19,6 +19,7 @@ final class MetronomeManager: MetronomeFeature {
     @Published var tapCount: Int = 0
     private let maxTapCount = 8
     let beatCountRange = 1...16
+    let tempoRange: ClosedRange<Double> = 40...200
     var gridBeatCountRange: ClosedRange<Int> {
         1...(noteValue.isTriplet ? 12 : 16)
     }
@@ -228,7 +229,7 @@ final class MetronomeManager: MetronomeFeature {
     }
 
     func adjustedBPM(by amount: Double) -> Double {
-        max(40, min(200, bpm + amount))
+        max(tempoRange.lowerBound, min(tempoRange.upperBound, bpm + amount))
     }
 
     func adjustBPM(by amount: Double) {
@@ -355,7 +356,7 @@ final class MetronomeManager: MetronomeFeature {
             let newBPM = 60.0 / averageInterval
             
             // Clamp BPM to reasonable range
-            bpm = min(max(newBPM, 40), 200)
+            bpm = min(max(newBPM, tempoRange.lowerBound), tempoRange.upperBound)
             
             if isPlaying {
                 updateBPM(bpm)

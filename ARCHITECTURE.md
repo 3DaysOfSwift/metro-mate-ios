@@ -7,6 +7,17 @@ which manages presentation state and user interactions. ViewModels obtain the
 metronome feature from AppBrain. MetronomeManager owns musical rules and delegates
 audio, timing, and preset storage to the dependencies constructed by AppBrain.live().
 
+Each ViewModel keeps its feature reference private. Views read screen-facing
+properties and call ViewModel actions; they cannot reach through a ViewModel
+into the feature API. Musical limits, including the tempo range, belong to the
+feature. ViewModels expose those limits without redefining them.
+
+The current observation mechanism remains Combine: a ViewModel forwards the
+feature's objectWillChange notification using a weak capture, and its computed
+properties read the shared feature state. It does not copy feature state.
+Notifications precede mutation; subscribers must not treat them as updated values.
+An Observation conversion is a separate change, not part of this boundary pass.
+
 ## Folder Structure
 
 ```text
