@@ -4,13 +4,17 @@ import Foundation
 
 final class InMemoryPresetRepository: PresetRepository {
     private(set) var presets: [BeatPreset]
+    private(set) var loadCallCount = 0
+    var loadError: Error?
 
     init(presets: [BeatPreset] = []) {
         self.presets = presets
     }
 
     func loadPresets() throws -> [BeatPreset] {
-        presets
+        loadCallCount += 1
+        if let loadError { throw loadError }
+        return presets
     }
 
     func savePresets(_ presets: [BeatPreset]) throws {

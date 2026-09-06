@@ -19,6 +19,11 @@ final class BeatPresetsViewModel: ObservableObject {
     }
 
     var defaultPresets: [BeatPreset] { metronome.defaultPresets }
+    var loadError: String? { metronome.presetLoadError }
+
+    func loadSavedPresets() {
+        metronome.loadSavedPresets()
+    }
 
     func beginSavingCurrentBeat() {
         lightImpact()

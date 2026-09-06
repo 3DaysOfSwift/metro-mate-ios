@@ -10,6 +10,13 @@ final class AppBrain {
         self.metronome = metronome
     }
 
+    /// An early opportunity to warm audio and load saved presets before interaction.
+    /// Features own readiness; playback does not depend on this callback running first.
+    func applicationDidFinishLaunching() {
+        metronome.prepareAudio()
+        metronome.loadSavedPresets()
+    }
+
     /// Produces the live, non-test AppBrain and constructs all production dependencies in one place.
     static func live() -> AppBrain {
         let presetRepository = UserDefaultsPresetRepository(

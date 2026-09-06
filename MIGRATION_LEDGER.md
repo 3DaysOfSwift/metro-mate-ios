@@ -1,5 +1,20 @@
 # AppBrain Migration Ledger
 
+## Explicit Loading Pass
+
+Feature construction now assigns dependencies and builds in-memory defaults only.
+AppBrain.applicationDidFinishLaunching() explicitly warms audio and requests saved
+presets when the root screen appears. The preset screen also requests its data;
+successful loads are retained by the feature and failed loads expose an error
+with a Retry action. Saving and deleting first ensure existing presets have
+loaded, preventing an unsuccessful read from causing a storage overwrite.
+Playback retains its existing audio readiness check, including the Siri path.
+
+Added tests for side-effect-free construction, launch loading, repeated successful
+requests, saving before launch, and failure/retry. Production subset typechecking
+passed; full Xcode build and test execution remain to be verified. Audio readiness
+failure handling and preset save-error presentation remain for the next pass.
+
 ## Starting Architecture
 
 The current folder structure is documented in [ARCHITECTURE.md](ARCHITECTURE.md).

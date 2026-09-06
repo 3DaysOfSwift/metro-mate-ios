@@ -57,6 +57,10 @@ struct BeatPresetsView: View {
                 }
                 
                 Section("Saved Beats") {
+                    if let error = viewModel.loadError {
+                        Text("Could not load saved beats: \(error)")
+                        Button("Retry", action: viewModel.loadSavedPresets)
+                    }
                     ForEach(metronome.savedBeats) { preset in
                         HStack {
                             VStack(alignment: .leading) {
@@ -89,6 +93,7 @@ struct BeatPresetsView: View {
             .scrollContentBackground(.hidden)
             .foregroundColor(Color(hex: "#DDDDDD"))
             .navigationTitle("Beat Presets")
+            .onAppear(perform: viewModel.loadSavedPresets)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark)
             .toolbar {

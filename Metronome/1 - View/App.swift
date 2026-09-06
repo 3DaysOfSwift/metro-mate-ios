@@ -18,6 +18,9 @@ struct MetronomeApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    AppBrain.shared.applicationDidFinishLaunching()
+                }
         }
     }
 }

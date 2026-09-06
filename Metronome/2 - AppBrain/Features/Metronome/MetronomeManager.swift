@@ -36,6 +36,8 @@ final class MetronomeManager: MetronomeFeature {
     private let blinkScheduler: any CancellableDelayScheduler
     /// Supplies the current date so time-based rules can be tested without waiting for real time.
     private let currentDate: () -> Date
+    private var hasLoadedPresets = false
+    @Published private(set) var presetLoadError: String?
 
     init(
         presetRepository: any PresetRepository,
@@ -51,9 +53,12 @@ final class MetronomeManager: MetronomeFeature {
         self.tapResetScheduler = tapResetScheduler
         self.blinkScheduler = blinkScheduler
         self.currentDate = currentDate
-        audioPlayer.prepare()
         setupDefaultPattern()
-        restorePresets()
+    }
+
+    /// Warms the audio system without starting metronome playback.
+    func prepareAudio() {
+        audioPlayer.prepare()
     }
     
     private func setupDefaultPattern() {
@@ -411,6 +416,8 @@ final class MetronomeManager: MetronomeFeature {
 
     func saveBeatPreset(name: String) {
         guard !name.isEmpty else { return }
+        loadSavedPresets()
+        guard hasLoadedPresets else { return }
         let preset = BeatPreset(
             name: name,
             noteValue: noteValue,
@@ -440,11 +447,15 @@ final class MetronomeManager: MetronomeFeature {
         }
     }
 
-    private func restorePresets() {
+    /// Loads once after success. Failed requests can be retried without rebuilding the feature.
+    func loadSavedPresets() {
+        guard !hasLoadedPresets else { return }
         do {
             savedBeats = try presetRepository.loadPresets()
+            hasLoadedPresets = true
+            presetLoadError = nil
         } catch {
-            print("Failed to load beat presets: \(error)")
+            presetLoadError = error.localizedDescription
         }
     }
     
@@ -481,6 +492,8 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func deleteBeatPreset(_ preset: BeatPreset) {
+        loadSavedPresets()
+        guard hasLoadedPresets else { return }
         savedBeats.removeAll { $0.id == preset.id }
         if currentBeatName == preset.name {
             currentBeatName = "Eighth"

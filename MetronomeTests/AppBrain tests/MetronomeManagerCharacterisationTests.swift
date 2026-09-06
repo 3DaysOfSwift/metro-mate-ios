@@ -250,6 +250,7 @@ struct MetronomeManagerCharacterisationTests {
         firstManager.saveBeatPreset(name: "Stored Beat")
 
         let restoredManager = makeManager(repository: repository)
+        restoredManager.loadSavedPresets()
 
         #expect(restoredManager.savedBeats.count == 1)
         #expect(restoredManager.savedBeats.first?.name == "Stored Beat")
@@ -260,7 +261,7 @@ struct MetronomeManagerCharacterisationTests {
         let audioPlayer = RecordingMetronomeAudioPlayer()
         let manager = makeManager(audioPlayer: audioPlayer)
 
-        #expect(audioPlayer.prepareCallCount == 1)
+        #expect(audioPlayer.prepareCallCount == 0)
 
         manager.togglePlayback()
         #expect(audioPlayer.startCallCount == 1)

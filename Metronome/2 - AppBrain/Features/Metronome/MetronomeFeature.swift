@@ -16,10 +16,13 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var gridDisplayMode: GridDisplayMode { get }
     var currentBeatName: String { get }
     var savedBeats: [BeatPreset] { get }
+    var presetLoadError: String? { get }
     var defaultPresets: [BeatPreset] { get }
     var quickPresets: [QuickPreset] { get }
     var tapCount: Int { get }
 
+    func prepareAudio()
+    func loadSavedPresets()
     func togglePlayback()
     func updateBPM(_ bpm: Double)
     func adjustedBPM(by amount: Double) -> Double
