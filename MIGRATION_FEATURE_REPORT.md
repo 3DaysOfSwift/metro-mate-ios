@@ -2,10 +2,15 @@
 
 ## Current Refinement: Pass Fifteen
 
+Closed by explicit developer approval on 7 September 2026 after the developer
+reported that the app works well. Implementation commit:
+`7afc34fa387fac7b540c7da98d5bcb19b1058ded`. The complete MetronomeTests target passed;
+physical-device profiling and measured performance comparisons remain follow-ups.
+
 Audio-progress polling now rejects a result if the pattern changed while the
 read was suspended, preventing an obsolete visual beat or blink from being
-published. Audio output is unchanged. The concurrency review and remaining
-queue-growth and initial-load ordering verification gaps are recorded in the
+published. Audio output is unchanged. The concurrency review, resolved
+initial-load ordering gap, and remaining queue-growth limits are recorded in the
 migration ledger; this does not claim exhaustive concurrency correctness.
 
 The follow-up orders preset edits before initial-load suspension and coalesces

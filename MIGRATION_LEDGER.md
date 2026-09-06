@@ -1,5 +1,20 @@
 # AppBrain Migration Ledger
 
+## Pass Fifteen Closed — 7 September 2026
+
+The developer reported that the refined app works well and explicitly approved
+closing Pass Fifteen. Implementation checkpoint:
+`7afc34fa387fac7b540c7da98d5bcb19b1058ded`.
+The complete MetronomeTests target passed, including stale-progress rejection,
+initial-load edit ordering, and coalescing regression tests. This records general
+manual approval, not separately witnessed results for every suggested journey.
+
+The agreed scope is complete. Physical-device profiling and measured performance
+comparisons remain follow-up work; UI tests were not rerun for this checkpoint.
+Pending snapshots are bounded, but caller counts and nonreplaceable commands
+are not capped. No performance or arbitrary-load guarantee is implied. Earlier
+review entries below preserve the findings and verification state at the time.
+
 ## Pass Fifteen Follow-up: Ordered Edits and Coalescing
 
 At the developer's request, preset edits now establish arrival order before
@@ -17,8 +32,8 @@ under suspended storage, and rapid rhythm edits under suspended audio scheduling
 These changes bound pending snapshots/configurations, not the number of callers
 or nonreplaceable commands. Initial-load waiters and explicitly ordered clicks,
 starts, and stops remain lossless; rejecting those under arbitrary sustained
-input would require an explicit admission policy. Manual verification remains
-with the developer. The complete MetronomeTests target passed on 7 September
+input would require an explicit admission policy. The developer has now supplied
+manual approval, recorded above. The complete MetronomeTests target passed on 7 September
 2026 after these changes; UI tests and device profiling were not rerun.
 
 ## Pass Fifteen: Concurrency Review — 7 September 2026
