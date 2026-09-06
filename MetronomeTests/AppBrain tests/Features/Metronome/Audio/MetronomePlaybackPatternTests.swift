@@ -3,6 +3,25 @@ import AVFoundation
 @testable import Metronome
 
 struct MetronomePlaybackPatternTests {
+    @Test func audioEngineKeepsRenderingThroughRepeatedRateChanges() async throws {
+        let energies = try await OfflineRhythmProbe().renderRateChanges()
+        // After warm-up, repeated edits must not insert a beat-sized silent gap.
+        #expect(energies.count == 100)
+        #expect(energies.allSatisfy { $0.isFinite && $0 > 0.001 })
+    }
+
+    @Test func repeatedTempoRatesReferToTheOriginalLoopRatherThanCompounding() {
+        let source = MetronomePlaybackPattern(interval: 0.5, beats: [true, false], restartFromFirstBeat: true)
+        for bpm in 40...200 {
+            let next = MetronomePlaybackPattern(interval: 30.0 / Double(bpm), beats: source.beats, restartFromFirstBeat: false)
+            #expect(next.playbackRate(relativeTo: source) == Float(Double(bpm) / 60.0))
+        }
+        let restart = MetronomePlaybackPattern(interval: 0.25, beats: source.beats, restartFromFirstBeat: true)
+        #expect(restart.playbackRate(relativeTo: source) == nil)
+        let changed = MetronomePlaybackPattern(interval: 0.25, beats: [nil, false], restartFromFirstBeat: false)
+        #expect(changed.playbackRate(relativeTo: source) == nil)
+    }
+
     @Test func audioEngineLoopsAtSampleSpacedIntervalsWithoutUITicks() async throws {
         let rendered = try await OfflineRhythmProbe().render()
         let peaks = rendered.enumerated().filter { abs($0.element) > 0.1 }.map(\.offset)
@@ -46,6 +65,45 @@ struct MetronomePlaybackPatternTests {
 
 /// Exercises AVAudioPlayerNode looping, without a device audio session or UI timer.
 private actor OfflineRhythmProbe {
+    func renderRateChanges() throws -> [Float] {
+        let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let engine = AVAudioEngine()
+        let node = AVAudioPlayerNode()
+        let tempo = AVAudioUnitTimePitch()
+        engine.attach(node)
+        engine.attach(tempo)
+        engine.connect(node, to: tempo, format: format)
+        engine.connect(tempo, to: engine.mainMixerNode, format: format)
+        try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 512)
+        let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4410))
+        buffer.frameLength = 4410
+        let data = try #require(buffer.floatChannelData)
+        // A continuous tone makes unintended silence unambiguous, unlike silent
+        // spaces deliberately included in the metronome's musical pattern.
+        for channel in 0..<2 {
+            for frame in 0..<4410 {
+                data[channel][frame] = 0.25 * sin(2 * .pi * Float(frame) / 100)
+            }
+        }
+        node.scheduleBuffer(buffer, at: nil, options: .loops)
+        try engine.start()
+        node.play()
+        defer { node.stop(); engine.stop() }
+        let output = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 512))
+        var energies: [Float] = []
+        for step in 0..<200 {
+            if step >= 100 { tempo.rate = Float(60 + step - 100) / 60 }
+            let status = try engine.renderOffline(512, to: output)
+            try #require(status == .success)
+            if step >= 100 {
+                let samples = try #require(output.floatChannelData?[0])
+                let energy = (0..<Int(output.frameLength)).reduce(Float.zero) { $0 + samples[$1] * samples[$1] }
+                energies.append(energy / Float(output.frameLength))
+            }
+        }
+        return energies
+    }
+
     func render() throws -> [Float] {
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
         let pattern = MetronomePlaybackPattern(interval: 0.01, beats: [true, false], restartFromFirstBeat: true)

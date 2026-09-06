@@ -1,5 +1,23 @@
 # AppBrain Migration Ledger
 
+## Rapid Tempo-Edit Playback Correction — 7 September 2026
+
+Manual testing exposed a continuity regression: each tempo edit stopped the
+rhythm node and delayed replacement by a full beat. Tempo-only updates now keep
+the source loop running and adjust its rate through AVAudioUnitTimePitch, whose
+pitch remains unchanged. The UI polling timer also remains running. Equal tempo
+requests do nothing; tap-tempo uses the same command path.
+
+Added tests for non-restarting rapid tempo requests before the first UI poll,
+source-relative rate calculations, and offline audio-engine rendering through
+repeated rate changes. The offline probe checks for unintended silence using a
+continuous test tone; it does not establish metronome transient quality or
+device-level performance. Manual listening remains required. Pattern replacements
+retain their previous stop/rebuild behaviour and are not covered by this fix.
+
+Validation: the complete MetronomeTests target passed on the iPhone Air simulator,
+including the offline rate-change rendering test. UI/device tests were not run.
+
 ## Pass Sixteen: Architecture Refinements — 7 September 2026
 
 Implemented the developer-approved review findings: all eight ViewModels accept

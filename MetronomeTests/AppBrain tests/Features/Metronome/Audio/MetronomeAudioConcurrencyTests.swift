@@ -7,6 +7,26 @@ import Testing
 @Suite(.serialized)
 struct MetronomeAudioConcurrencyTests {
     @Test(.timeLimit(.minutes(1)))
+    func rapidTempoChangesNeverRequestARestartEvenBeforeTheFirstUIPoll() async throws {
+        let audio = RecordingMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeTestMetronome(audioPlayer: audio, ticker: ticker)
+        try await manager.startPlayback()
+        await audio.waitForSchedule()
+        for bpm in 61...100 {
+            manager.updateBPM(Double(bpm))
+            await audio.waitForSchedule()
+            #expect(audio.scheduledPatterns.last?.restartFromFirstBeat == false)
+        }
+        let count = audio.scheduledPatterns.count
+        manager.updateBPM(100)
+        #expect(audio.scheduledPatterns.count == count)
+        #expect(ticker.startCallCount == 1)
+        #expect(audio.stopCallCount == 0)
+        await manager.togglePlayback()
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func rapidPatternEditsKeepOnlyTheLatestPendingConfiguration() async throws {
         let audio = SuspendedMetronomeAudioPlayer()
         let manager = makeTestMetronome(audioPlayer: audio)

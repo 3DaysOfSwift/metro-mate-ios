@@ -32,9 +32,15 @@ and player are created on first explicit audio use on that executor, not during
 AppBrain construction. The feature awaits audio commands in submission order,
 invalidates superseded starts and queued ticks, and publishes a starting state.
 Repeating audio is rendered as a sample-spaced buffer and looped by AVAudioPlayerNode.
+Tempo-only edits reuse that source buffer and adjust AVAudioUnitTimePitch.rate
+without stopping the node or resetting its timeline. Rates are calculated against
+the original source interval, never compounded from successive requests. The
+presentation ticker keeps polling; an unchanged tempo is a no-op. Pattern edits
+and explicit restarts still replace the buffer. Time-stretching quality requires
+listening checks, particularly across large tempo changes.
 The main-actor ticker only polls the audio playhead for display; it never triggers
-an audible beat. Tap feedback uses a separate node. Tempo/pattern edits replace
-the loop through ordered audio commands. Cached click samples are mixed so
+an audible beat. Tap feedback uses a separate node. Tempo and pattern edits pass
+through ordered audio commands. Cached click samples are mixed so
 sound tails can overlap subdivisions instead of queuing whole files end to end.
 AppBrain starts audio preparation and preset loading as independent child tasks.
 

@@ -75,7 +75,7 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.isPlaying)
         #expect(manager.bpm == 60)
         #expect(ticker.interval == .seconds(1.0 / 60.0))
-        #expect(ticker.startCallCount == 2)
+        #expect(ticker.startCallCount == 1)
         await manager.togglePlayback()
     }
 
@@ -145,7 +145,7 @@ struct MetronomeManagerCharacterisationTests {
         manager.adjustBPM(by: 60)
         #expect(manager.bpm == 120)
         #expect(ticker.interval == .seconds(1.0 / 60.0))
-        #expect(ticker.startCallCount == 2)
+        #expect(ticker.startCallCount == 1)
     }
 
     @Test func quickPresetsRetainTheirExistingMusicalSettings() {
@@ -456,15 +456,14 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.shouldBlink == false)
     }
 
-    @Test func changingTempoReplacesTheRunningTicker() async {
+    @Test func changingTempoKeepsThePresentationTickerRunning() async {
         let ticker = ControllableMetronomeTicker()
         let manager = makeManager(ticker: ticker)
         await manager.togglePlayback()
 
         manager.updateBPM(120)
 
-        #expect(ticker.startCallCount == 2)
-        #expect(ticker.initialDelay == .milliseconds(250))
+        #expect(ticker.startCallCount == 1)
         #expect(ticker.interval == .seconds(1.0 / 60.0))
     }
 

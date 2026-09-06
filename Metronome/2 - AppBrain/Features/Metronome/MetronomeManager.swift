@@ -300,10 +300,12 @@ final class MetronomeManager: MetronomeFeature {
     
     func updateBPM(_ newBPM: Double) {
         guard newBPM.isFinite else { return }
-        bpm = max(tempoRange.lowerBound, min(tempoRange.upperBound, newBPM))
+        let clampedBPM = max(tempoRange.lowerBound, min(tempoRange.upperBound, newBPM))
+        guard clampedBPM != bpm else { return }
+        bpm = clampedBPM
         
         if isPlaying {
-            restartTicker()
+            refreshAudioPattern(restart: false)
         }
     }
 
@@ -440,11 +442,7 @@ final class MetronomeManager: MetronomeFeature {
             let newBPM = 60.0 / averageInterval
             
             // Clamp BPM to reasonable range
-            bpm = min(max(newBPM, tempoRange.lowerBound), tempoRange.upperBound)
-            
-            if isPlaying {
-                updateBPM(bpm)
-            }
+            updateBPM(newBPM)
         }
         
         // Reset the visible count three seconds after the most recent tap.
@@ -791,11 +789,11 @@ final class MetronomeManager: MetronomeFeature {
         )
     }
 
-    private func refreshAudioPattern() {
+    private func refreshAudioPattern(restart: Bool? = nil) {
         guard isPlaying else { return }
         patternRevision += 1
-        lastPlaybackStep = nil
-        pendingPlaybackPattern = (playbackPattern(restart: currentBeat < 0), patternRevision)
+        if restart != false { lastPlaybackStep = nil }
+        pendingPlaybackPattern = (playbackPattern(restart: restart ?? (currentBeat < 0)), patternRevision)
         guard playbackUpdateTask == nil else { return }
         let revision = playbackRevision
         playbackUpdateTask = Task {

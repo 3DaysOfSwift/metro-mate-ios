@@ -6,6 +6,17 @@ struct MetronomePlaybackPattern: Sendable, Equatable {
     let beats: [Bool?] // nil is silent; true is accented.
     let restartFromFirstBeat: Bool
 
+    /// Reuse a playing loop only when the musical pattern is unchanged and no
+    /// explicit restart was requested. AVAudioUnitTimePitch preserves click pitch.
+    func playbackRate(relativeTo source: Self) -> Float? {
+        guard !restartFromFirstBeat, beats == source.beats,
+              interval.isFinite, interval > 0,
+              source.interval.isFinite, source.interval > 0 else { return nil }
+        let rate = source.interval / interval
+        guard (1.0 / 32.0...32.0).contains(rate) else { return nil }
+        return Float(rate)
+    }
+
     func framesPerBeat(sampleRate: Double) throws -> Int {
         guard sampleRate.isFinite, sampleRate > 0, sampleRate <= 192_000,
               interval.isFinite, interval >= 0.01, interval <= 10,

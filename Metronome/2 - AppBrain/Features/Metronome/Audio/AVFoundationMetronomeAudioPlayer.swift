@@ -12,6 +12,7 @@ actor AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
     private lazy var audioEngine = AVAudioEngine()
     private lazy var playerNode = AVAudioPlayerNode()
     private lazy var rhythmNode = AVAudioPlayerNode()
+    private lazy var rhythmTempo = AVAudioUnitTimePitch()
     private var rhythmPattern: MetronomePlaybackPattern?
     private var rhythmFirstBeat = 0
     private var rhythmFramesPerBeat = 1
@@ -36,7 +37,10 @@ actor AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
             audioEngine.attach(playerNode)
             audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: nil)
             audioEngine.attach(rhythmNode)
-            audioEngine.connect(rhythmNode, to: audioEngine.mainMixerNode,
+            audioEngine.attach(rhythmTempo)
+            audioEngine.connect(rhythmNode, to: rhythmTempo,
+                                format: AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+            audioEngine.connect(rhythmTempo, to: audioEngine.mainMixerNode,
                                 format: AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
             isConnected = true
         }
@@ -77,6 +81,13 @@ actor AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
     func schedulePlayback(_ pattern: MetronomePlaybackPattern, initialDelay: Double) throws {
         try prepare()
         let framesPerBeat = try pattern.framesPerBeat(sampleRate: 44_100)
+        // Keep the source loop and its sample timeline intact for tempo-only edits.
+        // The source pattern remains the reference: successive rates must not compound.
+        if rhythmNode.isPlaying, let source = rhythmPattern,
+           let rate = pattern.playbackRate(relativeTo: source) {
+            rhythmTempo.rate = rate
+            return
+        }
         let firstBeat = pattern.restartFromFirstBeat ? 0
             : ((playbackBeat() ?? -1) + 1) % pattern.beats.count
         let frameCount = framesPerBeat * pattern.beats.count
@@ -92,6 +103,7 @@ actor AVFoundationMetronomeAudioPlayer: MetronomeAudioPlayer {
         }
         if !audioEngine.isRunning { try audioEngine.start() }
         rhythmNode.stop()
+        rhythmTempo.rate = 1
         rhythmPattern = pattern
         rhythmFirstBeat = firstBeat
         rhythmFramesPerBeat = framesPerBeat
