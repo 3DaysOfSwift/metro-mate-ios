@@ -28,16 +28,16 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $viewModel.isShowingSettings) {
-            SettingsView(metronome: metronome)
+            SettingsView()
         }
         .sheet(isPresented: $viewModel.isShowingGridSettings) {
-            GridSettingsView(metronome: metronome)
+            GridSettingsView()
         }
         .sheet(isPresented: $viewModel.isShowingBeatPresets) {
-            BeatPresetsView(metronome: metronome)
+            BeatPresetsView()
         }
         .sheet(isPresented: $viewModel.isShowingNoteValuePicker) {
-            NoteValuePicker(metronome: metronome, isPresented: $viewModel.isShowingNoteValuePicker)
+            NoteValuePicker()
         }
     }
     
@@ -327,19 +327,21 @@ struct GridView: View {
 }
 
 struct SettingsView: View {
-    @ObservedObject var metronome: MetronomeManager
-    @Environment(\.dismiss) var dismiss
+    @StateObject private var viewModel = SettingsViewModel()
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
             Form {
                 Section("Beat Configuration") {
-                    Stepper("Beats per Measure: \(metronome.beatsPerMeasure)", 
-                           value: $metronome.beatsPerMeasure, 
-                           in: 1...16)
-                    .onChange(of: metronome.beatsPerMeasure) { newValue in
-                        metronome.updateBeatsPerMeasure(newValue)
-                    }
+                    Stepper(
+                        "Beats per Measure: \(viewModel.beatsPerMeasure)",
+                        value: Binding(
+                            get: { viewModel.beatsPerMeasure },
+                            set: { viewModel.beatsPerMeasure = $0 }
+                        ),
+                        in: 1...16
+                    )
                     .foregroundColor(Color(hex: "#DDDDDD"))
                     .accentColor(Color(hex: "#F54206"))
                 }
@@ -353,8 +355,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
+                        viewModel.finish()
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "#DDDDDD"))
@@ -367,21 +368,21 @@ struct SettingsView: View {
 }
 
 struct GridSettingsView: View {
-    @ObservedObject var metronome: MetronomeManager
-    @Environment(\.dismiss) var dismiss
+    @StateObject private var viewModel = GridSettingsViewModel()
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationView {
             Form {
                 Section("Grid Configuration") {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Number of Beats: \(metronome.beatsPerMeasure)")
+                        Text("Number of Beats: \(viewModel.beatsPerMeasure)")
                             .foregroundColor(Color(hex: "#DDDDDD"))
                         
-                        let maxBeats = metronome.noteValue.isTriplet ? 12 : 16
+                        let maxBeats = viewModel.maximumBeatCount
                         Slider(value: Binding(
-                            get: { Double(metronome.beatsPerMeasure) },
-                            set: { metronome.updateGridBeats(Int($0)) }
+                            get: { Double(viewModel.beatsPerMeasure) },
+                            set: viewModel.updateBeatCount
                         ), in: 1...Double(maxBeats), step: 1)
                         .accentColor(Color(hex: "#F54206"))
                         
@@ -411,8 +412,7 @@ struct GridSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
+                        viewModel.finish()
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "#DDDDDD"))
@@ -425,10 +425,10 @@ struct GridSettingsView: View {
 }
 
 struct BeatPresetsView: View {
-    @ObservedObject var metronome: MetronomeManager
-    @Environment(\.dismiss) var dismiss
-    @State private var showSaveDialog = false
-    @State private var newBeatName = ""
+    @StateObject private var viewModel = BeatPresetsViewModel()
+    @Environment(\.dismiss) private var dismiss
+
+    private var metronome: MetronomeManager { viewModel.metronome }
     
     var body: some View {
         NavigationView {
@@ -447,10 +447,7 @@ struct BeatPresetsView: View {
                         Spacer()
                         
                         Button("Save As...") {
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            newBeatName = metronome.currentBeatName
-                            showSaveDialog = true
+                            viewModel.beginSavingCurrentBeat()
                         }
                         .foregroundColor(Color(hex: "#F54206"))
                     }
@@ -458,7 +455,7 @@ struct BeatPresetsView: View {
                 }
                 
                 Section("Presets") {
-                    ForEach(defaultPresets(), id: \.noteValue) { preset in
+                    ForEach(viewModel.defaultPresets, id: \.noteValue) { preset in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(preset.name)
@@ -472,9 +469,7 @@ struct BeatPresetsView: View {
                             Spacer()
                             
                             Button("Load") {
-                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                impactFeedback.impactOccurred()
-                                metronome.loadBeatPreset(preset)
+                                viewModel.load(preset)
                                 dismiss()
                             }
                             .foregroundColor(Color(hex: "#F54206"))
@@ -500,9 +495,7 @@ struct BeatPresetsView: View {
                             Spacer()
                             
                             Button("Load") {
-                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                impactFeedback.impactOccurred()
-                                metronome.loadBeatPreset(preset)
+                                viewModel.load(preset)
                                 dismiss()
                             }
                             .foregroundColor(Color(hex: "#F54206"))
@@ -512,9 +505,7 @@ struct BeatPresetsView: View {
                         .listRowBackground(Color(hex: "#303030"))
                     }
                     .onDelete { indexSet in
-                        for index in indexSet {
-                            metronome.deleteBeatPreset(metronome.savedBeats[index])
-                        }
+                        viewModel.deleteSavedBeats(at: indexSet)
                     }
                 }
             }
@@ -527,9 +518,7 @@ struct BeatPresetsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Reset") {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
-                        metronome.resetToBasicBeat()
+                        viewModel.reset()
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "#DDDDDD"))
@@ -537,8 +526,7 @@ struct BeatPresetsView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                        impactFeedback.impactOccurred()
+                        viewModel.finish()
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "#DDDDDD"))
@@ -547,15 +535,11 @@ struct BeatPresetsView: View {
         }
         .background(Color(hex: "#1C1C1B"))
         .preferredColorScheme(.dark)
-        .alert("Save Beat Preset", isPresented: $showSaveDialog) {
-            TextField("Beat Name", text: $newBeatName)
+        .alert("Save Beat Preset", isPresented: $viewModel.isShowingSaveDialog) {
+            TextField("Beat Name", text: $viewModel.newBeatName)
                 .foregroundColor(.black)
             Button("Save") {
-                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                impactFeedback.impactOccurred()
-                if !newBeatName.isEmpty {
-                    metronome.saveBeatPreset(name: newBeatName)
-                }
+                viewModel.saveCurrentBeat()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
@@ -563,86 +547,6 @@ struct BeatPresetsView: View {
         }
     }
     
-    func defaultPresets() -> [BeatPreset] {
-        let presets: [(NoteValue, String)] = [
-            (.quarter, "Quarter"),
-            (.eighth, "Eighth"),
-            (.sixteenth, "Sixteenth"),
-            (.quarterTriplet, "Quarter Triplet"),
-            (.eighthTriplet, "Eighth Triplet"),
-            (.sixteenthTriplet, "Sixteenth Triplet")
-        ]
-        
-        return presets.map { noteValue, name in
-            let beatsPerMeasure = noteValue.beatsPerMeasure
-            var gridPattern = Array(repeating: false, count: 16)
-            var accentPattern = Array(repeating: false, count: 16)
-            
-            // Set all beats active for current beatsPerMeasure
-            for i in 0..<beatsPerMeasure {
-                gridPattern[i] = true
-            }
-            
-            // Set accents on beats 1,2,3,4 for all preset beats
-            switch noteValue {
-            case .quarter:
-                // Quarter: accent on beats 0,1,2,3 (positions 1,2,3,4)
-                for i in 0..<min(4, beatsPerMeasure) {
-                    accentPattern[i] = true
-                }
-            case .eighth:
-                // Eighth: accent on beats 0,2,4,6 (positions 1,2,3,4)
-                let accentPositions = [0, 2, 4, 6] // beats 1,2,3,4
-                for position in accentPositions {
-                    if position < beatsPerMeasure {
-                        accentPattern[position] = true
-                    }
-                }
-            case .sixteenth:
-                // Sixteenth: accent on beats 0,4,8,12 (positions 1,2,3,4)
-                let accentPositions = [0, 4, 8, 12] // beats 1,2,3,4
-                for position in accentPositions {
-                    if position < beatsPerMeasure {
-                        accentPattern[position] = true
-                    }
-                }
-            case .quarterTriplet:
-                // Quarter triplet: accent on beats 0,1,2 (positions 1,2,3)
-                for i in 0..<min(3, beatsPerMeasure) {
-                    accentPattern[i] = true
-                }
-            case .eighthTriplet:
-                // Eighth triplet: accent on beats 0,3 (positions 1,2)
-                for i in stride(from: 0, to: min(6, beatsPerMeasure), by: 3) {
-                    accentPattern[i] = true
-                }
-            case .sixteenthTriplet:
-                // Sixteenth triplet: accent on beats 0,3,6,9 (positions 1,2,3,4)
-                for i in stride(from: 0, to: min(12, beatsPerMeasure), by: 3) {
-                    accentPattern[i] = true
-                }
-            }
-            
-            let displayMode: GridDisplayMode = {
-                switch noteValue {
-                case .sixteenth, .sixteenthTriplet:
-                    return .subdivisionCounting
-                default:
-                    return .andCounting
-                }
-            }()
-            
-            return BeatPreset(
-                name: name,
-                noteValue: noteValue,
-                bpm: 80,
-                beatsPerMeasure: beatsPerMeasure,
-                gridPattern: gridPattern,
-                accentPattern: accentPattern,
-                gridDisplayMode: displayMode
-            )
-        }
-    }
 }
 
 #Preview {

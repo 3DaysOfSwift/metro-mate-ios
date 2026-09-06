@@ -1,0 +1,25 @@
+import Combine
+import UIKit
+
+@MainActor
+final class SettingsViewModel: ObservableObject {
+    let metronome: MetronomeManager
+
+    private var metronomeUpdates: AnyCancellable?
+
+    init(metronome: MetronomeManager = .shared) {
+        self.metronome = metronome
+        metronomeUpdates = metronome.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+
+    var beatsPerMeasure: Int {
+        get { metronome.beatsPerMeasure }
+        set { metronome.updateBeatsPerMeasure(newValue) }
+    }
+
+    func finish() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+}

@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct NoteValuePicker: View {
-    @ObservedObject var metronome: MetronomeManager
-    @Binding var isPresented: Bool
+    @StateObject private var viewModel = NoteValuePickerViewModel()
+    @Environment(\.dismiss) private var dismiss
+
+    private var metronome: MetronomeManager { viewModel.metronome }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -29,14 +31,7 @@ struct NoteValuePicker: View {
                             isSelected: metronome.noteValue == noteValue,
                             action: {
                                 withAnimation(.easeOut(duration: 0.2)) {
-                                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                                    impactFeedback.impactOccurred()
-                                    metronome.updateNoteValue(noteValue)
-                                    
-                                    // Close sheet after selection
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                        isPresented = false
-                                    }
+                                    viewModel.select(noteValue)
                                 }
                             }
                         )
@@ -53,10 +48,14 @@ struct NoteValuePicker: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            PresetButton(title: "Basic", bpm: 120, noteValue: .quarter, metronome: metronome, isPresented: $isPresented)
-                            PresetButton(title: "Rock", bpm: 110, noteValue: .eighth, metronome: metronome, isPresented: $isPresented)
-                            PresetButton(title: "Jazz", bpm: 140, noteValue: .quarterTriplet, metronome: metronome, isPresented: $isPresented)
-                            PresetButton(title: "Fast", bpm: 160, noteValue: .sixteenth, metronome: metronome, isPresented: $isPresented)
+                            ForEach(viewModel.quickPresets) { preset in
+                                PresetButton(
+                                    title: preset.title,
+                                    bpm: preset.bpm,
+                                    noteValue: preset.noteValue,
+                                    action: { viewModel.select(preset) }
+                                )
+                            }
                         }
                         .padding(.horizontal)
                     }
@@ -70,6 +69,11 @@ struct NoteValuePicker: View {
         .presentationDetents([.fraction(0.6)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(20)
+        .onChange(of: viewModel.shouldDismiss) { shouldDismiss in
+            if shouldDismiss {
+                dismiss()
+            }
+        }
     }
 }
 
@@ -126,22 +130,10 @@ struct PresetButton: View {
     let title: String
     let bpm: Int
     let noteValue: NoteValue
-    @ObservedObject var metronome: MetronomeManager
-    @Binding var isPresented: Bool
+    let action: () -> Void
     
     var body: some View {
-        Button(action: {
-            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-            impactFeedback.impactOccurred()
-            
-            metronome.bpm = Double(bpm)
-            metronome.updateBPM(Double(bpm))
-            metronome.updateNoteValue(noteValue)
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                isPresented = false
-            }
-        }) {
+        Button(action: action) {
             VStack(spacing: 6) {
                 Text(title.uppercased())
                     .font(.system(size: 11, weight: .bold))
