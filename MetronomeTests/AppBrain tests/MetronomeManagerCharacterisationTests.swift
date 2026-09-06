@@ -422,6 +422,41 @@ struct MetronomeManagerCharacterisationTests {
         #expect(ticker.interval == .milliseconds(250))
     }
 
+    @Test func loadingAPresetWhilePlayingAdvancesExactlyOncePerTick() {
+        let audio = RecordingMetronomeAudioPlayer()
+        let ticker = ControllableMetronomeTicker()
+        let manager = makeManager(audioPlayer: audio, ticker: ticker)
+        manager.togglePlayback()
+        ticker.sendTick()
+        #expect(manager.currentBeat == 0)
+
+        let preset = BeatPreset(
+            name: "Live preset", noteValue: .quarter, bpm: 120,
+            beatsPerMeasure: 4, gridPattern: [true, true, true, true],
+            accentPattern: [true, false, false, false], gridDisplayMode: .andCounting
+        )
+        manager.loadBeatPreset(preset)
+        #expect(manager.isPlaying)
+        #expect(ticker.startCallCount == 2)
+        #expect(ticker.interval == .milliseconds(500))
+        #expect(ticker.initialDelay == .milliseconds(500))
+        #expect(audio.startCallCount == 1)
+        #expect(audio.playedAccents.count == 1)
+
+        ticker.sendTick()
+        #expect(manager.currentBeat == 1)
+        #expect(audio.playedAccents == [true, false])
+        ticker.sendTick()
+        #expect(manager.currentBeat == 2)
+        #expect(audio.playedAccents == [true, false, false])
+
+        manager.togglePlayback()
+        ticker.sendTick()
+        #expect(!manager.isPlaying)
+        #expect(manager.currentBeat == -1)
+        #expect(audio.playedAccents.count == 3)
+    }
+
     private func activeIndices(in values: [Bool]) -> [Int] {
         values.indices.filter { values[$0] }
     }

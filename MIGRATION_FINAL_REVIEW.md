@@ -2,6 +2,11 @@
 
 ## Status
 
+On 6 September 2026 the developer reported that the preceding test suite passed.
+This is developer-reported execution evidence, not an independently inspected
+test-result bundle. It does not establish device timing or manual regression.
+The subsequently added live-preset tick regression test still needs an Xcode run.
+
 The architectural restructuring and explicit GCD/timer replacement are implemented.
 This is not yet a claim of runtime equivalence or completed regression testing.
 
@@ -37,7 +42,15 @@ This is not yet a claim of runtime equivalence or completed regression testing.
 UserDefaultsPresetRepositoryTests uses unique, disposable test suites, never the
 live app's defaults. It checks field round-trip, repository recreation, deletion,
 and corruption handling. Repository recreation is not a process-termination test.
-Run these tests in Xcode; this session cannot connect to CoreSimulator.
+These tests are included in the developer-reported passing run above.
+This session cannot connect to CoreSimulator.
+
+## Live Preset Regression
+
+loadingAPresetWhilePlayingAdvancesExactlyOncePerTick protects BEH-020: loading
+while playing replaces the interval without restarting the audio session or
+emitting an extra click. Each controlled tick advances once, and stopping prevents
+further clicks. This verifies feature coordination, not the real clock's cadence.
 
 ## Final Verification Gate
 
