@@ -5,6 +5,19 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func savingAnEmptyPresetNameLeavesStateAndStorageUnchanged() {
+        let repository = InMemoryPresetRepository()
+        let manager = makeManager(repository: repository)
+        manager.saveBeatPreset(name: "Saved Beat")
+        let savedIDs = manager.savedBeats.map(\.id)
+
+        manager.saveBeatPreset(name: "")
+
+        #expect(manager.savedBeats.map(\.id) == savedIDs)
+        #expect(repository.presets.map(\.id) == savedIDs)
+        #expect(manager.currentBeatName == "Saved Beat")
+    }
+
     @Test func availableBeatRangesPreserveTheSettingsAndGridDistinction() {
         let manager = makeManager()
         for note in NoteValue.allCases {

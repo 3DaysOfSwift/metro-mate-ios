@@ -554,6 +554,7 @@ final class MetronomeManager: MetronomeFeature {
     }
 
     func saveBeatPreset(name: String) {
+        guard !name.isEmpty else { return }
         let preset = BeatPreset(
             name: name,
             noteValue: noteValue,

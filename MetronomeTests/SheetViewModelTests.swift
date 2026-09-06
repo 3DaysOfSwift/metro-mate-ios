@@ -1,9 +1,25 @@
+import Foundation
 import Testing
 @testable import Metronome
 
 @MainActor
 @Suite(.serialized)
 struct SheetViewModelTests {
+    @Test func deletingSeveralRowsRemovesTheOriginallySelectedPresets() {
+        let repository = InMemoryPresetRepository()
+        let metronome = makeTestMetronome(presetRepository: repository)
+        for name in ["First", "Second", "Third", "Fourth"] {
+            metronome.saveBeatPreset(name: name)
+        }
+        let viewModel = BeatPresetsViewModel(brain: AppBrain(metronome: metronome))
+
+        viewModel.deleteSavedBeats(at: IndexSet([0, 2]))
+
+        #expect(metronome.savedBeats.map(\.name) == ["Second", "Fourth"])
+        #expect(repository.presets.map(\.name) == ["Second", "Fourth"])
+        #expect(metronome.currentBeatName == "Fourth")
+    }
+
     @Test func settingsUpdatesTheBeatCountThroughTheExistingFeature() {
         let metronome = makeTestMetronome()
         let viewModel = SettingsViewModel(brain: AppBrain(metronome: metronome))

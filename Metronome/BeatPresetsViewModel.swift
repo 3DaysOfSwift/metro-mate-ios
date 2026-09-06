@@ -28,7 +28,6 @@ final class BeatPresetsViewModel: ObservableObject {
 
     func saveCurrentBeat() {
         lightImpact()
-        guard !newBeatName.isEmpty else { return }
         metronome.saveBeatPreset(name: newBeatName)
     }
 
@@ -38,8 +37,9 @@ final class BeatPresetsViewModel: ObservableObject {
     }
 
     func deleteSavedBeats(at offsets: IndexSet) {
-        for index in offsets {
-            metronome.deleteBeatPreset(metronome.savedBeats[index])
+        let selectedPresets = offsets.map { metronome.savedBeats[$0] }
+        for preset in selectedPresets {
+            metronome.deleteBeatPreset(preset)
         }
     }
 
@@ -51,7 +51,6 @@ final class BeatPresetsViewModel: ObservableObject {
     func finish() {
         lightImpact()
     }
-
 
     private func lightImpact() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
