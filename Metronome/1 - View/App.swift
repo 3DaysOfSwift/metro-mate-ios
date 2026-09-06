@@ -20,6 +20,13 @@ struct MetronomeApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.appColourTheme, themeManager.selectedTheme)
+                .simultaneousGesture(
+                    TapGesture(count: 2).onEnded {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            themeManager.selectNextTheme()
+                        }
+                    }
+                )
                 .task {
                     await AppBrain.shared.applicationDidFinishLaunching()
                 }

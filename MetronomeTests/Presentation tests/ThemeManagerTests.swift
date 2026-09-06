@@ -5,6 +5,14 @@ import Synchronization
 
 @MainActor
 struct ThemeManagerTests {
+    @Test func cyclingThemesWrapsBackToTheFirstPalette() {
+        let manager = ThemeManager()
+        manager.selectNextTheme()
+        #expect(manager.selectedTheme.id == AppColourTheme.midnight.id)
+        manager.selectNextTheme()
+        #expect(manager.selectedTheme.id == AppColourTheme.classic.id)
+    }
+
     @Test func selectedPaletteParticipatesInObservation() {
         let manager = ThemeManager()
         let notifications = Mutex(0)

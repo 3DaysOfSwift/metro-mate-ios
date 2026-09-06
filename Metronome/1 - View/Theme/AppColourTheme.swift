@@ -22,8 +22,7 @@ struct AppColourTheme: Identifiable {
         alertInputText: .black
     )
 
-    /// An alternate palette for checking that screens honour the selected theme.
-    /// Not exposed as a new customer-facing setting during the migration.
+    /// An alternate palette available through the main view's double-tap gesture.
     static let midnight = AppColourTheme(
         id: "Midnight",
         background: Color(hex: "#141923"),
