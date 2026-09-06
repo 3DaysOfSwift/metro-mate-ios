@@ -40,7 +40,10 @@ establish audio cadence, scheduling jitter, or acceptable catch-up sound under l
 
 There is no DispatchSource, scheduledTimer, or Timer construction.
 Syntax replacement does not prove timing equivalence. Cooperative tasks are not real-time audio scheduling:
-device testing under load remains essential before declaring this migration done.
+device testing under load is still needed to establish timing quality. Pass Ten
+was closed by agreement on 6 September 2026 with profiling and additional
+catch-up diagnostics deferred to future work. This scope decision is not
+evidence that those unperformed checks passed; see MIGRATION_LEDGER.md.
 
 ## Original Planning Inventory
 

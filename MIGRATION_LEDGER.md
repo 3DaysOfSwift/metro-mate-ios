@@ -1,6 +1,13 @@
 # AppBrain Migration Ledger
 
-## Pass Ten: Off-Main Feature Execution — In Progress
+## Pass Ten: Off-Main Feature Execution — Closed
+
+Closed on 6 September 2026 with the developer's agreement to defer additional
+cadence investigations and performance profiling to future improvement work.
+Complete concurrency checking, off-main audio and persistence ownership, cached
+fallback buffers, and real ticker lifecycle tests are implemented and verified
+as described below. Closure records the agreed scope; it does not certify
+real-time audio accuracy or measured responsiveness.
 
 First checkpoint enables complete concurrency checking in Debug and Release
 for all three targets, retaining Swift 5 language mode. App Intent metadata is
@@ -13,7 +20,7 @@ with complete checking and warnings-as-errors also succeeds (excluding the App
 and root preview files; these are covered by the full build). Project syntax and
 diff whitespace checks pass. The MetronomeTests suite passes on the iPhone Air
 iOS 26.2 simulator. Actual fallback playback and profiling still require
-verification; this is not a completed responsiveness pass. Existing app-icon
+verification; no measured responsiveness claim is made. Existing app-icon
 and weak-variable compiler warnings remain unrelated to concurrency checking.
 
 ### Persistence Checkpoint
@@ -93,7 +100,10 @@ Verification: the full MetronomeTests automated suite passed on the iPhone Air
 simulator, including these six real-ticker tests. This does not replace device
 profiling or manual audio regression checks.
 
-Remaining checkpoints:
+### Future Improvements and Outstanding Manual Verification
+
+These are recorded follow-ups, not blockers to the agreed Pass Ten closure.
+Unperformed checks remain unverified rather than being counted as passed.
 
 1. Capture a combined cold-start, star-field animation, and playback baseline
    using Instruments on a representative device. Include missing audio files
@@ -101,14 +111,19 @@ Remaining checkpoints:
 2. Verify bundled and fallback audio by listening on device, including rapid
    start/stop, tempo changes, and simultaneous animation.
 3. Measure real ticker cadence and catch-up spacing under animation load.
+   A future Swift diagnostic can record ContinuousClock callback timestamps
+   after deliberately suspending one callback. Deterministic deadline-policy
+   tests can complement those observations without tight real-time assertions.
    Agree on any change to the existing late-tick policy before implementing it.
 4. Repeat profiling, strict checking, and regressions. Move costly animation
    calculations off-main only if measurements warrant it, publishing completed
    frames without stale results. Do not add Task.yield merely as a showcase.
 
 The audio and persistence ownership changes and real ticker lifetime tests are
-implemented. Catch-up cadence, fallback playback verification, and performance
-gates remain open.
+complete within this pass. Catch-up diagnostics are a future test-suite
+enhancement; fallback playback and device performance remain unverified.
+No production behaviour was changed to close the pass. The final migration
+audit and feature behaviour report should retain these evidence limits.
 
 ## Pass Seven: Feature-owned Model Files
 
