@@ -5,6 +5,45 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct MetronomeManagerCharacterisationTests {
+    @Test func quickPresetsRetainTheirExistingMusicalSettings() {
+        let manager = makeManager()
+        #expect(manager.quickPresets.map(\.title) == ["Basic", "Rock", "Jazz", "Fast"])
+        #expect(manager.quickPresets.map(\.bpm) == [120, 110, 140, 160])
+        #expect(manager.quickPresets.map(\.noteValue) == [.quarter, .eighth, .quarterTriplet, .sixteenth])
+
+        for preset in manager.quickPresets {
+            manager.applyQuickPreset(preset)
+            #expect(manager.bpm == Double(preset.bpm))
+            #expect(manager.noteValue == preset.noteValue)
+            #expect(manager.beatsPerMeasure == preset.noteValue.beatsPerMeasure)
+            #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<manager.beatsPerMeasure))
+        }
+    }
+
+    @Test func builtInPresetsRetainTheirTempoPatternsAndCountingModes() {
+        let manager = makeManager()
+        let presets = manager.defaultPresets
+        #expect(presets.map(\.name) == [
+            "Quarter", "Eighth", "Sixteenth", "Quarter Triplet", "Eighth Triplet", "Sixteenth Triplet"
+        ])
+        #expect(presets.map(\.beatsPerMeasure) == [4, 8, 16, 3, 6, 12])
+        #expect(presets.allSatisfy { $0.bpm == 80 })
+        let expectedAccents = [[0, 1, 2, 3], [0, 2, 4, 6], [0, 4, 8, 12], [0, 1, 2], [0, 3], [0, 3, 6, 9]]
+        for (preset, accents) in zip(presets, expectedAccents) {
+            #expect(preset.gridPattern.count == 16)
+            #expect(preset.accentPattern.count == 16)
+            #expect(activeIndices(in: preset.gridPattern) == Array(0..<preset.beatsPerMeasure))
+            #expect(activeIndices(in: preset.accentPattern) == accents)
+        }
+        #expect(presets.map(\.gridDisplayMode) == [
+            .andCounting, .andCounting, .subdivisionCounting,
+            .andCounting, .andCounting, .subdivisionCounting
+        ])
+        // Browsing presets must not apply one to the active metronome.
+        #expect(manager.bpm == 60)
+        #expect(manager.noteValue == .eighth)
+    }
+
     @Test func newManagerUsesTheExistingDefaultBeat() {
         let manager = makeManager()
 

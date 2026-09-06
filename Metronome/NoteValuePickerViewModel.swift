@@ -3,23 +3,10 @@ import UIKit
 
 @MainActor
 final class NoteValuePickerViewModel: ObservableObject {
-    struct QuickPreset: Identifiable {
-        let title: String
-        let bpm: Int
-        let noteValue: NoteValue
-
-        var id: String { title }
-    }
-
     @Published private(set) var shouldDismiss = false
 
     let metronome: any MetronomeFeature
-    let quickPresets = [
-        QuickPreset(title: "Basic", bpm: 120, noteValue: .quarter),
-        QuickPreset(title: "Rock", bpm: 110, noteValue: .eighth),
-        QuickPreset(title: "Jazz", bpm: 140, noteValue: .quarterTriplet),
-        QuickPreset(title: "Fast", bpm: 160, noteValue: .sixteenth)
-    ]
+    var quickPresets: [QuickPreset] { metronome.quickPresets }
 
     private var dismissalTask: Task<Void, Never>?
     private var metronomeUpdates: AnyCancellable?
@@ -44,8 +31,7 @@ final class NoteValuePickerViewModel: ObservableObject {
 
     func select(_ preset: QuickPreset) {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        metronome.updateBPM(Double(preset.bpm))
-        metronome.updateNoteValue(preset.noteValue)
+        metronome.applyQuickPreset(preset)
         requestDismissalAfterSelection()
     }
 

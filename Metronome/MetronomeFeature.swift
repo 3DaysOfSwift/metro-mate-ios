@@ -14,6 +14,8 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     var gridDisplayMode: GridDisplayMode { get }
     var currentBeatName: String { get }
     var savedBeats: [BeatPreset] { get }
+    var defaultPresets: [BeatPreset] { get }
+    var quickPresets: [QuickPreset] { get }
     var tapCount: Int { get }
 
     func togglePlayback()
@@ -26,6 +28,7 @@ where ObjectWillChangePublisher == ObservableObjectPublisher {
     func tapTempo()
     func saveBeatPreset(name: String)
     func loadBeatPreset(_ preset: BeatPreset)
+    func applyQuickPreset(_ preset: QuickPreset)
     func deleteBeatPreset(_ preset: BeatPreset)
     func randomizeBeat()
     func resetToBasicBeat()
