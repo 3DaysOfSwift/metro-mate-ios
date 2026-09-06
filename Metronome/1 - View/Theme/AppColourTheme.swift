@@ -35,6 +35,63 @@ struct AppColourTheme: Identifiable {
     )
 }
 
+extension AppColourTheme {
+    static let forest = AppColourTheme(
+        id: "Forest",
+        background: Color(hex: "#101E19"),
+        surface: Color(hex: "#192D24"),
+        elevatedSurface: Color(hex: "#294238"),
+        text: Color(hex: "#E3F3E9"),
+        accent: Color(hex: "#6EE7A8"),
+        errorText: .white,
+        alertInputText: .black
+    )
+
+    static let amethyst = AppColourTheme(
+        id: "Amethyst",
+        background: Color(hex: "#1D1529"),
+        surface: Color(hex: "#2B203B"),
+        elevatedSurface: Color(hex: "#423052"),
+        text: Color(hex: "#F0E7FA"),
+        accent: Color(hex: "#C4A0FF"),
+        errorText: .white,
+        alertInputText: .black
+    )
+
+    static let ember = AppColourTheme(
+        id: "Ember",
+        background: Color(hex: "#241815"),
+        surface: Color(hex: "#35241F"),
+        elevatedSurface: Color(hex: "#50362A"),
+        text: Color(hex: "#F8EADC"),
+        accent: Color(hex: "#FFBE70"),
+        errorText: .white,
+        alertInputText: .black
+    )
+
+    static let lagoon = AppColourTheme(
+        id: "Lagoon",
+        background: Color(hex: "#102027"),
+        surface: Color(hex: "#19333B"),
+        elevatedSurface: Color(hex: "#284B53"),
+        text: Color(hex: "#E2F5F5"),
+        accent: Color(hex: "#58DFDA"),
+        errorText: .white,
+        alertInputText: .black
+    )
+
+    static let rose = AppColourTheme(
+        id: "Rose",
+        background: Color(hex: "#27171F"),
+        surface: Color(hex: "#3A2530"),
+        elevatedSurface: Color(hex: "#563747"),
+        text: Color(hex: "#FBE8F0"),
+        accent: Color(hex: "#FF9DBC"),
+        errorText: .white,
+        alertInputText: .black
+    )
+}
+
 private struct AppColourThemeKey: EnvironmentKey {
     static let defaultValue = AppColourTheme.classic
 }

@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class ThemeManager {
-    let themes = [AppColourTheme.classic, AppColourTheme.midnight]
+    let themes: [AppColourTheme] = [.classic, .midnight, .forest, .amethyst, .ember, .lagoon, .rose]
     private(set) var selectedTheme = AppColourTheme.classic
 
     func selectNextTheme() {

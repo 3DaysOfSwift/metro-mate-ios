@@ -7,8 +7,11 @@ import Synchronization
 struct ThemeManagerTests {
     @Test func cyclingThemesWrapsBackToTheFirstPalette() {
         let manager = ThemeManager()
-        manager.selectNextTheme()
-        #expect(manager.selectedTheme.id == AppColourTheme.midnight.id)
+        #expect(Set(manager.themes.map(\.id)).count == 7)
+        for theme in manager.themes.dropFirst() {
+            manager.selectNextTheme()
+            #expect(manager.selectedTheme.id == theme.id)
+        }
         manager.selectNextTheme()
         #expect(manager.selectedTheme.id == AppColourTheme.classic.id)
     }
@@ -31,7 +34,7 @@ struct ThemeManagerTests {
     @Test func defaultsToTheExistingPalette() {
         let manager = ThemeManager()
         #expect(manager.selectedTheme.id == AppColourTheme.classic.id)
-        #expect(manager.themes.count == 2)
+        #expect(manager.themes.count == 7)
     }
 
     @Test func selectingAThemeUpdatesThePaletteAndUnknownNamesDoNothing() {
