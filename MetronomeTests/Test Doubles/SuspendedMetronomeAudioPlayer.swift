@@ -2,12 +2,22 @@
 
 @MainActor
 final class SuspendedMetronomeAudioPlayer: MetronomeAudioPlayer {
-    enum Operation { case prepare, start, click, progress }
+    enum Operation { case prepare, start, click, progress, schedule }
     var suspendedOperation: Operation?
     private let arrivals = AsyncStream<Operation>.makeStream()
     private var pending: CheckedContinuation<Void, Never>?
     private(set) var commands: [String] = []
-    func schedulePlayback(_ pattern: MetronomePlaybackPattern, initialDelay: Double) {}
+    private(set) var scheduledPatterns: [MetronomePlaybackPattern] = []
+    private let schedules = AsyncStream<Void>.makeStream()
+    func schedulePlayback(_ pattern: MetronomePlaybackPattern, initialDelay: Double) async {
+        scheduledPatterns.append(pattern)
+        schedules.continuation.yield()
+        await suspendIfRequested(.schedule)
+    }
+    func waitForSchedule() async {
+        var events = schedules.stream.makeAsyncIterator()
+        await events.next()
+    }
     var currentPlaybackBeat: Int?
     func playbackBeat() async -> Int? {
         let snapshot = currentPlaybackBeat

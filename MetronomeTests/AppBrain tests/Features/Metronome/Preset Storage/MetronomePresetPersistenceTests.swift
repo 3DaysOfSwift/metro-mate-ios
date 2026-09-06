@@ -7,6 +7,75 @@ import Testing
 @Suite(.serialized)
 struct MetronomePresetPersistenceTests {
     @Test(.timeLimit(.minutes(1)))
+    func sameNameEditsWaitingForInitialLoadKeepSubmissionOrder() async {
+        let repository = SuspendedPresetRepository()
+        let manager = makeTestMetronome(presetRepository: repository)
+        manager.updateBPM(80)
+        let first = Task { await manager.saveBeatPreset(name: "Beat") }
+        await repository.waitForLoad()
+        manager.updateBPM(120)
+        let entered = AsyncStream<Void>.makeStream()
+        let second = Task {
+            entered.continuation.yield()
+            await manager.saveBeatPreset(name: "Beat")
+        }
+        var arrivals = entered.stream.makeAsyncIterator()
+        await arrivals.next()
+        let changed = AsyncStream<Void>.makeStream()
+        // The second command is submitted before the shared load is released.
+        repository.finishLoad()
+        await repository.waitForSave()
+        if manager.savedBeats.first?.bpm != 120 {
+            withObservationTracking { _ = manager.savedBeats } onChange: {
+                changed.continuation.yield()
+            }
+            var events = changed.stream.makeAsyncIterator()
+            await events.next()
+        }
+        #expect(manager.savedBeats.first?.bpm == 120)
+        let firstWriteHasLatest = repository.writes.last?.first?.bpm == 120
+        repository.finishSave()
+        if !firstWriteHasLatest {
+            await repository.waitForSave()
+            #expect(repository.writes.last?.first?.bpm == 120)
+            repository.finishSave()
+        }
+        await first.value
+        await second.value
+        #expect(manager.savedBeats.count == 1)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func slowStorageCoalescesSnapshotsWithoutLosingEdits() async {
+        let repository = SuspendedPresetRepository()
+        let manager = makeTestMetronome(presetRepository: repository)
+        let first = Task { await manager.saveBeatPreset(name: "First") }
+        await repository.waitForLoad()
+        repository.finishLoad()
+        await repository.waitForSave()
+        var pending: [Task<Void, Never>] = []
+        for name in ["Second", "Third"] {
+            let changed = AsyncStream<Void>.makeStream()
+            withObservationTracking { _ = manager.currentBeatName } onChange: {
+                changed.continuation.yield()
+            }
+            pending.append(Task { await manager.saveBeatPreset(name: name) })
+            var events = changed.stream.makeAsyncIterator()
+            await events.next()
+        }
+        #expect(repository.writes.count == 1)
+        first.cancel()
+        repository.finishSave()
+        await repository.waitForSave()
+        #expect(repository.writes.last?.map(\.name) == ["First", "Second", "Third"])
+        repository.finishSave()
+        await first.value
+        for task in pending { await task.value }
+        #expect(repository.writes.count == 2)
+        #expect(!manager.isSavingPresets)
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func concurrentCallersShareOnePendingLoad() async {
         let repository = SuspendedPresetRepository()
         let manager = makeTestMetronome(presetRepository: repository)

@@ -2,6 +2,11 @@
 
 ## Current Implementation
 
+The Pass Fifteen follow-up serializes preset edits before the initial load and
+uses a single coalescing storage worker. Rhythm configuration has a single
+worker and latest pending value too. See ARCHITECTURE.md for completion semantics
+and the distinction between bounded snapshots and uncapped caller counts.
+
 Pass Fifteen adds pattern-revision validation to in-flight audio-progress reads:
 a result captured before a rhythm edit cannot update the new visual state.
 See the ledger for reviewed ordering/lifetime guarantees and queue-growth limits.

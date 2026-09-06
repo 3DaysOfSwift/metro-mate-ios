@@ -8,6 +8,12 @@ published. Audio output is unchanged. The concurrency review and remaining
 queue-growth and initial-load ordering verification gaps are recorded in the
 migration ledger; this does not claim exhaustive concurrency correctness.
 
+The follow-up orders preset edits before initial-load suspension and coalesces
+intermediate storage snapshots into the latest complete collection. One write
+and one pending snapshot are retained. Rhythm settings use one update worker
+and one latest pending configuration. This preserves edits while avoiding
+redundant queued work; nonreplaceable commands and caller counts are not capped.
+
 ## Current Refinement: Pass Fourteen
 
 As of 7 September 2026, the UI ticker skips missed polls and waits a fresh

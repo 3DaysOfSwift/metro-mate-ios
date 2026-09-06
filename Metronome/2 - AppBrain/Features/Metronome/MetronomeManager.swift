@@ -9,6 +9,7 @@ final class MetronomeManager: MetronomeFeature {
     @ObservationIgnored private var playbackStartTask: Task<Void, Error>?
     @ObservationIgnored private var lastAudioOperation: Task<Void, Error>?
     @ObservationIgnored private var playbackUpdateTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingPlaybackPattern: (pattern: MetronomePlaybackPattern, revision: Int)?
     @ObservationIgnored private var patternRevision = 0
     @ObservationIgnored private var lastPlaybackStep: Int?
     @ObservationIgnored private var playbackRevision = 0
@@ -49,6 +50,9 @@ final class MetronomeManager: MetronomeFeature {
     @ObservationIgnored private var hasLoadedPresets = false
     @ObservationIgnored private var presetLoadTask: Task<Void, Never>?
     @ObservationIgnored private var presetSaveTask: Task<Void, Never>?
+    @ObservationIgnored private var presetEditTask: Task<Void, Never>?
+    @ObservationIgnored private var presetEditRevision = 0
+    @ObservationIgnored private var pendingPresetSave: (presets: [BeatPreset], revision: Int)?
     @ObservationIgnored private var presetSaveRevision = 0
     private(set) var isLoadingPresets = false
     private(set) var isSavingPresets = false
@@ -237,6 +241,7 @@ final class MetronomeManager: MetronomeFeature {
         playbackStartTask?.cancel()
         playbackUpdateTask?.cancel()
         playbackUpdateTask = nil
+        pendingPlaybackPattern = nil
         playbackStartTask = nil
         isStartingPlayback = false
         isPlaying = false
@@ -542,52 +547,72 @@ final class MetronomeManager: MetronomeFeature {
             accentPattern: accentPattern,
             gridDisplayMode: gridDisplayMode
         )
-        await loadSavedPresets()
+        await applyPresetEdit {
+            self.savedBeats.removeAll { $0.name == name }
+            self.savedBeats.append(preset)
+            self.currentBeatName = name
+        }
         guard hasLoadedPresets else { return }
-        
-        // Remove existing preset with same name
-        savedBeats.removeAll { $0.name == name }
-        savedBeats.append(preset)
-        currentBeatName = name
-        await persistPresets()
+        await presetSaveTask?.value
+    }
+
+    /// Order edits before the initial load can suspend their callers.
+    private func applyPresetEdit(_ edit: @escaping @MainActor () -> Void) async {
+        let previous = presetEditTask
+        presetEditRevision += 1
+        let revision = presetEditRevision
+        let task = Task {
+            defer {
+                if revision == presetEditRevision { presetEditTask = nil }
+            }
+            await previous?.value
+            await loadSavedPresets()
+            guard hasLoadedPresets else { return }
+            edit()
+            _ = persistPresets()
+        }
+        presetEditTask = task
+        await task.value
     }
 
     // MARK: - Preset persistence
 
     /// Persists the current presets through the storage supplied by AppBrain.
     /// Nothing leaves the device in the live implementation - see PRIVACY.md.
-    private func persistPresets() async {
-        let previousSave = presetSaveTask
-        let presets = savedBeats
+    private func persistPresets() -> Task<Void, Never> {
         presetSaveRevision += 1
-        let revision = presetSaveRevision
+        pendingPresetSave = (savedBeats, presetSaveRevision)
         isSavingPresets = true
-
-        // A committed edit outlives its screen. Await the previous write rather
-        // than relying on actor scheduling to preserve submission order.
+        if let presetSaveTask {
+            return presetSaveTask
+        }
+        // One active write and one latest snapshot. The latest collection includes
+        // every applied edit; intermediate snapshots need not each reach storage.
         let task = Task {
-            await previousSave?.value
-            do {
-                try await presetRepository.savePresets(presets)
-                if revision == presetSaveRevision { presetSaveError = nil }
-            } catch {
-                if revision == presetSaveRevision {
-                    presetSaveError = error.localizedDescription
+            defer {
+                presetSaveTask = nil
+                isSavingPresets = false
+            }
+            while let pending = pendingPresetSave {
+                pendingPresetSave = nil
+                do {
+                    try await presetRepository.savePresets(pending.presets)
+                    if pending.revision == presetSaveRevision { presetSaveError = nil }
+                } catch {
+                    if pending.revision == presetSaveRevision {
+                        presetSaveError = error.localizedDescription
+                    }
                 }
             }
         }
         presetSaveTask = task
-        await task.value
-        if revision == presetSaveRevision {
-            presetSaveTask = nil
-            isSavingPresets = false
-        }
+        return task
     }
 
     /// Retries the current unsaved collection without adding or deleting anything again.
     func retrySavingPresets() async {
         guard hasLoadedPresets, presetSaveError != nil else { return }
-        await persistPresets()
+        await persistPresets().value
     }
 
     /// Loads once after success. Failed requests can be retried without rebuilding the feature.
@@ -654,13 +679,14 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func deleteBeatPreset(_ preset: BeatPreset) async {
-        await loadSavedPresets()
-        guard hasLoadedPresets else { return }
-        savedBeats.removeAll { $0.id == preset.id }
-        if currentBeatName == preset.name {
-            currentBeatName = "Eighth"
+        await applyPresetEdit {
+            self.savedBeats.removeAll { $0.id == preset.id }
+            if self.currentBeatName == preset.name {
+                self.currentBeatName = "Eighth"
+            }
         }
-        await persistPresets()
+        guard hasLoadedPresets else { return }
+        await presetSaveTask?.value
     }
     
     func randomizeBeat() {
@@ -767,29 +793,33 @@ final class MetronomeManager: MetronomeFeature {
 
     private func refreshAudioPattern() {
         guard isPlaying else { return }
-        playbackUpdateTask?.cancel()
         patternRevision += 1
-        let requestedPatternRevision = patternRevision
         lastPlaybackStep = nil
-        let pattern = playbackPattern(restart: currentBeat < 0)
+        pendingPlaybackPattern = (playbackPattern(restart: currentBeat < 0), patternRevision)
+        guard playbackUpdateTask == nil else { return }
         let revision = playbackRevision
         playbackUpdateTask = Task {
             defer {
-                if requestedPatternRevision == patternRevision { playbackUpdateTask = nil }
+                if revision == playbackRevision { playbackUpdateTask = nil }
             }
-            guard !Task.isCancelled else { return }
-            let operation = enqueueAudioOperation {
-                guard revision == self.playbackRevision,
-                      requestedPatternRevision == self.patternRevision else { return }
-                try await self.audioPlayer.schedulePlayback(pattern, initialDelay: pattern.interval)
-            }
-            do {
-                try await operation.value
-            } catch {
-                guard revision == playbackRevision,
-                      requestedPatternRevision == patternRevision else { return }
-                audioError = error.localizedDescription
-                await stop()
+            while !Task.isCancelled, revision == playbackRevision,
+                  let pending = pendingPlaybackPattern {
+                pendingPlaybackPattern = nil
+                let operation = enqueueAudioOperation {
+                    guard revision == self.playbackRevision,
+                          pending.revision == self.patternRevision else { return }
+                    try await self.audioPlayer.schedulePlayback(pending.pattern, initialDelay: pending.pattern.interval)
+                }
+                do {
+                    try await operation.value
+                } catch {
+                    guard revision == playbackRevision else { return }
+                    if pending.revision == patternRevision {
+                        audioError = error.localizedDescription
+                        await stop()
+                        return
+                    }
+                }
             }
         }
     }

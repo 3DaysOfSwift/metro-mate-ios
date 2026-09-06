@@ -1,5 +1,26 @@
 # AppBrain Migration Ledger
 
+## Pass Fifteen Follow-up: Ordered Edits and Coalescing
+
+At the developer's request, preset edits now establish arrival order before
+awaiting initial loading. Each applied edit submits its latest collection before
+the next edit runs. A single durable writer keeps one active snapshot and one
+latest pending snapshot. Intermediate writes may be combined, but every applied
+edit is represented in the resulting collection unless a later edit deliberately
+replaces or deletes it. Callers await the writer; latest failures remain retryable.
+
+Replaceable rhythm updates also use one worker and a latest pending pattern,
+rather than appending an audio operation for each change while the audio executor
+is busy. Added tests for same-name edits during initial loading, coalesced writes
+under suspended storage, and rapid rhythm edits under suspended audio scheduling.
+
+These changes bound pending snapshots/configurations, not the number of callers
+or nonreplaceable commands. Initial-load waiters and explicitly ordered clicks,
+starts, and stops remain lossless; rejecting those under arbitrary sustained
+input would require an explicit admission policy. Manual verification remains
+with the developer. The complete MetronomeTests target passed on 7 September
+2026 after these changes; UI tests and device profiling were not rerun.
+
 ## Pass Fifteen: Concurrency Review — 7 September 2026
 
 Validation: the complete MetronomeTests target passed on the iPhone Air simulator

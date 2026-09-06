@@ -1,5 +1,20 @@
 # Metro Mate Architecture
 
+## Ordered Edits and Coalesced Work
+
+Preset commands capture their input before suspension and apply edits in arrival
+order, including while the initial load is pending. Each edit synchronously
+submits its resulting collection to one persistence worker. The worker keeps
+one active write and one latest pending snapshot, so intermediate disk writes
+may be coalesced without discarding edits. Callers await the worker; cancellation
+of a screen does not cancel committed work. Latest failures remain visible for
+retry.
+
+Rhythm configuration similarly uses one update worker and one latest pending
+pattern. Stop invalidates the worker and clears pending settings. Already
+executing synchronous audio work finishes before ordered cleanup. Clicks and
+start/stop commands are not silently dropped or coalesced with rhythm edits.
+
 ## Responsibilities
 
 SwiftUI Views describe each screen. Each screen owns its dedicated ViewModel,
