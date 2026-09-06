@@ -31,3 +31,18 @@ resilience under delayed refills before choosing the look-ahead duration. Expose
 the applied beat/configuration to presentation, then test audible behaviour on
 simulator and device. Retain the existing player until that evidence supports
 replacement. This checkpoint makes no performance-improvement claim.
+
+## Second Checkpoint: Bounded Refills and Overlapping Voices
+
+The candidate refill policy accepts windows no larger than 250 milliseconds;
+this is a safety ceiling, not a measured live scheduling choice. It does not
+duplicate committed events. Late refills count and skip expired beats using
+arithmetic rather than an unbounded catch-up loop. The count is returned to the
+future audio owner for underrun reporting.
+
+A fixed-capacity voice reservation policy reuses a voice only after its previous
+click ends. Exhaustion is an explicit error rather than permission to truncate
+audio. The offline engine probe uses two reusable nodes and checks overlapping
+tails at their original sample offsets. These policies are still candidates:
+the live refill task, production voice capacity, stop/restart lifetime, and
+audible-state publication have not been connected to the current player.
