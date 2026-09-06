@@ -1,3 +1,5 @@
+import Foundation
+
 @testable import Metronome
 
 final class InMemoryPresetRepository: PresetRepository {
