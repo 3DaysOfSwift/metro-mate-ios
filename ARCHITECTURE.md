@@ -53,9 +53,14 @@ Each ViewModel receives a narrow MetronomeFeature dependency directly through
 its initializer and keeps that reference private. Omitting that dependency selects AppBrain.shared.metronome
 inside the Main Actor initializer; callers no longer inject the entire AppBrain.
 Feature state has private setters, and tap timestamps are private bookkeeping.
+The musical beat pattern is one flat sequence. Grid rows belong to presentation,
+not duplicated Model state; toggleBeat(at:) takes a musical beat index. Saved
+presets retain their existing flat-array representation.
 Beat activity and accent queries belong to the feature; presentation retains
 highlighting and pulse styling. Commands enforce tempo/count boundaries and
 grid count changes refresh active audio as well as observable state.
+Audio refresh and presentation polling are explicit separate operations at their
+call sites; startPlaybackProgressPolling does not reconfigure audio.
 
 Views read screen-facing properties and call ViewModel actions; they cannot reach through a ViewModel
 into the feature API. Musical limits, including the tempo range, belong to the

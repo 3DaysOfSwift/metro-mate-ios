@@ -18,9 +18,8 @@ final class MetronomeManager: MetronomeFeature {
     private(set) var beatsPerMeasure = 8
     private(set) var currentBeat = -1
     private(set) var shouldBlink = false
-    private(set) var gridPattern: [[Bool]] = Array(repeating: Array(repeating: false, count: 16), count: 4)
+    private(set) var gridPattern: [Bool] = Array(repeating: false, count: 16)
     private(set) var accentPattern: [Bool] = Array(repeating: false, count: 16)
-    private(set) var gridSize = 4
     private(set) var noteValue: NoteValue = .eighth
     private(set) var gridDisplayMode: GridDisplayMode = .andCounting
     private(set) var currentBeatName: String = "Eighth"
@@ -107,14 +106,8 @@ final class MetronomeManager: MetronomeFeature {
     
     private func setupDefaultPattern() {
         // Build locally so Observation sees one publication per completed array.
-        var gridPattern = self.gridPattern
+        var gridPattern = Array(repeating: false, count: 16)
         var accentPattern = self.accentPattern
-        // Clear all patterns first
-        for i in 0..<gridPattern.count {
-            for j in 0..<gridPattern[i].count {
-                gridPattern[i][j] = false
-            }
-        }
         
         // Clear accent pattern
         for i in 0..<accentPattern.count {
@@ -123,7 +116,7 @@ final class MetronomeManager: MetronomeFeature {
         
         // Set all beats active for current beatsPerMeasure
         for i in 0..<beatsPerMeasure {
-            gridPattern[0][i] = true
+            gridPattern[i] = true
         }
         
         // Set accents on beats 1,2,3,4 for all default patterns
@@ -221,7 +214,7 @@ final class MetronomeManager: MetronomeFeature {
             guard revision == playbackRevision else { throw CancellationError() }
             isPlaying = true
             currentBeat = -1
-            startTicker(after: .milliseconds(10))
+            startPlaybackProgressPolling(after: .milliseconds(10))
             // Settings may change while the audio executor is building the loop.
             if scheduledPattern != playbackPattern(restart: true) { refreshAudioPattern() }
         }
@@ -352,22 +345,11 @@ final class MetronomeManager: MetronomeFeature {
         currentBeat = -1
         
         // Reset grid pattern for new beat count
-        let maxBeats = max(16, beatsPerMeasure)
-        for i in 0..<gridPattern.count {
-            while gridPattern[i].count < maxBeats {
-                gridPattern[i].append(false)
-            }
-        }
-        
-        // Reset accent pattern for new beat count
-        while accentPattern.count < maxBeats {
-            accentPattern.append(false)
-        }
-        
         setupDefaultPattern()
         
         if isPlaying {
-            restartTicker()
+            refreshAudioPattern()
+            startPlaybackProgressPolling(after: tickInterval)
         }
     }
     
@@ -376,21 +358,13 @@ final class MetronomeManager: MetronomeFeature {
         beatsPerMeasure = beats
         currentBeat = -1
         
-        // Ensure grid pattern accommodates new beat count
-        if gridPattern.count > 0 && gridPattern[0].count < beats {
-            for i in 0..<gridPattern.count {
-                while gridPattern[i].count < beats {
-                    gridPattern[i].append(false)
-                }
-            }
-        }
         setupDefaultPattern()
         refreshAudioPattern()
     }
     
-    func toggleGridCell(row: Int, col: Int) {
-        guard gridPattern.indices.contains(row), gridPattern[row].indices.contains(col) else { return }
-        gridPattern[row][col].toggle()
+    func toggleBeat(at beat: Int) {
+        guard (0..<beatsPerMeasure).contains(beat) else { return }
+        gridPattern[beat].toggle()
         // Set to custom beat when user modifies pattern
         if currentBeatName != "Random Beat" {
             currentBeatName = "Custom Beat"
@@ -405,14 +379,6 @@ final class MetronomeManager: MetronomeFeature {
         if currentBeatName != "Random Beat" {
             currentBeatName = "Custom Beat"
         }
-        refreshAudioPattern()
-    }
-    
-    func updateGridSize(_ size: Int) {
-        guard size > 0 else { return }
-        gridSize = size
-        gridPattern = Array(repeating: Array(repeating: false, count: max(16, beatsPerMeasure)), count: size)
-        setupDefaultPattern()
         refreshAudioPattern()
     }
     
@@ -459,9 +425,8 @@ final class MetronomeManager: MetronomeFeature {
     }
 
     func isBeatActive(_ beat: Int) -> Bool {
-        guard (0..<beatsPerMeasure).contains(beat), let pattern = gridPattern.first,
-              pattern.indices.contains(beat) else { return false }
-        return pattern[beat]
+        guard (0..<beatsPerMeasure).contains(beat) else { return false }
+        return gridPattern[beat]
     }
 
     func isBeatAccented(_ beat: Int) -> Bool {
@@ -540,7 +505,7 @@ final class MetronomeManager: MetronomeFeature {
             noteValue: noteValue,
             bpm: bpm,
             beatsPerMeasure: beatsPerMeasure,
-            gridPattern: gridPattern[0],
+            gridPattern: gridPattern,
             accentPattern: accentPattern,
             gridDisplayMode: gridDisplayMode
         )
@@ -650,14 +615,8 @@ final class MetronomeManager: MetronomeFeature {
         currentBeatName = preset.name
         
         // Update grid patterns
-        for i in 0..<gridPattern.count {
-            for j in 0..<gridPattern[i].count {
-                if j < preset.gridPattern.count {
-                    gridPattern[i][j] = preset.gridPattern[j]
-                } else {
-                    gridPattern[i][j] = false
-                }
-            }
+        for i in gridPattern.indices {
+            gridPattern[i] = i < preset.gridPattern.count ? preset.gridPattern[i] : false
         }
         
         // Update accent pattern
@@ -672,7 +631,8 @@ final class MetronomeManager: MetronomeFeature {
         self.accentPattern = accentPattern
         
         if isPlaying {
-            restartTicker()
+            refreshAudioPattern()
+            startPlaybackProgressPolling(after: tickInterval)
         }
     }
     
@@ -688,7 +648,7 @@ final class MetronomeManager: MetronomeFeature {
     }
     
     func randomizeBeat() {
-        var gridPattern = self.gridPattern
+        var gridPattern = Array(repeating: false, count: 16)
         var accentPattern = self.accentPattern
         // Randomize note value
         let allNoteValues = NoteValue.allCases
@@ -701,13 +661,6 @@ final class MetronomeManager: MetronomeFeature {
         noteValue = randomNoteValue
         beatsPerMeasure = randomNoteValue.beatsPerMeasure
         gridDisplayMode = randomDisplayMode
-        
-        // Clear current pattern
-        for i in 0..<gridPattern.count {
-            for j in 0..<gridPattern[i].count {
-                gridPattern[i][j] = false
-            }
-        }
         
         // Clear accent pattern
         for i in 0..<accentPattern.count {
@@ -722,14 +675,14 @@ final class MetronomeManager: MetronomeFeature {
         
         // Always include first beat
         selectedBeats.insert(0)
-        gridPattern[0][0] = true
+        gridPattern[0] = true
         accentPattern[0] = true // First beat always has accent
         
         // Add random beats
         while selectedBeats.count < activeBeats {
             let randomBeat = Int.random(in: 1..<beatsPerMeasure)
             if selectedBeats.insert(randomBeat).inserted {
-                gridPattern[0][randomBeat] = true
+                gridPattern[randomBeat] = true
                 
                 // Random chance for accent (25% for non-first beats)
                 if Int.random(in: 1...4) == 1 {
@@ -743,7 +696,8 @@ final class MetronomeManager: MetronomeFeature {
 
         // Update timer if playing
         if isPlaying {
-            restartTicker()
+            refreshAudioPattern()
+            startPlaybackProgressPolling(after: tickInterval)
         }
         
         currentBeatName = "Random Beat"
@@ -767,22 +721,18 @@ final class MetronomeManager: MetronomeFeature {
         
         // Update timer if playing
         if isPlaying {
-            restartTicker()
+            refreshAudioPattern()
+            startPlaybackProgressPolling(after: tickInterval)
         }
         
         currentBeatName = "Eighth"
-    }
-
-    private func restartTicker() {
-        refreshAudioPattern()
-        startTicker(after: tickInterval)
     }
 
     private func playbackPattern(restart: Bool) -> MetronomePlaybackPattern {
         MetronomePlaybackPattern(
             interval: (60.0 / bpm) / noteValue.multiplier,
             beats: (0..<beatsPerMeasure).map { beat in
-                guard beat < gridPattern[0].count, gridPattern[0][beat] else { return nil }
+                guard beat < gridPattern.count, gridPattern[beat] else { return nil }
                 return beat < accentPattern.count && accentPattern[beat]
             },
             restartFromFirstBeat: restart
@@ -822,7 +772,7 @@ final class MetronomeManager: MetronomeFeature {
         }
     }
 
-    private func startTicker(after initialDelay: Duration) {
+    private func startPlaybackProgressPolling(after initialDelay: Duration) {
         tickerRevision += 1
         let revision = tickerRevision
         ticker.start(

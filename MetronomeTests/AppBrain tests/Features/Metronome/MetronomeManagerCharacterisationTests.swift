@@ -22,10 +22,9 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.beatsPerMeasure == 1)
         let grid = manager.gridPattern
         let accents = manager.accentPattern
-        manager.toggleGridCell(row: -1, col: 0)
-        manager.toggleGridCell(row: 0, col: Int.max)
+        manager.toggleBeat(at: -1)
+        manager.toggleBeat(at: Int.max)
         manager.toggleAccentCell(col: -1)
-        manager.updateGridSize(0)
         #expect(manager.gridPattern == grid)
         #expect(manager.accentPattern == accents)
         #expect(!manager.isBeatActive(-1))
@@ -159,7 +158,7 @@ struct MetronomeManagerCharacterisationTests {
             #expect(manager.bpm == Double(preset.bpm))
             #expect(manager.noteValue == preset.noteValue)
             #expect(manager.beatsPerMeasure == preset.noteValue.beatsPerMeasure)
-            #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<manager.beatsPerMeasure))
+            #expect(activeIndices(in: manager.gridPattern) == Array(0..<manager.beatsPerMeasure))
         }
     }
 
@@ -196,7 +195,7 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.beatsPerMeasure == 8)
         #expect(manager.gridDisplayMode == .andCounting)
         #expect(manager.currentBeatName == "Eighth")
-        #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<8))
+        #expect(activeIndices(in: manager.gridPattern) == Array(0..<8))
         #expect(activeIndices(in: manager.accentPattern) == [0, 2, 4, 6])
     }
 
@@ -209,7 +208,7 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.beatsPerMeasure == 16)
         #expect(manager.gridDisplayMode == .subdivisionCounting)
         #expect(manager.currentBeatName == "Sixteenth")
-        #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<16))
+        #expect(activeIndices(in: manager.gridPattern) == Array(0..<16))
         #expect(activeIndices(in: manager.accentPattern) == [0, 4, 8, 12])
     }
 
@@ -222,16 +221,16 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.beatsPerMeasure == 6)
         #expect(manager.gridDisplayMode == .andCounting)
         #expect(manager.currentBeatName == "Eighth Triplet")
-        #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<6))
+        #expect(activeIndices(in: manager.gridPattern) == Array(0..<6))
         #expect(activeIndices(in: manager.accentPattern) == [0, 3])
     }
 
     @Test func editingThePatternMarksItAsCustom() {
         let manager = makeManager()
 
-        manager.toggleGridCell(row: 0, col: 1)
+        manager.toggleBeat(at: 1)
 
-        #expect(manager.gridPattern[0][1] == false)
+        #expect(manager.gridPattern[1] == false)
         #expect(manager.currentBeatName == "Custom Beat")
 
         manager.toggleAccentCell(col: 1)
@@ -256,7 +255,7 @@ struct MetronomeManagerCharacterisationTests {
         let manager = makeManager()
         manager.updateNoteValue(.sixteenthTriplet)
         manager.updateBPM(147)
-        manager.toggleGridCell(row: 0, col: 1)
+        manager.toggleBeat(at: 1)
 
         manager.resetToBasicBeat()
 
@@ -265,7 +264,7 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.beatsPerMeasure == 8)
         #expect(manager.gridDisplayMode == .andCounting)
         #expect(manager.currentBeatName == "Eighth")
-        #expect(activeIndices(in: manager.gridPattern[0]) == Array(0..<8))
+        #expect(activeIndices(in: manager.gridPattern) == Array(0..<8))
         #expect(activeIndices(in: manager.accentPattern) == [0, 2, 4, 6])
     }
 
@@ -277,10 +276,10 @@ struct MetronomeManagerCharacterisationTests {
 
         #expect(manager.bpm == 123)
         #expect(manager.currentBeatName == "Random Beat")
-        #expect(manager.gridPattern[0][0])
+        #expect(manager.gridPattern[0])
         #expect(manager.accentPattern[0])
-        #expect(activeIndices(in: manager.gridPattern[0]).count >= 2)
-        #expect(activeIndices(in: manager.gridPattern[0]).count <= min(manager.beatsPerMeasure, 12))
+        #expect(activeIndices(in: manager.gridPattern).count >= 2)
+        #expect(activeIndices(in: manager.gridPattern).count <= min(manager.beatsPerMeasure, 12))
     }
 
     @Test func loadingPresetRestoresAllPersistedConfiguration() {
@@ -302,7 +301,7 @@ struct MetronomeManagerCharacterisationTests {
         #expect(manager.bpm == 91)
         #expect(manager.beatsPerMeasure == 3)
         #expect(manager.gridDisplayMode == .subdivisionCounting)
-        #expect(Array(manager.gridPattern[0].prefix(3)) == [true, false, true])
+        #expect(Array(manager.gridPattern.prefix(3)) == [true, false, true])
         #expect(Array(manager.accentPattern.prefix(3)) == [true, false, false])
     }
 

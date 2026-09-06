@@ -2,6 +2,11 @@
 
 ## Current Refinement: Pass Sixteen
 
+The latest iteration removes unused multi-row Model state while preserving the
+saved-preset format, separates audio refresh from presentation polling at call
+sites, and adds real production-player timeline coverage for rapid tempo edits.
+Manual listening and developer approval are still required before closure.
+
 The feature now protects its advertised tempo and beat-count ranges at command
 boundaries, and grid-count changes update running audio. Invalid cell indices
 are harmless no-ops. Manager state cannot be changed directly by external code;

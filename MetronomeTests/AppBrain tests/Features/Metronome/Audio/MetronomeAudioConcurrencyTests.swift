@@ -7,6 +7,42 @@ import Testing
 @Suite(.serialized)
 struct MetronomeAudioConcurrencyTests {
     @Test(.timeLimit(.minutes(1)))
+    func productionPlayerKeepsItsTimelineThroughRapidTempoChanges() async throws {
+        let audio = AVFoundationMetronomeAudioPlayer(bundle: .main)
+        do {
+            let source = MetronomePlaybackPattern(interval: 0.1, beats: [true, false], restartFromFirstBeat: true)
+            try await audio.schedulePlayback(source, initialDelay: 0)
+            // Wait for the real engine to render, not an assumed simulator startup time.
+            let clock = ContinuousClock()
+            let deadline = clock.now.advanced(by: .seconds(5))
+            while await audio.playbackBeat() == nil, clock.now < deadline {
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            var previous = try #require(await audio.playbackBeat())
+            let first = previous
+            for step in 0..<60 {
+                let pattern = MetronomePlaybackPattern(
+                    interval: 0.1 - Double(step % 20) * 0.001,
+                    beats: source.beats, restartFromFirstBeat: false
+                )
+                // A replacement would postpone sound by a whole beat. Rate edits
+                // must ignore this startup delay and preserve the existing timeline.
+                try await audio.schedulePlayback(pattern, initialDelay: pattern.interval)
+                try await Task.sleep(for: .milliseconds(20))
+                let beat = try #require(await audio.playbackBeat())
+                #expect(beat >= previous)
+                previous = beat
+            }
+            #expect(previous >= first + 4)
+            await audio.stop()
+            #expect(await audio.playbackBeat() == nil)
+        } catch {
+            await audio.stop()
+            throw error
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
     func rapidTempoChangesNeverRequestARestartEvenBeforeTheFirstUIPoll() async throws {
         let audio = RecordingMetronomeAudioPlayer()
         let ticker = ControllableMetronomeTicker()
@@ -55,7 +91,7 @@ struct MetronomeAudioConcurrencyTests {
         audio.suspendedOperation = .progress
         let poll = Task { await ticker.sendTick() }
         await audio.waitForSuspension()
-        manager.toggleGridCell(row: 0, col: 0)
+        manager.toggleBeat(at: 0)
         audio.finishOperation()
         await poll.value
         #expect(manager.currentBeat == -1)
@@ -76,7 +112,7 @@ struct MetronomeAudioConcurrencyTests {
         manager.updateBPM(120)
         await audio.waitForSchedule()
         #expect(audio.scheduledPatterns.last?.interval == 0.25)
-        manager.toggleGridCell(row: 0, col: 0)
+        manager.toggleBeat(at: 0)
         await audio.waitForSchedule()
         #expect(audio.scheduledPatterns.last?.beats[0] == nil)
         #expect(audio.playedAccents.isEmpty)

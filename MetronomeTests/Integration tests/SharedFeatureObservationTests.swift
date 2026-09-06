@@ -18,7 +18,7 @@ struct SharedFeatureObservationTests {
                 notifications.withLock { $0 += 1 }
             }
             let before = notifications.withLock { $0 }
-            manager.toggleGridCell(row: 0, col: 0)
+            manager.toggleBeat(at: 0)
             #expect(notifications.withLock { $0 } == before)
             manager.updateBPM(tempo)
             #expect(notifications.withLock { $0 } == before + 1)
@@ -36,7 +36,7 @@ struct SharedFeatureObservationTests {
         } onChange: {
             notifications.withLock { $0 += 1 }
         }
-        manager.toggleGridCell(row: 0, col: 0)
+        manager.toggleBeat(at: 0)
         #expect(notifications.withLock { $0 } == 1)
         #expect(tile.isActive != original)
     }

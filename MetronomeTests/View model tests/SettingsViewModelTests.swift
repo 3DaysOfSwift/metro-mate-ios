@@ -12,6 +12,6 @@ struct SettingsViewModelTests {
         viewModel.beatsPerMeasure = 5
 
         #expect(metronome.beatsPerMeasure == 5)
-        #expect(metronome.gridPattern[0].count == 16)
+        #expect(metronome.gridPattern.count == 16)
     }
 }

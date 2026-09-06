@@ -10,7 +10,7 @@ protocol MetronomeFeature: AnyObject, Observable, Sendable {
     var gridBeatCountRange: ClosedRange<Int> { get }
     var currentBeat: Int { get }
     var shouldBlink: Bool { get }
-    var gridPattern: [[Bool]] { get }
+    var gridPattern: [Bool] { get }
     var accentPattern: [Bool] { get }
     var noteValue: NoteValue { get }
     var gridDisplayMode: GridDisplayMode { get }
@@ -38,7 +38,7 @@ protocol MetronomeFeature: AnyObject, Observable, Sendable {
     func updateNoteValue(_ noteValue: NoteValue)
     func updateBeatsPerMeasure(_ beats: Int)
     func updateGridBeats(_ beats: Int)
-    func toggleGridCell(row: Int, col: Int)
+    func toggleBeat(at beat: Int)
     func toggleAccentCell(col: Int)
     func isBeatActive(_ beat: Int) -> Bool
     func isBeatAccented(_ beat: Int) -> Bool

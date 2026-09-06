@@ -1,5 +1,23 @@
 # AppBrain Migration Ledger
 
+## Pass Sixteen — Further Architecture Refinement, 7 September 2026
+
+Removed unused grid rows, gridSize, and updateGridSize. The feature now owns one
+16-slot beat sequence, and the UI calls toggleBeat(at:) without pretending that
+layout rows are separate musical data. BeatPreset already stores a flat sequence;
+its persisted representation and repository contract are unchanged.
+
+Removed restartTicker's hidden audio side effect. Callers explicitly request
+refreshAudioPattern and startPlaybackProgressPolling when both are needed.
+Tempo-only edits still leave playback and presentation polling running.
+
+Added a regression test against AVFoundationMetronomeAudioPlayer itself: repeated
+tempo edits must preserve and advance its real player timeline, and stopping must
+clear it. This complements the offline signal test rather than substituting for
+audible quality checks. The complete MetronomeTests target passed with the new
+production-player test. Manual listening and developer approval remain pending;
+Pass Sixteen stays open.
+
 ## Rapid Tempo-Edit Playback Correction — 7 September 2026
 
 Manual testing exposed a continuity regression: each tempo edit stopped the

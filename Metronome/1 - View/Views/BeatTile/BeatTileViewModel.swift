@@ -28,6 +28,6 @@ final class BeatTileViewModel {
 
     func toggleBeat() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        metronome.toggleGridCell(row: 0, col: beat)
+        metronome.toggleBeat(at: beat)
     }
 }
