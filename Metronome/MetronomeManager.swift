@@ -1,13 +1,6 @@
 import Foundation
 import SwiftUI
 
-struct TapPoint: Identifiable {
-    let id = UUID()
-    let timestamp: Date
-    var opacity: Double = 1.0
-    var scale: Double = 1.0
-}
-
 enum NoteValue: String, CaseIterable, Codable {
     case quarter = "1/4"
     case eighth = "1/8"
@@ -166,16 +159,15 @@ final class MetronomeManager: MetronomeFeature {
     @Published var gridDisplayMode: GridDisplayMode = .andCounting
     @Published var currentBeatName: String = "Eighth"
     @Published var savedBeats: [BeatPreset] = []
-    @Published var tapPoints: [TapPoint] = []
     @Published var tapTimes: [Date] = []
     @Published var tapCount: Int = 0
     private let maxTapCount = 8
-    private var tapPointTimer: Timer?
     
     private let presetRepository: any PresetRepository
     private let audioPlayer: any MetronomeAudioPlayer
     private let ticker: any MetronomeTicker
     private let tapResetScheduler: any CancellableDelayScheduler
+    private let blinkScheduler: any CancellableDelayScheduler
     /// Supplies the current date so time-based rules can be tested without waiting for real time.
     private let currentDate: () -> Date
 
@@ -184,12 +176,14 @@ final class MetronomeManager: MetronomeFeature {
         audioPlayer: any MetronomeAudioPlayer,
         ticker: any MetronomeTicker,
         tapResetScheduler: any CancellableDelayScheduler,
+        blinkScheduler: any CancellableDelayScheduler,
         currentDate: @escaping () -> Date
     ) {
         self.presetRepository = presetRepository
         self.audioPlayer = audioPlayer
         self.ticker = ticker
         self.tapResetScheduler = tapResetScheduler
+        self.blinkScheduler = blinkScheduler
         self.currentDate = currentDate
         audioPlayer.prepare()
         setupDefaultPattern()
@@ -198,7 +192,7 @@ final class MetronomeManager: MetronomeFeature {
     
     deinit {
         tapResetScheduler.cancel()
-        tapPointTimer?.invalidate()
+        blinkScheduler.cancel()
     }
     
     private func setupDefaultPattern() {
@@ -280,6 +274,7 @@ final class MetronomeManager: MetronomeFeature {
     private func stop() {
         isPlaying = false
         ticker.stop()
+        blinkScheduler.cancel()
         currentBeat = -1
         shouldBlink = false
         
@@ -312,10 +307,9 @@ final class MetronomeManager: MetronomeFeature {
     
     
     private func triggerVisualBlink() {
-        // Always trigger blink but with different intensities
         shouldBlink = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.shouldBlink = false
+        blinkScheduler.schedule(after: .milliseconds(100)) { [weak self] in
+            self?.shouldBlink = false
         }
     }
     
@@ -430,11 +424,7 @@ final class MetronomeManager: MetronomeFeature {
         // Play tap sound
         playTapSound()
         
-        // Always trigger background pulse effect (even when not playing)
-        shouldBlink = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.shouldBlink = false
-        }
+        triggerVisualBlink()
         
         // Only keep recent taps for BPM calculation (but don't affect count)
         tapTimes = tapTimes.filter { now.timeIntervalSince($0) < 3.0 }
@@ -462,39 +452,6 @@ final class MetronomeManager: MetronomeFeature {
         tapResetScheduler.cancel()
         tapResetScheduler.schedule(after: .seconds(3)) { [weak self] in
             self?.tapCount = 0
-        }
-    }
-    
-    private func startTapPointAnimation() {
-        // Clear old timer
-        tapPointTimer?.invalidate()
-        
-        // Start new animation timer
-        tapPointTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            
-            let now = self.currentDate()
-            var hasActiveTaps = false
-            
-            // Update opacity and scale for each tap point
-            for i in self.tapPoints.indices {
-                let age = now.timeIntervalSince(self.tapPoints[i].timestamp)
-                
-                if age < 1.0 { // Fade out over 1 second (faster)
-                    hasActiveTaps = true
-                    self.tapPoints[i].opacity = max(0, 1.0 - age)
-                    self.tapPoints[i].scale = 1.0 + (age * 1.0) // Grow faster
-                }
-            }
-            
-            // Remove old tap points
-            self.tapPoints.removeAll { now.timeIntervalSince($0.timestamp) >= 1.0 }
-            
-            // Stop timer if no active taps
-            if !hasActiveTaps {
-                self.tapPointTimer?.invalidate()
-                self.tapPointTimer = nil
-            }
         }
     }
     

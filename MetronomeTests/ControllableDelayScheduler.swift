@@ -2,27 +2,29 @@
 
 @MainActor
 final class ControllableDelayScheduler: CancellableDelayScheduler {
-    private(set) var delay: Duration?
+    private(set) var delays: [Duration] = []
     private(set) var cancelCallCount = 0
 
-    private var action: (@MainActor () -> Void)?
+    private var actions: [@MainActor () -> Void] = []
 
     func schedule(
         after delay: Duration,
         action: @escaping @MainActor () -> Void
     ) {
-        self.delay = delay
-        self.action = action
+        delays.append(delay)
+        actions.append(action)
     }
 
     func cancel() {
-        action = nil
+        delays.removeAll()
+        actions.removeAll()
         cancelCallCount += 1
     }
 
-    func completeDelay() {
-        let action = action
-        self.action = nil
-        action?()
+    func completeAllDelays() {
+        let actions = actions
+        delays.removeAll()
+        self.actions.removeAll()
+        actions.forEach { $0() }
     }
 }

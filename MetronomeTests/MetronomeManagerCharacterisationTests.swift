@@ -247,12 +247,26 @@ struct MetronomeManagerCharacterisationTests {
         manager.tapTempo()
 
         #expect(manager.tapCount == 2)
-        #expect(tapResetScheduler.delay == .seconds(3))
+        #expect(tapResetScheduler.delays == [.seconds(3)])
         #expect(tapResetScheduler.cancelCallCount == 2)
 
-        tapResetScheduler.completeDelay()
+        tapResetScheduler.completeAllDelays()
 
         #expect(manager.tapCount == 0)
+    }
+
+    @Test func tappingTriggersTheExistingBriefVisualPulse() {
+        let blinkScheduler = ControllableDelayScheduler()
+        let manager = makeManager(blinkScheduler: blinkScheduler)
+
+        manager.tapTempo()
+
+        #expect(manager.shouldBlink)
+        #expect(blinkScheduler.delays == [.milliseconds(100)])
+
+        blinkScheduler.completeAllDelays()
+
+        #expect(manager.shouldBlink == false)
     }
 
     @Test func changingTempoReplacesTheRunningTicker() {
@@ -276,6 +290,7 @@ struct MetronomeManagerCharacterisationTests {
         audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
         ticker: ControllableMetronomeTicker? = nil,
         tapResetScheduler: ControllableDelayScheduler? = nil,
+        blinkScheduler: ControllableDelayScheduler? = nil,
         currentDate: @escaping () -> Date = Date.init
     ) -> MetronomeManager {
         MetronomeManager(
@@ -283,6 +298,7 @@ struct MetronomeManagerCharacterisationTests {
             audioPlayer: audioPlayer,
             ticker: ticker ?? ControllableMetronomeTicker(),
             tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
+            blinkScheduler: blinkScheduler ?? ControllableDelayScheduler(),
             currentDate: currentDate
         )
     }

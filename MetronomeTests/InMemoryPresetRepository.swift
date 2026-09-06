@@ -22,6 +22,7 @@ func makeTestMetronome(
     audioPlayer: RecordingMetronomeAudioPlayer = RecordingMetronomeAudioPlayer(),
     ticker: ControllableMetronomeTicker? = nil,
     tapResetScheduler: ControllableDelayScheduler? = nil,
+    blinkScheduler: ControllableDelayScheduler? = nil,
     currentDate: @escaping () -> Date = Date.init
 ) -> MetronomeManager {
     MetronomeManager(
@@ -29,6 +30,7 @@ func makeTestMetronome(
         audioPlayer: audioPlayer,
         ticker: ticker ?? ControllableMetronomeTicker(),
         tapResetScheduler: tapResetScheduler ?? ControllableDelayScheduler(),
+        blinkScheduler: blinkScheduler ?? ControllableDelayScheduler(),
         currentDate: currentDate
     )
 }
