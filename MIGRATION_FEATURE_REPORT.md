@@ -72,7 +72,7 @@ and theme tests cover load failure/retry, local draft state, and palette changes
 Suspended-operation tests use Observation signals instead of Combine publishers.
 The ledger records the latest verification and outstanding manual checks.
 
-The AppBrain and Swift Concurrency migration is complete within the agreed
+The AppModel and Swift Concurrency migration is complete within the agreed
 scope. Matthew reported that the migrated app works well and requested final
 closure after agreeing to defer additional catch-up diagnostics and profiling.
 That general manual approval is not a recorded pass for every device regression
@@ -85,10 +85,10 @@ See [the migration ledger](MIGRATION_LEDGER.md),
 
 ## Final Architecture Audit
 
-- AppBrain constructs one shared live feature graph. Construction does not load
+- AppModel constructs one shared live feature graph. Construction does not load
   presets or activate audio. Explicit launch work is an early opportunity, not
   a prerequisite for feature calls.
-- All Model support files belong to Features/Metronome. AppBrain itself remains
+- All Model support files belong to Features/Metronome. AppModel itself remains
   outside that folder because application composition is its responsibility.
 - Each of the eight View groups has its own ViewModel. Feature references stay
   private to ViewModels; business rules remain in MetronomeManager. Retained
@@ -109,7 +109,7 @@ See [the migration ledger](MIGRATION_LEDGER.md),
 
 ## Metronome Playback and Musical Rules
 
-Owner: [MetronomeManager](Metronome/2%20-%20AppBrain/Features/Metronome/MetronomeManager.swift),
+Owner: [MetronomeManager](Metronome/2%20-%20AppModel/Features/Metronome/MetronomeManager.swift),
 accessed through MetronomeFeature. Audio, timing, and preset storage below are
 capabilities of this one feature, not additional feature managers.
 
@@ -189,8 +189,8 @@ merely to close this migration.
 
 ## Presentation and Application Coordination
 
-AppBrain's explicit launch callback uses async let for independent audio and
-preset preparation. AppBrainTests and audio concurrency tests cover this
+AppModel's explicit launch callback uses async let for independent audio and
+preset preparation. AppModelTests and audio concurrency tests cover this
 coordination. Features retain their own readiness and recovery responsibilities.
 
 Screen-specific ViewModels own retained animation, repeated-control, and delayed

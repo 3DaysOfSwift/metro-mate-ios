@@ -551,7 +551,7 @@ final class MetronomeManager: MetronomeFeature {
 
     // MARK: - Preset persistence
 
-    /// Persists the current presets through the storage supplied by AppBrain.
+    /// Persists the current presets through the storage supplied by AppModel.
     /// Nothing leaves the device in the live implementation - see PRIVACY.md.
     private func persistPresets() -> Task<Void, Never> {
         presetSaveRevision += 1

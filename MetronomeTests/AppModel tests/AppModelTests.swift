@@ -4,27 +4,27 @@ import Testing
 
 @MainActor
 @Suite(.serialized)
-struct AppBrainTests {
+struct AppModelTests {
     @Test func constructionDoesNotLoadStorageOrPrepareAudio() async {
         let repository = InMemoryPresetRepository()
         let audio = RecordingMetronomeAudioPlayer()
         let manager = makeTestMetronome(presetRepository: repository, audioPlayer: audio)
-        let brain = AppBrain(metronome: manager)
+        let appModel = AppModel(metronome: manager)
 
         #expect(repository.loadCallCount == 0)
         #expect(audio.prepareCallCount == 0)
-        await brain.applicationDidFinishLaunching()
+        await appModel.applicationDidFinishLaunching()
         #expect(repository.loadCallCount == 1)
         #expect(audio.prepareCallCount == 1)
-        await brain.applicationDidFinishLaunching()
+        await appModel.applicationDidFinishLaunching()
         #expect(repository.loadCallCount == 1)
     }
 
     @Test func storesTheFeatureManagerProvidedByTheCompositionRoot() {
         let metronome = makeTestMetronome()
 
-        let brain = AppBrain(metronome: metronome)
+        let appModel = AppModel(metronome: metronome)
 
-        #expect(brain.metronome === metronome)
+        #expect(appModel.metronome === metronome)
     }
 }

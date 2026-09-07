@@ -1,8 +1,8 @@
 import Foundation
 
 @MainActor
-final class AppBrain {
-    static let shared = AppBrain.live()
+final class AppModel {
+    static let shared = AppModel.live()
 
     let metronome: any MetronomeFeature
 
@@ -18,8 +18,8 @@ final class AppBrain {
         _ = await (audio, presets)
     }
 
-    /// Produces the live, non-test AppBrain and constructs all production dependencies in one place.
-    static func live() -> AppBrain {
+    /// Produces the live, non-test AppModel and constructs all production dependencies in one place.
+    static func live() -> AppModel {
         let presetRepository = UserDefaultsPresetRepository(
             suiteName: nil,
             storageKey: "savedBeatPresets"
@@ -37,6 +37,6 @@ final class AppBrain {
             currentDate: Date.init
         )
 
-        return AppBrain(metronome: metronome)
+        return AppModel(metronome: metronome)
     }
 }

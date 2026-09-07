@@ -7,7 +7,7 @@ final class GridSettingsViewModel {
     private let metronome: any MetronomeFeature
 
     init(metronome: (any MetronomeFeature)? = nil) {
-        self.metronome = metronome ?? AppBrain.shared.metronome
+        self.metronome = metronome ?? AppModel.shared.metronome
     }
 
     var beatsPerMeasure: Int { metronome.beatsPerMeasure }

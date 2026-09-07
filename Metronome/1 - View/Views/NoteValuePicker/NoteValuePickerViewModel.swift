@@ -23,7 +23,7 @@ final class NoteValuePickerViewModel {
     @ObservationIgnored private var dismissalTask: Task<Void, Never>?
 
     init(metronome: (any MetronomeFeature)? = nil) {
-        self.metronome = metronome ?? AppBrain.shared.metronome
+        self.metronome = metronome ?? AppModel.shared.metronome
     }
 
     deinit {

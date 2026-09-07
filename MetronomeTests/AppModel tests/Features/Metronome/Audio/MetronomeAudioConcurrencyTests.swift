@@ -226,8 +226,8 @@ struct MetronomeAudioConcurrencyTests {
         audio.suspendedOperation = .prepare
         let repository = SuspendedPresetRepository()
         let manager = makeTestMetronome(presetRepository: repository, audioPlayer: audio)
-        let brain = AppBrain(metronome: manager)
-        let launch = Task { await brain.applicationDidFinishLaunching() }
+        let appModel = AppModel(metronome: manager)
+        let launch = Task { await appModel.applicationDidFinishLaunching() }
         await audio.waitForSuspension()
         await repository.waitForLoad()
         #expect(manager.isLoadingPresets)

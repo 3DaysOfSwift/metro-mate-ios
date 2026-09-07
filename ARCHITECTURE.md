@@ -19,8 +19,8 @@ start/stop commands are not silently dropped or coalesced with rhythm edits.
 
 SwiftUI Views describe each screen. Each screen owns its dedicated ViewModel,
 which manages presentation state and user interactions. ViewModels obtain the
-metronome feature from AppBrain. MetronomeManager owns musical rules and delegates
-audio, timing, and preset storage to the dependencies constructed by AppBrain.live().
+metronome feature from AppModel. MetronomeManager owns musical rules and delegates
+audio, timing, and preset storage to the dependencies constructed by AppModel.live().
 
 PresetRepository exposes asynchronous loading and saving. Its live implementation
 is an actor using a serial off-main executor for synchronous UserDefaults and
@@ -29,7 +29,7 @@ state, shares in-flight loads, and orders writes so older snapshots cannot
 overwrite newer edits. Committed writes outlive the presenting screen.
 AVFoundationMetronomeAudioPlayer also owns a serial off-main executor. Its engine
 and player are created on first explicit audio use on that executor, not during
-AppBrain construction. The feature awaits audio commands in submission order,
+AppModel construction. The feature awaits audio commands in submission order,
 invalidates superseded starts and queued ticks, and publishes a starting state.
 Cached click buffers are scheduled at absolute sample positions across a fixed
 voice pool. A silent clock node gives every voice the same continuous timeline.
@@ -46,7 +46,7 @@ through ordered audio commands. Voices preserve overlapping click tails, and
 progress reports the committed beat index rather than deriving it from the
 latest requested measure size. Controls still display requested configuration
 while already committed audio finishes.
-AppBrain starts audio preparation and preset loading as independent child tasks.
+AppModel starts audio preparation and preset loading as independent child tasks.
 
 StarFieldRenderer is a presentation actor that calculates dot frames outside
 the Main Actor. StarFieldViewModel retains its single animation task, submits
@@ -54,8 +54,8 @@ value inputs, and publishes completed frames. Resize revisions and cancellation
 prevent stale publication. SwiftUI drawing still belongs to presentation.
 
 Each ViewModel receives a narrow MetronomeFeature dependency directly through
-its initializer and keeps that reference private. Omitting that dependency selects AppBrain.shared.metronome
-inside the Main Actor initializer; callers no longer inject the entire AppBrain.
+its initializer and keeps that reference private. Omitting that dependency selects AppModel.shared.metronome
+inside the Main Actor initializer; callers no longer inject the entire AppModel.
 Feature state has private setters, and tap timestamps are private bookkeeping.
 The musical beat pattern is one flat sequence. Grid rows belong to presentation,
 not duplicated Model state; toggleBeat(at:) takes a musical beat index. Saved
@@ -102,8 +102,8 @@ Metronome/
 │       ├── BeatTile/        BeatTile.swift, BeatTileViewModel.swift
 │       ├── StarField/       StarFieldView.swift, StarFieldViewModel.swift, StarFieldRenderer.swift
 │       └── NoteValuePicker/ NoteValuePicker.swift, NoteValuePickerViewModel.swift
-├── 2 - AppBrain/
-│   ├── AppBrain.swift
+├── 2 - AppModel/
+│   ├── AppModel.swift
 │   └── Features/Metronome/
 │       ├── MetronomeFeature.swift
 │       ├── MetronomeManager.swift
@@ -134,8 +134,8 @@ Metronome/
         └── normal_click.wav.asd
 
 MetronomeTests/
-├── AppBrain tests/
-│   ├── AppBrainTests.swift
+├── AppModel tests/
+│   ├── AppModelTests.swift
 │   └── Features/Metronome/
 │       ├── MetronomeManagerCharacterisationTests.swift
 │       ├── Audio/

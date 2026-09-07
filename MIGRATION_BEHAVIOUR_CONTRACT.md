@@ -13,7 +13,7 @@ manual journey has been retrospectively marked as passed.
 
 - Original repository: `alexfriedl/metro-mate-ios`
 - Original commit: `57670a1e23a2fb4bb3d55cf297b67528695fc849`
-- Migration branch: `migration/appbrain-swift-concurrency`
+- Migration branch: `migration/appmodel-swift-concurrency`
 - Baseline environment: Xcode 26.2, iPhone Air simulator running iOS 26.2
 - Baseline result: the complete `Metronome` scheme test action passed on 6 September 2026
 - Existing automated protection: one empty unit test, one launch-only UI test, four launch configurations, and one launch-performance test
@@ -54,7 +54,7 @@ regression evidence establish them.
 ### Test Locations after Pass Eight
 
 MetronomeManagerCharacterisationTests and NoteValueTests now live under
-AppBrain tests/Features/Metronome; their names and test methods are unchanged.
+AppModel tests/Features/Metronome; their names and test methods are unchanged.
 Real storage tests live in that feature's Preset Storage folder. Screen tests
 are named after their individual ViewModels, and cross-screen observation is
 in Integration tests/SharedFeatureObservationTests. Test regrouping does not

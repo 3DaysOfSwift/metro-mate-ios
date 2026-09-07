@@ -1,4 +1,4 @@
-# AppBrain Migration Ledger
+# AppModel Migration Ledger
 
 ## Audio Scheduling: Live Integration — 7 September 2026
 
@@ -49,7 +49,7 @@ including the offline rate-change rendering test. UI/device tests were not run.
 ## Pass Sixteen: Architecture Refinements — 7 September 2026
 
 Implemented the developer-approved review findings: all eight ViewModels accept
-MetronomeFeature directly rather than AppBrain; concrete manager state has
+MetronomeFeature directly rather than AppModel; concrete manager state has
 private setters; tap timestamps are private; and repeated active/accent lookup
 logic is exposed through feature queries instead of array indexing in ViewModels.
 Presentation styling remains in the UI layer and execution owners are unchanged.
@@ -348,7 +348,7 @@ Playback is still durable; an explicit Stop cancels a pending start, whereas a
 single awaiting caller disappearing does not implicitly stop shared playback.
 
 The ViewModel exposes a starting state and its UI permits cancelling preparation.
-AppBrain uses async let to begin audio and preset loading independently.
+AppModel uses async let to begin audio and preset loading independently.
 Added five tests: shared pending start, stop/start replacement, in-flight click
 ordering, concurrent launch loads, and the live audio actor's off-main executor.
 Existing playback/failure tests now await completed operations.
@@ -405,14 +405,14 @@ audit and feature behaviour report should retain these evidence limits.
 ## Pass Seven: Feature-owned Model Files
 
 Moved all eight audio, preset-storage, and timing source files beneath
-Features/Metronome. Their sole feature consumer is MetronomeManager; AppBrain
-continues to construct them. AppBrain.swift is the only Model-layer file outside
+Features/Metronome. Their sole feature consumer is MetronomeManager; AppModel
+continues to construct them. AppModel.swift is the only Model-layer file outside
 the feature, justified by its application-wide composition responsibility.
 No source contents, resources, or runtime behaviour changed.
 
 ## Pass Eight: Test Grouping Implemented
 
-- Split mixed AppBrainTests: retain composition/launch tests there, move
+- Split mixed AppModelTests: retain composition/launch tests there, move
   feature persistence/audio tests to Metronome tests, and observation tests
   to the appropriate ViewModel or cross-screen integration group.
 - Split SheetViewModelTests and VisualViewModelTests into focused suites.
@@ -423,10 +423,10 @@ No source contents, resources, or runtime behaviour changed.
   including clock cadence verification, separately from folder changes.
 
 The grouping above is now implemented. All 22 test bodies redistributed from
-AppBrainTests, SheetViewModelTests, and VisualViewModelTests are unchanged.
+AppModelTests, SheetViewModelTests, and VisualViewModelTests are unchanged.
 The two mixed screen suites were removed; their tests now live in the six
 matching screen suites. The load-error presentation test also moved from
-AppBrainTests into BeatPresetsViewModelTests. Cross-screen observation and
+AppModelTests into BeatPresetsViewModelTests. Cross-screen observation and
 dependency wiring live in SharedFeatureObservationTests. Existing feature,
 domain, repository, and theme suites were moved intact. Shared test doubles
 remain shared. No production files changed in this pass.
@@ -491,7 +491,7 @@ Grid layout and visual highlighting remain presentation responsibilities.
 ## Explicit Loading Pass
 
 Feature construction now assigns dependencies and builds in-memory defaults only.
-AppBrain.applicationDidFinishLaunching() explicitly warms audio and requests saved
+AppModel.applicationDidFinishLaunching() explicitly warms audio and requests saved
 presets when the root screen appears. The preset screen also requests its data;
 successful loads are retained by the feature and failed loads expose an error
 with a Retry action. Saving and deleting first ensure existing presets have
@@ -551,8 +551,8 @@ that no responsibility becomes stranded during the staged migration.
 | Haptic creation | SwiftUI Views | Screen ViewModels temporarily | Presentation haptic dependency or feature capability chosen during boundary review | Existing Views instantiate UIKit generators repeatedly | Pass One and Three | Pending |
 | Repeating BPM-button timer | `ContentView` | `ContentViewModel` | Cancellable `Task` in `ContentViewModel` | Repeats after a 100ms delay; release, replacement, or ViewModel destruction cancels the interaction | Pass One and Four | Implemented; runtime tests awaiting Xcode run |
 | Star-field animation timer and dot mutation | `StarFieldView` | `StarFieldViewModel` | Cancellable `Task` in `StarFieldViewModel` | Maintains approximately 60 updates per second, skips missed frames, and cancels on disappearance or destruction | Pass One and Four | Implemented; runtime tests awaiting Xcode run |
-| Production object construction | `MetronomeManager.shared` | `AppBrain.shared` | `AppBrain.live()` | One explicit composition root is required | Pass Two | Complete |
-| Siri access to playback | App Intents through `MetronomeManager.shared` | AppBrain facade | `MetronomeFeature` supplied by `AppBrain.shared` | App Intent is another UI entry point into the same feature | Pass Two and Three | Complete |
+| Production object construction | `MetronomeManager.shared` | `AppModel.shared` | `AppModel.live()` | One explicit composition root is required | Pass Two | Complete |
+| Siri access to playback | App Intents through `MetronomeManager.shared` | AppModel facade | `MetronomeFeature` supplied by `AppModel.shared` | App Intent is another UI entry point into the same feature | Pass Two and Three | Complete |
 
 No architectural production change begins until the behaviour contract has
 adequate protection for the responsibility being moved.

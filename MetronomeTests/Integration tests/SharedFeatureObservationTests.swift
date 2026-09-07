@@ -43,9 +43,9 @@ struct SharedFeatureObservationTests {
 
     @Test func featureChangesNotifyBothScreenViewModelsWithoutCopyingState() {
         let manager = makeTestMetronome()
-        let brain = AppBrain(metronome: manager)
-        let content = ContentViewModel(metronome: brain.metronome)
-        let presets = BeatPresetsViewModel(metronome: brain.metronome)
+        let appModel = AppModel(metronome: manager)
+        let content = ContentViewModel(metronome: appModel.metronome)
+        let presets = BeatPresetsViewModel(metronome: appModel.metronome)
         let contentNotifications = Mutex(0)
         let presetNotifications = Mutex(0)
         withObservationTracking {
@@ -70,12 +70,12 @@ struct SharedFeatureObservationTests {
         #expect(content.maximumBPM == Int(manager.tempoRange.upperBound))
     }
 
-    @Test func viewModelsUseTheFeatureFromTheirProvidedBrain() {
+    @Test func viewModelsUseTheFeatureFromTheirProvidedAppModel() {
         let metronome = makeTestMetronome()
-        let brain = AppBrain(metronome: metronome)
+        let appModel = AppModel(metronome: metronome)
 
-        let content = ContentViewModel(metronome: brain.metronome)
-        let settings = SettingsViewModel(metronome: brain.metronome)
+        let content = ContentViewModel(metronome: appModel.metronome)
+        let settings = SettingsViewModel(metronome: appModel.metronome)
 
         metronome.updateBPM(96)
         #expect(content.bpm == 96)

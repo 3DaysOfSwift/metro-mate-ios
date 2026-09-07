@@ -28,7 +28,7 @@ struct MetronomeApp: App {
                     }
                 )
                 .task {
-                    await AppBrain.shared.applicationDidFinishLaunching()
+                    await AppModel.shared.applicationDidFinishLaunching()
                 }
         }
     }

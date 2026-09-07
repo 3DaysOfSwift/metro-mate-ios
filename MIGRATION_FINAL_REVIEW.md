@@ -12,7 +12,7 @@ This is not yet a claim of runtime equivalence or completed regression testing.
 
 ## Architecture Findings
 
-- AppBrain composes shared features; screen ViewModels keep feature references private.
+- AppModel composes shared features; screen ViewModels keep feature references private.
 - Each custom View has a dedicated ViewModel. Private rendering functions keep
   picker controls within their owning screen rather than passing actions between Views.
 - Musical rules and tempo limits are feature-owned. Rendering, gestures, haptics,
