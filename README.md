@@ -1,5 +1,15 @@
 # Metro Mate — GCD → Swift Concurrency
 
+<p align="left">
+  <a href="https://www.3daysofswiftconcurrency.com/">
+    <img
+      src="readme-images/README-Logo-h512.png"
+      width="160"
+      alt="3 Days of Swift Concurrency"
+    >
+  </a>
+</p>
+
 > A real iOS application.  
 > A real legacy GCD codebase.  
 > One AI-assisted Swift Concurrency migration you can inspect, compare and reproduce yourself.
@@ -362,7 +372,7 @@ And GitHub's comparison tools show exactly what changed.
 
 # About 3 Days of Swift Concurrency
 
-<p align="center">
+<p align="left">
   <a href="https://www.3daysofswiftconcurrency.com/">
     <img
       src="readme-images/README-Logo-h512.png"
