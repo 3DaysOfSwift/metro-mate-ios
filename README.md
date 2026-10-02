@@ -362,28 +362,19 @@ And GitHub's comparison tools show exactly what changed.
 
 # About 3 Days of Swift Concurrency
 
-<!--
-Add the 3 Days of Swift Concurrency logo to this repository.
-
-For example:
-
-readme-images/3-days-of-swift-concurrency.png
-
-Then replace this comment with:
-
 <p align="center">
   <a href="https://www.3daysofswiftconcurrency.com/">
     <img
-      src="readme-images/3-days-of-swift-concurrency.png"
+      src="readme-images/README-Logo-h512.png"
       width="160"
       alt="3 Days of Swift Concurrency"
     >
   </a>
 </p>
--->
 
 **CFA is created and published by 3 Days of Swift Concurrency.**
-
+ <a href="https://www.3daysofswiftconcurrency.com/">3DaysOfSwiftConcurrency.com</a>
+ 
 We build practical resources for iOS developers learning and applying modern Swift Concurrency.
 
 CFA grew from a simple idea:
