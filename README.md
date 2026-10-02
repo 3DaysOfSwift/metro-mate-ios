@@ -172,49 +172,87 @@ That's what the CFA migration skill is designed to help with.
 
 ---
 
-# 🧒 Installing CFA — The Simple Version
+# 🧰 Install the CFA Toolkit
 
-If you've never installed an AI coding skill before, don't worry.
+CFA is a toolkit for AI-assisted iOS development.
 
-The basic idea is:
+It contains two important parts:
 
-```text
-Download CFA
-     ↓
-Install CFA into your coding agent
-     ↓
-Open your Xcode project
-     ↓
-Tell the agent to use a CFA skill
+1. **The CFA development tool**
+2. **A set of CFA AI coding skills**
+
+The tool provides additional CFA development functionality, while the AI skills teach your coding agent how to perform specific development tasks using CFA.
+
+CFA is **not** a framework that gets compiled into your iOS application.
+
+You do not write:
+
+```swift
+import CFA
 ```
 
-That's it.
+Instead, CFA is installed into your **AI coding environment**.
 
-## Step 1 — Download CFA
-
-Go to the CFA releases page:
-
-**[Download the latest CFA release](https://github.com/3DaysOfSwift/cooperative-feature-architecture/releases)**
-
-Download the plugin ZIP from the latest release.
-
-Use the **plugin ZIP**, rather than GitHub's automatically generated source-code ZIP, when installing the plugin.
+Once installed, your AI coding agent can use CFA while it works with your Xcode projects.
 
 ---
 
-## Step 2 — Extract It
+## What Are the CFA AI Skills?
 
-Double-click the ZIP file.
+Each skill teaches your AI coding agent how to perform a particular development job.
 
-You'll get a folder containing CFA.
+The toolkit currently includes skills for:
 
-Keep that folder intact.
+| CFA Skill | What It Does |
+|---|---|
+| **CFA App Creation** | Creates a new iOS application using CFA |
+| **CFA Architecture Adoption** | Introduces CFA into an existing application |
+| **Swift Concurrency Migration** | Migrates legacy concurrency code to Swift Concurrency |
+| **CFA Architecture Review** | Reviews the structure of an application |
+| **CFA Codebase Tidy** | Improves the organisation of an existing CFA codebase |
+
+This means you can give your AI coding agent an instruction such as:
+
+```text
+Use the CFA App Creation skill to create a new SwiftUI app.
+```
+
+Or, as demonstrated by this repository:
+
+```text
+Use the Swift Concurrency Migration skill to migrate this
+GCD application to Swift Concurrency.
+```
+
+The skill contains the detailed engineering instructions the AI needs to carry out that job.
 
 ---
 
-## Step 3 — Install CFA
+# 📦 Step 1 — Download CFA
 
-Open Terminal inside the extracted CFA folder.
+Download the latest CFA release:
+
+**[Download the latest CFA Toolkit](https://github.com/3DaysOfSwift/cooperative-feature-architecture/releases)**
+
+Download the CFA plugin ZIP from the latest release and extract it.
+
+> Use the CFA release package rather than GitHub's automatically generated "Source code" ZIP.
+
+You now have the CFA Toolkit on your Mac.
+
+The next step is to make CFA available to your AI coding agent.
+
+---
+
+# ⚙️ Step 2 — Install CFA
+
+There are currently two installation modes.
+
+**Choose the one that matches your AI coding environment.**
+
+---
+
+## Using OpenAI Codex?
 
 Run:
 
@@ -222,34 +260,329 @@ Run:
 node scripts/install.mjs
 ```
 
-On macOS you can alternatively open:
+This installs the **complete CFA plugin for Codex** and activates the CFA AI coding skills.
 
-```text
-Install.command
-```
+Use this option if Codex is your coding agent.
 
-The installer installs CFA and makes its skills available to your supported AI coding environment.
+---
 
-### Using Another Compatible AI Coding Agent?
+## Using Another AI Coding Agent?
 
-CFA also provides a skills-only installation:
+If your AI coding agent supports agent skills, run:
 
 ```zsh
 node scripts/install.mjs --mode skills
 ```
 
-This installs the skill folders under:
+This installs CFA's AI coding skills into:
 
 ```text
 ~/.agents/skills
 ```
 
-Your AI coding agent must support discovering skills from that location.
+Your coding agent must support discovering skills from that location.
 
-For complete installation instructions and troubleshooting:
+Use this option for compatible AI coding agents that do not use the Codex plugin system.
 
-**[Read the CFA Installation Documentation](https://github.com/3DaysOfSwift/cooperative-feature-architecture/blob/main/docs/INSTALLATION.md)**
+---
 
+## Which Command Should I Use?
+
+It's simple:
+
+```text
+Using Codex?
+    │
+    └── node scripts/install.mjs
+
+
+Using another compatible AI coding agent?
+    │
+    └── node scripts/install.mjs --mode skills
+```
+
+Both approaches give your AI access to the **CFA coding skills**.
+
+The Codex installation additionally installs CFA through the Codex plugin system.
+
+For the complete installation guide, requirements and troubleshooting:
+
+**[Read the CFA Installation Guide](https://github.com/3DaysOfSwift/cooperative-feature-architecture/blob/main/docs/INSTALLATION.md)**
+
+---
+
+# 🚀 CFA Is Installed. What Now?
+
+Now comes the useful part.
+
+You can give your AI coding agent a job and tell it which CFA skill to use.
+
+You don't need to explain the entire CFA architecture yourself.
+
+The skill does that.
+
+---
+
+## Create Your First CFA App
+
+For example, ask your AI coding agent:
+
+```text
+Use the CFA App Creation skill to create a new SwiftUI iPhone app.
+
+Call the app MyNotes.
+
+The user should be able to create a note, save it and see their
+saved notes.
+
+Keep the first version simple.
+
+Use CFA to structure the application.
+
+Build the project and run its tests when your tooling allows it.
+```
+
+Your AI coding agent now has two things:
+
+```text
+Your idea
+    +
+CFA's engineering instructions
+    │
+    ▼
+A structured iOS application
+```
+
+You describe **what you want to build**.
+
+CFA helps your AI coding agent understand **how the application should be structured**.
+
+---
+
+# 🧠 What Does CFA Actually Do?
+
+Think of CFA as a shared architectural language between you and your AI coding agent.
+
+As an application grows, somebody needs to make decisions such as:
+
+- Where should this code live?
+- Who owns this state?
+- Where does business logic belong?
+- How should features communicate?
+- Where should dependencies be created?
+- Which work belongs on `@MainActor`?
+- Should an actor own this concurrent state?
+- How do we stop Views becoming responsible for everything?
+- How do we make this code understandable six months from now?
+
+CFA gives the developer and the AI a common structure for answering those questions.
+
+The goal is straightforward:
+
+> **Make modern iOS applications easier to write, read, change and maintain.**
+
+---
+
+# 🛠️ CFA Isn't Just for New Apps
+
+You can use CFA throughout the life of an application.
+
+## Create a New Application
+
+Ask your AI:
+
+```text
+Use the CFA App Creation skill to create this application using CFA.
+```
+
+---
+
+## Introduce CFA Into an Existing Application
+
+Already have an app?
+
+Ask:
+
+```text
+Use the CFA Architecture Adoption skill to introduce CFA into
+this existing application.
+
+Preserve the existing behaviour and migrate the architecture
+progressively.
+```
+
+---
+
+## Review Your Architecture
+
+You can ask CFA to inspect an application without immediately changing it:
+
+```text
+Use the CFA Architecture Review skill to review this application.
+
+Do not modify the source code.
+
+Explain where responsibilities, state ownership, dependencies
+or concurrency boundaries could be clearer.
+```
+
+---
+
+## Tidy an Existing CFA Application
+
+Ask:
+
+```text
+Use the CFA Codebase Tidy skill to review and tidy this CFA project.
+
+Preserve the existing behaviour while improving its organisation.
+```
+
+---
+
+# 🔄 Or Migrate a Legacy GCD Application
+
+This is the CFA capability demonstrated by **Metro Mate**.
+
+CFA contains a dedicated **Swift Concurrency Migration** skill.
+
+The purpose isn't simply to search for:
+
+```swift
+DispatchQueue
+```
+
+and replace it with:
+
+```swift
+Task
+```
+
+Real applications are more complicated than that.
+
+Existing GCD code may be providing important guarantees involving:
+
+- execution ordering
+- protected mutable state
+- serial execution
+- cancellation
+- callback delivery
+- thread safety
+- error handling
+- communication between components
+
+Those guarantees need to be understood before the concurrency implementation is changed.
+
+The CFA migration skill gives the AI a structured process for approaching that work.
+
+---
+
+# 🧪 Try the Metro Mate Migration Yourself
+
+This repository lets you perform the same experiment.
+
+Clone Metro Mate:
+
+```zsh
+git clone https://github.com/3DaysOfSwift/metro-mate-ios.git
+cd metro-mate-ios
+```
+
+Make sure you're starting with the original GCD application:
+
+```zsh
+git switch main
+```
+
+Create your own migration branch:
+
+```zsh
+git switch -c my-swift-concurrency-migration
+```
+
+Open the project in your AI coding environment.
+
+Then give your AI coding agent the job:
+
+```text
+Use the CFA Toolkit's Swift Concurrency Migration skill.
+
+Migrate this GCD iOS application to Swift Concurrency.
+
+Understand and preserve the behavioural guarantees provided by
+the existing concurrency implementation before replacing it.
+```
+
+Then let your AI coding agent investigate the application and begin the migration.
+
+---
+
+# 🔀 Compare Your Migration With Ours
+
+When you've finished, you can compare your solution with the migration performed for this repository.
+
+Our migrated application lives on:
+
+```text
+migration/cfa-toolkit-swift-concurrency
+```
+
+GitHub can show you the entire migration:
+
+**[View the complete GCD → Swift Concurrency migration](https://github.com/3DaysOfSwift/metro-mate-ios/compare/main...migration/cfa-toolkit-swift-concurrency)**
+
+Now you can ask:
+
+- Did our AI agents identify the same concurrency problems?
+- Did we protect state in the same way?
+- Did we introduce actors in the same places?
+- Did responsibilities move between components?
+- Did our migrations make different architectural decisions?
+- Did we preserve the same behaviour?
+- Which implementation is easier to understand?
+
+You aren't reading a theoretical migration tutorial.
+
+You're looking at a real application, starting from the same source code, and you're free to perform the experiment yourself.
+
+---
+
+# 🌱 Start Using CFA
+
+You don't need a legacy application to experiment with CFA.
+
+You can start with something tiny.
+
+Install CFA and tell your AI coding agent:
+
+```text
+Use the CFA App Creation skill.
+
+Create a simple SwiftUI iPhone app that lets me record things
+I need to do today and mark them as completed.
+
+Use CFA to structure the application.
+
+Keep the first version small and easy to understand.
+```
+
+Then open the project and explore what your AI created.
+
+Look at where state lives.
+
+Look at where business behaviour lives.
+
+Look at how the Views communicate with the rest of the application.
+
+Then change something.
+
+Add a feature.
+
+Ask CFA to review it.
+
+That's one of the easiest ways to understand what an architecture is actually giving you:
+
+**build something with it.**
 ---
 
 # 🚀 Try the Metro Mate Migration Yourself
