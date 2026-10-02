@@ -1,153 +1,475 @@
-<div align="center">
+# Metro Mate — GCD → Swift Concurrency
 
-# Metro Mate
+> A real iOS application.  
+> A real legacy GCD codebase.  
+> One AI-assisted Swift Concurrency migration you can inspect, compare and reproduce yourself.
 
-**A metronome that doesn't sell you anything.**
+This repository is a practical demonstration of migrating an existing iOS application from **Grand Central Dispatch (GCD)** to **Swift Concurrency** using the **Cooperative Feature Architecture (CFA) Toolkit**.
 
-No ads. No subscription. No account. No tracking.
-Free forever, and you can read every line of code that makes it tick.
+It is intentionally kept as a fork of the original Metro Mate project.
 
-[**→ Download free on the App Store**](https://apps.apple.com/app/id6747667519)
+That means you don't have to take our word for what the application looked like before the migration.
 
-![Metro Mate on iPhone](https://github.com/user-attachments/assets/8299c602-f101-4803-8370-584af814efa8)
+You can see it.
 
-</div>
+You can run it.
+
+You can compare it.
+
+And, most importantly, **you can try migrating it yourself.**
 
 ---
 
-## Why another metronome?
+## 👀 Start Here: See the Migration
 
-Open the App Store and search for "metronome". You'll find a wall of free apps
-that show you a video ad between practice sessions, or ask €6.99 a year for a
-click track — technology that was invented in 1815.
+This repository deliberately keeps the original and migrated applications on separate Git branches.
 
-Metro Mate is the metronome I wanted for my own practice: it starts instantly,
-it keeps perfect time, and it gets out of the way. It is open source, which
-means the "no tracking" promise above isn't something you have to take on
-faith. You can check.
+```text
+main
+│
+└── Original Metro Mate
+    └── GCD implementation
 
-## What it does
 
-**Keeps time you can trust.** Audio is driven by a high-precision timer, not by
-the animation loop, so the click doesn't drift when your phone gets busy. It
-keeps clicking even when your ringer is on silent.
-
-**Tap tempo.** Don't know the BPM? Tap along with the track and Metro Mate
-works it out for you. Range is 40–200 BPM, adjustable by 1 BPM at a time.
-
-**Counts the way you count.** Switch the display between `1 & 2 &` and
-`1 e & a`, and it counts triplets as `1 trip let`. Useful when you're teaching
-subdivision and the student needs to *see* where "&" falls.
-
-**Subdivisions.** Quarters, eighths, sixteenths, and triplet versions of each
-(♩ ♪ ♬ ♩₃ ♪₃ ♬₃).
-
-**Accents where you want them.** Tap any beat to accent it. Practice a 7/8 with
-the accent on 1 and 5, or move the accent around a 4/4 to work on your
-internal pulse.
-
-**A beat grid, not just a click.** Build patterns across up to four rows and
-sixteen steps — a click layer, a backbeat, a subdivision layer. Handy for
-practising a groove rather than a pulse.
-
-**Save your setups.** Store a beat as a named preset and pull it back up next
-lesson — presets persist between sessions. No account needed; they stay on
-your device and are never uploaded.
-
-**Hands-free with Siri.** "Start Metro Mate at 90 BPM" works from across the
-room — useful when your hands are already on the instrument. Works in English
-and German.
-
-**Haptics.** The phone taps along in your pocket or on the music stand.
-
-## Get it
-
-[**→ Metro Mate on the App Store**](https://apps.apple.com/app/id6747667519) —
-free, no in-app purchases, no ads.
-
-Requires an iPhone running **iOS 18 or later**.
-
-If Metro Mate is useful to you, **please leave a rating**. It's a free app with
-no marketing budget, and App Store ratings are essentially the only way other
-musicians will ever find it. Thirty seconds of your time does more than
-anything else you could do for this project.
-
-## For teachers
-
-If you teach, a few things here were built with you in mind:
-
-- The **counting display** matches how you say it out loud, so students connect
-  the sound to the syllables.
-- **Presets** mean you can set up "student's tempo this week" once and recall it
-  next lesson, instead of dialling in numbers while they wait.
-- **Accent patterns** let you isolate a metric problem — put the click only on
-  beat 2 and 4, or only on 1, and let the student hold the rest.
-- No ads means nothing inappropriate appears mid-lesson, and no login means
-  students under 13 can use it without a parent setting up an account.
-
-Free to recommend to your whole studio. If it's missing something you need for
-teaching, [tell me](https://github.com/alexfriedl/metro-mate-ios/issues/new/choose)
-— that feedback is the most useful thing I get.
-
-## Feedback and bugs
-
-Found something broken, or missing a feature you rely on?
-**[Open an issue](https://github.com/alexfriedl/metro-mate-ios/issues/new/choose)** —
-you don't need to be a programmer, and you don't need to know any technical
-terms. "The click drifts when I switch apps" is a perfect bug report.
-
-If GitHub isn't your thing, an App Store review works too — I read all of them.
-
-## Privacy
-
-Metro Mate collects nothing. No analytics, no crash reporting, no advertising
-identifiers, no network requests at all. Your presets live on your device and
-nowhere else. See [PRIVACY.md](PRIVACY.md) for the long version — it's short.
-
-## Contributing
-
-Contributions are welcome, and **not just code**. Bug reports, feature ideas
-from real practice rooms, translations, and better click sounds are all
-genuinely useful. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Building from source
-
-<details>
-<summary>Developer instructions</summary>
-
-**Requirements:** Xcode 16+, iOS 18.0+ deployment target, Swift 5.9+
-
-```bash
-git clone https://github.com/alexfriedl/metro-mate-ios.git
-cd metro-mate-ios
-open Metronome.xcodeproj
+migration/cfa-toolkit-swift-concurrency
+│
+└── CFA Toolkit migration
+    └── Swift Concurrency implementation
 ```
 
-**Project structure**
+### Original Application
 
-| File | Purpose |
-| --- | --- |
-| `MetronomeApp.swift` | App entry point |
-| `ContentView.swift` | Main UI and beat grid |
-| `MetronomeManager.swift` | Timing engine and audio (`AVAudioEngine` + `DispatchSourceTimer`) |
-| `BeatTile.swift` | Individual grid cell |
-| `NoteValuePicker.swift` | Subdivision selector |
-| `AppIntents.swift` | Siri Shortcuts |
-| `StarFieldView.swift` | Background visual |
-| `ColorExtension.swift` | UI utilities |
+The `main` branch preserves the starting point.
 
-Audio assets are `normal_click.wav` (standard beat) and `accent_click.wav`
-(accented beat), loaded into an `AVAudioPlayerNode`.
+### Migrated Application
 
-</details>
+The completed migration lives on:
 
-## License
+`migration/cfa-toolkit-swift-concurrency`
 
-[MIT](LICENSE) — use it, fork it, ship it, teach with it.
+### 🔀 See Every Change
+
+GitHub can compare the two branches for you:
+
+**[View the complete GCD → Swift Concurrency migration](https://github.com/3DaysOfSwift/metro-mate-ios/compare/main...migration/cfa-toolkit-swift-concurrency)**
+
+This is one of the most useful parts of this repository.
+
+You're not looking at a simplified tutorial example.
+
+You're looking at the changes made to a real application.
 
 ---
 
-<div align="center">
-Built by <a href="https://github.com/alexfriedl">Alexander Friedl</a>.
-If Metro Mate is useful to you, a ⭐ helps other musicians find it.
-</div>
+# What Is CFA?
+
+**CFA stands for Cooperative Feature Architecture.**
+
+CFA is an architecture for building modern iOS applications with SwiftUI, Swift Concurrency and AI coding agents.
+
+Think of architecture as deciding **where everything belongs**.
+
+A house has rooms.
+
+A school has classrooms.
+
+A supermarket has aisles.
+
+Without that structure, finding anything would become difficult.
+
+Software is the same.
+
+As an application grows, thousands of lines of code need sensible places to live.
+
+**CFA provides those places.**
+
+It gives the developer and their AI coding agent a shared set of rules for questions such as:
+
+- Where should this code go?
+- Who owns this state?
+- Which object is responsible for this feature?
+- Should this work happen on the Main Actor?
+- Should an actor own this concurrent work?
+- How should two features communicate?
+- Where should a dependency be created?
+- How can somebody else understand this code six months from now?
+
+The goal is simple:
+
+> **Make modern iOS applications easier to write, read, change and maintain.**
+
+CFA isn't only for creating new applications.
+
+The toolkit also contains skills for working with existing codebases, reviewing architecture, tidying code and migrating legacy concurrency code.
+
+**[View the CFA Toolkit on GitHub](https://github.com/3DaysOfSwift/cooperative-feature-architecture)**
+
+---
+
+# What Is the CFA Toolkit?
+
+CFA isn't something you import into your iOS application.
+
+There is no:
+
+```swift
+import CFA
+```
+
+Instead, **CFA is installed into your AI coding environment.**
+
+The toolkit gives your coding agent detailed instructions describing how to perform particular software-engineering jobs.
+
+The CFA Toolkit includes AI skills for jobs such as:
+
+| Skill | What It Does |
+|---|---|
+| **CFA App Creation** | Builds a new application using CFA |
+| **CFA Architecture Adoption** | Brings CFA structure to an existing application |
+| **Swift Concurrency Migration** | Migrates legacy concurrency code |
+| **CFA Architecture Review** | Reviews an application's architecture |
+| **CFA Codebase Tidy** | Improves the organisation of an existing codebase |
+
+It also includes the **Xcode Project Dashboard**.
+
+For this repository, the important skill is:
+
+## Swift Concurrency Migration
+
+This skill teaches the coding agent how to investigate legacy concurrency **before changing it**.
+
+That's important.
+
+Migrating GCD isn't simply:
+
+```text
+DispatchQueue → Task
+```
+
+The old code may be using queues to guarantee:
+
+- ordering
+- mutual exclusion
+- thread safety
+- cancellation
+- state protection
+- callback ordering
+- where particular work executes
+
+Those behaviours have to be understood **before** the old concurrency code is replaced.
+
+That's what the CFA migration skill is designed to help with.
+
+---
+
+# 🧒 Installing CFA — The Simple Version
+
+If you've never installed an AI coding skill before, don't worry.
+
+The basic idea is:
+
+```text
+Download CFA
+     ↓
+Install CFA into your coding agent
+     ↓
+Open your Xcode project
+     ↓
+Tell the agent to use a CFA skill
+```
+
+That's it.
+
+## Step 1 — Download CFA
+
+Go to the CFA releases page:
+
+**[Download the latest CFA release](https://github.com/3DaysOfSwift/cooperative-feature-architecture/releases)**
+
+Download the plugin ZIP from the latest release.
+
+Use the **plugin ZIP**, rather than GitHub's automatically generated source-code ZIP, when installing the plugin.
+
+---
+
+## Step 2 — Extract It
+
+Double-click the ZIP file.
+
+You'll get a folder containing CFA.
+
+Keep that folder intact.
+
+---
+
+## Step 3 — Install CFA
+
+Open Terminal inside the extracted CFA folder.
+
+Run:
+
+```zsh
+node scripts/install.mjs
+```
+
+On macOS you can alternatively open:
+
+```text
+Install.command
+```
+
+The installer installs CFA and makes its skills available to your supported AI coding environment.
+
+### Using Another Compatible AI Coding Agent?
+
+CFA also provides a skills-only installation:
+
+```zsh
+node scripts/install.mjs --mode skills
+```
+
+This installs the skill folders under:
+
+```text
+~/.agents/skills
+```
+
+Your AI coding agent must support discovering skills from that location.
+
+For complete installation instructions and troubleshooting:
+
+**[Read the CFA Installation Documentation](https://github.com/3DaysOfSwift/cooperative-feature-architecture/blob/main/docs/INSTALLATION.md)**
+
+---
+
+# 🚀 Try the Metro Mate Migration Yourself
+
+This is where this repository becomes particularly useful.
+
+You don't have to simply read about our migration.
+
+**You can perform the same experiment yourself.**
+
+Clone Metro Mate:
+
+```zsh
+git clone https://github.com/3DaysOfSwift/metro-mate-ios.git
+cd metro-mate-ios
+```
+
+Make sure you're starting from the original application:
+
+```zsh
+git switch main
+```
+
+Create your own migration branch:
+
+```zsh
+git switch -c my-swift-concurrency-migration
+```
+
+Now open the project using your AI coding environment.
+
+Make sure CFA is installed.
+
+Then give your coding agent a simple instruction:
+
+> **Using the CFA Toolkit, migrate this GCD iOS app to use Swift Concurrency.**
+
+That's where the experiment begins.
+
+The migration skill should first investigate how the existing application works.
+
+It can then progressively migrate the application while attempting to preserve the behavioural guarantees provided by the existing implementation.
+
+---
+
+# 🧪 Compare Your Migration With Ours
+
+This is one of the reasons we've kept the migration on its own Git branch.
+
+You started with the **same application**.
+
+You started with the **same source code**.
+
+You're using the **same CFA Toolkit**.
+
+But your AI coding session may make different decisions.
+
+When you're finished, compare your implementation with ours:
+
+```text
+migration/cfa-toolkit-swift-concurrency
+```
+
+You can investigate questions such as:
+
+- Did we identify the same concurrency problems?
+- Did we introduce actors in the same places?
+- Did we preserve the same behaviours?
+- Did our coding agents make different architectural decisions?
+- Which responsibilities moved?
+- How did state ownership change?
+- How did the application's concurrency model change?
+- Is the resulting application easier to understand?
+
+Now you're not simply reading about Swift Concurrency.
+
+**You're investigating a real migration.**
+
+---
+
+# Why Keep `main` Unmigrated?
+
+Normally, after completing a feature branch, we'd merge it into `main`.
+
+We're deliberately **not doing that here**.
+
+This repository is an educational resource.
+
+We want:
+
+```text
+main
+     ↓
+BEFORE
+```
+
+and:
+
+```text
+migration/cfa-toolkit-swift-concurrency
+     ↓
+AFTER
+```
+
+to remain available.
+
+That means GitHub itself becomes part of the teaching material.
+
+The Git history records the journey.
+
+The migration branch contains the result.
+
+And GitHub's comparison tools show exactly what changed.
+
+### Compare them now:
+
+**[Original GCD application → CFA Swift Concurrency migration](https://github.com/3DaysOfSwift/metro-mate-ios/compare/main...migration/cfa-toolkit-swift-concurrency)**
+
+---
+
+# About 3 Days of Swift Concurrency
+
+<!--
+Add the 3 Days of Swift Concurrency logo to this repository.
+
+For example:
+
+readme-images/3-days-of-swift-concurrency.png
+
+Then replace this comment with:
+
+<p align="center">
+  <a href="https://www.3daysofswiftconcurrency.com/">
+    <img
+      src="readme-images/3-days-of-swift-concurrency.png"
+      width="160"
+      alt="3 Days of Swift Concurrency"
+    >
+  </a>
+</p>
+-->
+
+**CFA is created and published by 3 Days of Swift Concurrency.**
+
+We build practical resources for iOS developers learning and applying modern Swift Concurrency.
+
+CFA grew from a simple idea:
+
+> **If developers are increasingly building software alongside AI, then the developer and the AI should share a clear architectural language.**
+
+Instead of repeatedly explaining where state should live, how features should communicate, or which component owns a responsibility, CFA gives the developer and AI a common structure.
+
+It's designed to be a useful all-round architecture for modern iOS development.
+
+You can use CFA to help:
+
+- build a new application
+- organise an existing application
+- make responsibilities clearer
+- make code easier to read
+- make code easier to maintain
+- review an application's architecture
+- tidy an existing codebase
+- introduce modern Swift Concurrency
+- migrate legacy GCD code to Swift Concurrency
+
+CFA is not intended to hide Swift or Swift Concurrency from you.
+
+It's a structure for helping humans and AI work with those technologies more consistently.
+
+### Learn More
+
+**[3 Days of Swift Concurrency](https://www.3daysofswiftconcurrency.com/)**
+
+**[Download and Install the CFA Toolkit](https://github.com/3DaysOfSwift/cooperative-feature-architecture)**
+
+**[CFA Releases](https://github.com/3DaysOfSwift/cooperative-feature-architecture/releases)**
+
+---
+
+# About the Original Metro Mate Project
+
+Metro Mate was created by its original author independently of this migration experiment.
+
+This repository remains a GitHub fork so that the provenance of the original project remains visible.
+
+The CFA migration is maintained separately from the original project and should not be mistaken for work performed by or endorsed by the original author.
+
+---
+
+## The Whole Experiment in One Picture
+
+```text
+Original Metro Mate
+        │
+        │
+        ▼
+   GCD Codebase
+        │
+        │
+        │  Install CFA into your AI coding environment
+        │
+        ▼
+┌──────────────────────────────┐
+│      CFA Migration Skill     │
+│                              │
+│ Understand the old code      │
+│ Understand responsibilities  │
+│ Understand concurrency       │
+│ Preserve behaviour           │
+│ Introduce modern structure   │
+│ Migrate to Swift Concurrency │
+└──────────────────────────────┘
+        │
+        │
+        ▼
+Swift Concurrency Version
+        │
+        ▼
+Inspect it
+Run it
+Compare it
+Learn from it
+Try it yourself
+```
+
+**The original application is the lesson.**
+
+**The migration is the experiment.**
+
+**The Git diff is the evidence.**
+
+And the entire thing is here for you to explore.
